@@ -1,0 +1,122 @@
+# Environment Variables & Secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+.secret
+
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Package manager locks (keep one, ignore others based on your preference)
+# Uncomment the ones you want to ignore:
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Build Output
+lib/
+dist/
+build/
+.output/
+.nuxt/
+.next/
+.svelte-kit/
+.vite/
+
+# SvelteKit
+.svelte-kit
+/build
+/package
+.env.local
+
+# TypeScript
+*.tsbuildinfo
+.tsc-cache/
+
+# Development & Debug
+*.log
+logs/
+server.log
+debug*.js
+test-*.js
+
+# Testing
+coverage/
+.nyc_output/
+.coverage/
+
+# Cache directories
+.cache/
+.parcel-cache/
+.temp/
+.tmp/
+node_modules/.cache/
+
+# IDE & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+.classpath
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Runtime
+.pid
+.seed
+.pid.lock
+.lock-wscript
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# Backup files
+*.backup
+*.bak
+*.orig
+
+# Cloudflare
+.wrangler/
+
+# Deployment
+.vercel/
+.netlify/
+.firebase/
+
+# Local development
+.local/
+temp/
+tmp/
+
+# Profiling
+.clinic/
+.0x/
+
+# Documentation build
+docs/build/
+
+# Misc
+*.tgz
+*.tar.gz
+.npm
+.eslintcache
