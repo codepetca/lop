@@ -17,14 +17,14 @@ Multiplayer Choose-Your-Own-Adventure Game with real-time voting mechanics for 2
 ## Project Structure
 
 ```
-cyoa-backend/          # Colyseus multiplayer server
+backend/               # Colyseus multiplayer server
 ├── src/
 │   ├── schema/        # Colyseus schemas
 │   ├── rooms/         # Game room logic
 │   ├── database/      # Kysely queries
 │   └── auth/          # Lucia auth
 
-cyoa-frontend/         # SvelteKit client
+frontend/              # SvelteKit client
 ├── src/
 │   ├── lib/
 │   │   ├── stores/    # Svelte 5 runes state
@@ -44,7 +44,7 @@ cyoa-frontend/         # SvelteKit client
 
 **Backend (Colyseus):**
 ```bash
-cd cyoa-backend
+cd backend
 npm run dev          # Start development server
 npm run build        # Build for production
 npm run start        # Start production server
@@ -52,7 +52,7 @@ npm run start        # Start production server
 
 **Frontend (SvelteKit):**
 ```bash
-cd cyoa-frontend  
+cd frontend
 npm run dev          # Start dev server
 npm run build        # Build for production
 npm run preview      # Preview production build

@@ -14,14 +14,14 @@ A real-time multiplayer voting game where 2-30 players click on scene targets to
 ## Project Structure
 
 ```
-cyoa-backend/          # Colyseus multiplayer server
+backend/               # Colyseus multiplayer server
 ├── src/
 │   ├── schema/        # Colyseus schemas
 │   ├── rooms/         # Game room logic
 │   ├── database/      # Kysely queries
 │   └── auth/          # Lucia auth
 
-cyoa-frontend/         # SvelteKit client
+frontend/              # SvelteKit client
 ├── src/
 │   ├── lib/
 │   │   ├── stores/    # Svelte 5 runes state
@@ -40,7 +40,7 @@ cyoa-frontend/         # SvelteKit client
 ### 2. Backend Setup
 
 ```bash
-cd cyoa-backend
+cd backend
 npm install
 cp .env.example .env
 # Edit .env with your database URL
@@ -50,7 +50,7 @@ npm run dev
 ### 3. Frontend Setup
 
 ```bash
-cd cyoa-frontend
+cd frontend
 npm install
 cp .env.example .env
 # Edit .env with backend URLs (defaults should work for local dev)

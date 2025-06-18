@@ -13,14 +13,14 @@ The following have been completed and are ready:
 
 ### Start the Backend Server
 ```bash
-cd cyoa-backend
+cd backend
 npm run dev
 ```
 Server will start on http://localhost:2567
 
 ### Start the Frontend Server
 ```bash
-cd cyoa-frontend  
+cd frontend
 npm run dev
 ```
 Frontend will start on http://localhost:5173
@@ -30,7 +30,7 @@ Frontend will start on http://localhost:5173
 ### 1. Database Setup (Required for game to work)
 1. Create a [Neon PostgreSQL](https://neon.tech) database
 2. Copy your connection string
-3. Update `cyoa-backend/.env` with your DATABASE_URL
+3. Update `backend/.env` with your DATABASE_URL
 4. Run the SQL from `database-setup.sql` in your database
 
 ### 2. Environment Variables

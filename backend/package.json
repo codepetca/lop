@@ -1,5 +1,5 @@
 {
-  "name": "cyoa-backend",
+  "name": "backend",
   "version": "1.0.0",
   "description": "Multiplayer Choose-Your-Own-Adventure Game Backend",
   "main": "lib/index.js",
