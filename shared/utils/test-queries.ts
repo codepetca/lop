@@ -1,4 +1,4 @@
-import { getTestDb } from '@shared/utils/test-database'
+import { getTestDb } from './test-database'
 
 export async function getCampaign(campaignId: string) {
   const testDb = getTestDb()
