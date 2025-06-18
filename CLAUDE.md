@@ -76,6 +76,23 @@ VITE_COLYSEUS_URL=ws://localhost:2567
 VITE_API_URL=http://localhost:2567
 ```
 
+## Testing
+
+**Unified Vitest Workspace:**
+```bash
+npm test                    # Run all tests
+npm run test:backend        # Backend tests only
+npm run test:frontend       # Frontend tests only
+npm run test:e2e           # Playwright E2E tests
+npm run test:coverage      # Coverage reports
+```
+
+**Test Structure:**
+- Backend: Unit tests with in-memory SQLite, Colyseus room testing
+- Frontend: Svelte component tests, store testing with mocks
+- E2E: Full multiplayer game flow with Playwright
+- Shared: Common fixtures, utilities, and mocks
+
 ## Key Implementation Notes
 
 - Use strict TypeScript (no `any` types)
@@ -84,3 +101,4 @@ VITE_API_URL=http://localhost:2567
 - Svelte 5 runes manage client-side reactive state
 - Scene targets use percentage-based positioning for responsive design
 - Voting timer runs server-side to prevent client manipulation
+- Comprehensive test coverage with Vitest + Playwright

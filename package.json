@@ -1,0 +1,52 @@
+{
+  "name": "multiplayer-cyoa",
+  "version": "1.0.0",
+  "description": "Multiplayer Choose-Your-Own-Adventure Game with real-time voting",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "test:backend": "vitest run --project backend",
+    "test:frontend": "vitest run --project frontend",
+    "test:shared": "vitest run --project shared",
+    "test:backend:watch": "vitest --project backend",
+    "test:frontend:watch": "vitest --project frontend",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "npm run build:backend && npm run build:frontend",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "lint": "npm run lint:backend && npm run lint:frontend",
+    "lint:backend": "cd backend && npm run lint",
+    "lint:frontend": "cd frontend && npm run lint",
+    "typecheck": "npm run typecheck:backend && npm run typecheck:frontend",
+    "typecheck:backend": "cd backend && npm run build",
+    "typecheck:frontend": "cd frontend && npm run check"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@testing-library/jest-dom": "^6.1.5",
+    "@testing-library/svelte": "^4.0.5",
+    "@testing-library/user-event": "^14.5.1",
+    "@types/node": "^20.0.0",
+    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/ui": "^3.2.4",
+    "happy-dom": "^12.10.0",
+    "jsdom": "^23.0.0",
+    "sqlite3": "^5.1.6",
+    "supertest": "^6.3.3",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "kysely": "^0.27.0"
+  },
+  "workspaces": [
+    "backend",
+    "frontend",
+    "shared"
+  ]
+}
