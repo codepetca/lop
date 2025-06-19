@@ -31,8 +31,8 @@
     }
   })
 
-  async function joinGame() {
-    if (!selectedCampaign || !userProfile) return
+  async function joinCampaign(campaignId: string) {
+    if (!userProfile) return
 
     joining = true
     error = null
@@ -40,7 +40,7 @@
     try {
       gameStore.setConnectionStatus('connecting')
       
-      const room = await colyseusClient.joinRoom(selectedCampaign, userProfile.displayName || userProfile.username)
+      const room = await colyseusClient.joinRoom(campaignId, userProfile.displayName || userProfile.username)
       gameStore.setRoom(room)
       
       goto(`/game/${room.id}`)
@@ -51,10 +51,6 @@
     } finally {
       joining = false
     }
-  }
-
-  function selectCampaign(campaignId: string) {
-    selectedCampaign = campaignId
   }
 </script>
 
@@ -90,55 +86,39 @@
       {error}
     </div>
   {:else}
-    <div class="join-game-section">
-      <div class="card">
-        <h2>Join a Game</h2>
-
-        {#if campaigns.length === 0}
-          <div class="no-campaigns">
-            <p>No campaigns available. Please check back later!</p>
-          </div>
-        {:else}
-          <div class="campaigns-section">
-            <div class="campaigns-grid">
-              {#each campaigns as campaign (campaign.id)}
-                <button
-                  class="campaign-card"
-                  class:selected={selectedCampaign === campaign.id}
-                  onclick={() => selectCampaign(campaign.id)}
-                  disabled={joining}
-                >
-                  <h4>{campaign.title}</h4>
-                  {#if campaign.description}
-                    <p>{campaign.description}</p>
-                  {/if}
-                </button>
-              {/each}
-            </div>
-          </div>
-
-          <div class="join-section">
+    {#if campaigns.length === 0}
+      <div class="no-campaigns">
+        <div class="card">
+          <p>No campaigns available. Please check back later!</p>
+        </div>
+      </div>
+    {:else}
+      <div class="campaigns-section">
+        <div class="campaigns-grid">
+          {#each campaigns as campaign (campaign.id)}
             <button
-              class="btn-primary join-button"
-              onclick={joinGame}
-              disabled={!selectedCampaign || !userProfile || joining}
+              class="campaign-card card"
+              onclick={() => joinCampaign(campaign.id)}
+              disabled={joining}
             >
+              <h3>{campaign.title}</h3>
+              {#if campaign.description}
+                <p>{campaign.description}</p>
+              {/if}
               {#if joining}
-                Joining Game...
-              {:else}
-                Join Game
+                <div class="joining-indicator">Joining...</div>
               {/if}
             </button>
-          </div>
-        {/if}
+          {/each}
+        </div>
       </div>
-    </div>
+    {/if}
 
     <div class="how-to-play">
       <div class="card">
         <h2>How to Play</h2>
         <ol>
-          <li>Select a campaign to join</li>
+          <li>Click on a campaign to join instantly</li>
           <li>Wait for other players to join (2-30 players)</li>
           <li>View the story scene and click on targets to vote</li>
           <li>The choice with the most votes wins</li>
@@ -212,7 +192,7 @@
     opacity: 0.8;
   }
 
-  .join-game-section {
+  .campaigns-section {
     margin-bottom: 40px;
   }
 
@@ -244,56 +224,55 @@
     margin: 24px 0;
   }
 
-  .campaigns-section h3 {
-    margin-bottom: 16px;
-  }
-
   .campaigns-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
+    gap: 20px;
   }
 
   .campaign-card {
-    background: rgba(255, 255, 255, 0.05);
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    padding: 20px;
+    position: relative;
     text-align: left;
     transition: all 0.2s ease;
     color: white;
+    cursor: pointer;
   }
 
   .campaign-card:hover:not(:disabled) {
     border-color: #4CAF50;
     background: rgba(76, 175, 80, 0.1);
+    transform: translateY(-2px);
   }
 
-  .campaign-card.selected {
-    border-color: #4CAF50;
-    background: rgba(76, 175, 80, 0.2);
+  .campaign-card:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 
-  .campaign-card h4 {
-    margin-bottom: 8px;
-    font-size: 1.2rem;
+  .campaign-card h3 {
+    margin-bottom: 12px;
+    font-size: 1.3rem;
+    color: #4CAF50;
   }
 
   .campaign-card p {
     margin: 0;
     opacity: 0.8;
+    font-size: 0.95rem;
+    line-height: 1.4;
+  }
+
+  .joining-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #4CAF50;
+    padding: 8px 16px;
+    border-radius: 4px;
     font-size: 0.9rem;
-  }
-
-  .join-section {
-    text-align: center;
-  }
-
-  .join-button {
-    font-size: 1.1rem;
-    padding: 16px 32px;
-    min-width: 150px;
+    font-weight: 600;
   }
 
   .no-campaigns {
