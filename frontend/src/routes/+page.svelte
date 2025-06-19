@@ -38,6 +38,10 @@
     error = null
     
     try {
+      console.log('🎯 Joining campaign:', campaignId)
+      console.log('👤 User profile:', $state.snapshot(userProfile))
+      console.log('🏷️ Player name will be:', userProfile.displayName || userProfile.username)
+      
       gameStore.setConnectionStatus('connecting')
       
       const room = await colyseusClient.joinRoom(campaignId, userProfile.displayName || userProfile.username)

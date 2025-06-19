@@ -16,8 +16,18 @@ const gameServer = new Server({
   })
 })
 
-// Register room handlers
-gameServer.define('game_room', GameRoom)
+// Register room handlers with filtering options
+gameServer.define('game_room', GameRoom, {
+  // Filter rooms by campaign ID so players join the same room for the same campaign
+  filterBy: ['campaignId']
+})
+
+// Add connection logging
+gameServer.onShutdown(() => {
+  console.log('🔴 Game server shutting down')
+})
+
+console.log('🎯 Room handlers registered successfully')
 
 // Helper function to parse JSON body from Node.js request
 async function parseJSONBody(req: IncomingMessage): Promise<any> {

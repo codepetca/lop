@@ -8,8 +8,18 @@ export class GameRoom extends Room<GameRoomState> {
 
   async onCreate(options: { campaignId: string }) {
     console.log('🎮 GameRoom onCreate with campaignId:', options.campaignId)
+    console.log('🏠 Room created with ID:', this.roomId)
+    console.log('🔍 onCreate options:', options)
+    
     this.setState(new GameRoomState())
     this.autoDispose = true
+    
+    // Set room metadata for matching
+    this.setMetadata({
+      campaignId: options.campaignId,
+      playerCount: 0,
+      gameStarted: false
+    })
     
     this.state.campaignId = options.campaignId
     
@@ -24,6 +34,7 @@ export class GameRoom extends Room<GameRoomState> {
       console.error('❌ No first_scene_id found for campaign')
     }
 
+
     // Handle messages
     this.onMessage('vote', (client, message: { targetId: string }) => {
       this.handleVote(client, message.targetId)
@@ -34,9 +45,23 @@ export class GameRoom extends Room<GameRoomState> {
         this.startVoting()
       }
     })
+
+    this.onMessage('request_player_list', (client) => {
+      console.log('📋 Client requested player list, sending current state')
+      const playerList = Array.from(this.state.players.values()).map(p => ({
+        sessionId: p.sessionId,
+        name: p.name,
+        hasVoted: p.hasVoted,
+        votedTarget: p.votedTarget
+      }))
+      client.send('player_list_update', {
+        players: playerList,
+        totalPlayers: this.state.players.size
+      })
+    })
   }
 
-  async onJoin(client: Client, options: { name?: string }) {
+  async onJoin(client: Client, options: { name?: string, campaignId?: string }) {
     console.log('👤 Player joining:', client.sessionId, options.name)
     const player = new Player()
     player.sessionId = client.sessionId
@@ -46,8 +71,22 @@ export class GameRoom extends Room<GameRoomState> {
     this.state.players.set(client.sessionId, player)
     
     console.log(`✅ ${player.name} joined game room (${this.state.players.size} total players)`)
-    console.log('🎬 Current scene ID:', this.state.currentSceneId)
-    console.log('🎮 Game status:', this.state.gameStatus)
+    console.log('👥 All players in room:', Array.from(this.state.players.values()).map(p => p.name))
+    
+    // Update room metadata
+    this.setMetadata({
+      campaignId: this.state.campaignId,
+      playerCount: this.state.players.size,
+      gameStarted: this.state.gameStarted
+    })
+    
+    // Force a state synchronization to all clients
+    console.log('📡 Broadcasting player list update to all clients')
+    this.broadcast('player_joined', {
+      sessionId: player.sessionId,
+      name: player.name,
+      totalPlayers: this.state.players.size
+    })
     
     // Send current scene to the newly joined player
     if (this.state.currentSceneId) {
@@ -59,8 +98,15 @@ export class GameRoom extends Room<GameRoomState> {
   async onLeave(client: Client, consented: boolean) {
     const player = this.state.players.get(client.sessionId)
     if (player) {
-      console.log(`${player.name} left game room`)
+      console.log(`👋 ${player.name} left game room`)
       this.state.players.delete(client.sessionId)
+      
+      // Update room metadata
+      this.setMetadata({
+        campaignId: this.state.campaignId,
+        playerCount: this.state.players.size,
+        gameStarted: this.state.gameStarted
+      })
       
       // If player had voted, remove their vote
       if (player.hasVoted && player.votedTarget) {
