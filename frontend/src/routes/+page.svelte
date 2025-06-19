@@ -78,7 +78,6 @@
   {:else}
     <div class="join-game-section">
       <div class="card">
-        <h2>Join a Game</h2>
         
         {#if userProfile}
           <div class="profile-display">
@@ -101,7 +100,6 @@
           </div>
         {:else}
           <div class="campaigns-section">
-            <h3>Select a Campaign</h3>
             <div class="campaigns-grid">
               {#each campaigns as campaign (campaign.id)}
                 <button
