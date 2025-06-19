@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { getTestDb } from '@shared/utils/test-database'
-import { seedTestData, clearTestData, createTestCampaign, createTestScene, createTestTargets } from '@shared/utils/test-helpers'
-import { testCampaigns, testScenes } from '@shared/fixtures/campaigns'
+import { getTestDb } from '../../../../shared/utils/test-database'
+import { seedTestData, clearTestData, createTestCampaign, createTestScene, createTestTargets } from '../../../../shared/utils/test-helpers'
+import { testCampaigns, testScenes } from '../../../../shared/fixtures/campaigns'
 
 // Import the test versions of the functions
-import { getCampaign, getScene, getSceneTargets, getSceneWithTargets, getAllCampaigns } from '@shared/utils/test-queries'
+import { getCampaign, getScene, getSceneTargets, getSceneWithTargets, getAllCampaigns } from '../../../../shared/utils/test-queries'
 
 describe('Database Queries', () => {
   beforeEach(async () => {

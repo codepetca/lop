@@ -35,30 +35,55 @@ async function parseJSONBody(req: IncomingMessage): Promise<any> {
 }
 
 // Helper function to set CORS headers
-function setCORSHeaders(res: ServerResponse) {
-  res.setHeader('Access-Control-Allow-Origin', '*')
+function setCORSHeaders(res: ServerResponse, req?: IncomingMessage) {
+  // Allow specific origins for development
+  const allowedOrigins = [
+    'http://localhost:5173', // Vite dev server
+    'http://localhost:4173', // Vite preview
+    'http://localhost:3000'  // Alternative port
+  ]
+  
+  const origin = req?.headers.origin
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin)
+  } else {
+    // Fallback for development
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5173')
+  }
+  
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie')
   res.setHeader('Access-Control-Allow-Credentials', 'true')
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+  res.setHeader('Pragma', 'no-cache')
+  res.setHeader('Expires', '0')
 }
 
 // Helper function to send JSON response
-function sendJSONResponse(res: ServerResponse, data: any, status = 200) {
-  setCORSHeaders(res)
+function sendJSONResponse(res: ServerResponse, req: IncomingMessage, data: any, status = 200) {
+  setCORSHeaders(res, req)
   res.setHeader('Content-Type', 'application/json')
   res.statusCode = status
   res.end(JSON.stringify(data))
 }
 
-// HTTP route handlers
+// HTTP route handlers - only handle specific routes, let Colyseus handle its own
 server.on('request', async (req: IncomingMessage, res: ServerResponse) => {
   const url = new URL(req.url!, `http://${req.headers.host}`)
   const pathname = url.pathname
   const method = req.method
 
-  // Handle CORS preflight
+  // Only handle our custom routes, let Colyseus handle matchmaking and websocket routes
+  const isOurRoute = pathname.startsWith('/auth') || pathname.startsWith('/campaigns')
+  
+  if (!isOurRoute) {
+    // Let Colyseus handle this request
+    return
+  }
+
+  // Handle CORS preflight for our routes
   if (method === 'OPTIONS') {
-    setCORSHeaders(res)
+    setCORSHeaders(res, req)
     res.statusCode = 200
     res.end()
     return
@@ -67,7 +92,6 @@ server.on('request', async (req: IncomingMessage, res: ServerResponse) => {
   try {
     // Auth routes
     if (method === 'POST' && pathname === '/auth/guest') {
-      const { username } = await parseJSONBody(req)
       const { user, session, expressRes } = await getOrCreateGuestSession(req as any, res as any)
       
       // Set session cookie if available
@@ -75,10 +99,13 @@ server.on('request', async (req: IncomingMessage, res: ServerResponse) => {
         res.setHeader('Set-Cookie', expressRes.getHeaders()['Set-Cookie'])
       }
       
-      sendJSONResponse(res, {
+      sendJSONResponse(res, req, {
         user: {
           id: user.id,
-          username: user.username
+          username: user.username,
+          displayName: user.display_name,
+          nickname: user.nickname,
+          avatarSeed: user.avatar_seed
         },
         sessionId: session.id
       })
@@ -89,14 +116,17 @@ server.on('request', async (req: IncomingMessage, res: ServerResponse) => {
       const { user } = await validateSession(req as any)
       
       if (!user) {
-        sendJSONResponse(res, { error: 'Not authenticated' }, 401)
+        sendJSONResponse(res, req, { error: 'Not authenticated' }, 401)
         return
       }
       
-      sendJSONResponse(res, {
+      sendJSONResponse(res, req, {
         user: {
           id: user.id,
-          username: user.username
+          username: user.username,
+          displayName: user.display_name,
+          nickname: user.nickname,
+          avatarSeed: user.avatar_seed
         }
       })
       return
@@ -109,23 +139,23 @@ server.on('request', async (req: IncomingMessage, res: ServerResponse) => {
         res.setHeader('Set-Cookie', expressRes.getHeaders()['Set-Cookie'])
       }
       
-      sendJSONResponse(res, { success: true })
+      sendJSONResponse(res, req, { success: true })
       return
     }
 
     // Campaign routes
     if (method === 'GET' && pathname === '/campaigns') {
       const campaigns = await getAllCampaigns()
-      sendJSONResponse(res, campaigns)
+      sendJSONResponse(res, req, campaigns)
       return
     }
 
     // 404 for unmatched routes
-    sendJSONResponse(res, { error: 'Not found' }, 404)
+    sendJSONResponse(res, req, { error: 'Not found' }, 404)
 
   } catch (error) {
     console.error(`Error handling ${method} ${pathname}:`, error)
-    sendJSONResponse(res, { 
+    sendJSONResponse(res, req, { 
       error: `Internal server error: ${error instanceof Error ? error.message : 'Unknown error'}` 
     }, 500)
   }

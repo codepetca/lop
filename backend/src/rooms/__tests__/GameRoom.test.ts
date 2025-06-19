@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { GameRoom } from '../GameRoom'
-import { seedTestData, clearTestData, mockConsole } from '@shared/utils/test-helpers'
+import { seedTestData, clearTestData, mockConsole } from '../../../../shared/utils/test-helpers'
 
 // Mock the database queries for GameRoom tests
-vi.mock('../database/queries', () => ({
+vi.mock('../../database/queries', () => ({
   getCampaign: vi.fn(),
   getSceneWithTargets: vi.fn()
 }))

@@ -25,6 +25,9 @@ export const lucia = new Lucia(
     getUserAttributes: (attributes) => {
       return {
         username: attributes.username,
+        display_name: attributes.display_name,
+        nickname: attributes.nickname,
+        avatar_seed: attributes.avatar_seed,
         created_at: attributes.created_at
       }
     }
@@ -36,6 +39,9 @@ declare module "lucia" {
     Lucia: typeof lucia
     DatabaseUserAttributes: {
       username: string
+      display_name: string | null
+      nickname: string | null
+      avatar_seed: string | null
       created_at: Date
     }
   }

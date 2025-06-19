@@ -31,6 +31,9 @@ export interface Database {
     id: string
     username: string
     password_hash: string | null
+    display_name: string | null
+    nickname: string | null
+    avatar_seed: string | null
     created_at: Date
   }
   sessions: {

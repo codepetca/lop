@@ -2,10 +2,14 @@ import { lucia } from "./lucia"
 import { db } from "../database/connection"
 import { createExpressRequest, createExpressResponse } from "./colyseus-compat"
 import { IncomingMessage, ServerResponse } from "http"
+import { generateRandomProfile, createFallbackProfile } from "../utils/profile-generator"
 
 export interface User {
   id: string
   username: string
+  display_name: string | null
+  nickname: string | null
+  avatar_seed: string | null
   created_at: Date
 }
 
@@ -18,18 +22,28 @@ export interface Session {
 /**
  * Create a guest user for anonymous game sessions
  */
-export async function createGuestUser(username?: string): Promise<User> {
-  const guestUsername = username || `Guest_${Date.now()}`
-  
+export async function createGuestUser(): Promise<User> {
+  // Generate random profile
+  let profile
+  try {
+    profile = generateRandomProfile()
+  } catch (error) {
+    console.warn('Failed to generate random profile, using fallback:', error)
+    profile = createFallbackProfile()
+  }
+
   const user = await db
     .insertInto('users')
     .values({
-      username: guestUsername,
+      username: profile.displayName.replace(' ', '_').toLowerCase(), // technical username
+      display_name: profile.displayName,
+      nickname: profile.nickname,
+      avatar_seed: profile.avatarSeed,
       password_hash: null as any, // Guest users don't have passwords
       created_at: new Date(),
       id: undefined as any // Let DB generate UUID
     })
-    .returning(['id', 'username', 'created_at'])
+    .returning(['id', 'username', 'display_name', 'nickname', 'avatar_seed', 'created_at'])
     .executeTakeFirstOrThrow()
 
   return user

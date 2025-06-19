@@ -3,38 +3,44 @@
   import { goto } from '$app/navigation'
   import { colyseusClient } from '$lib/colyseus'
   import { gameStore } from '$lib/stores/game.svelte'
-  import type { Campaign } from '$lib/colyseus'
+  import Avatar from '$lib/components/Avatar.svelte'
+  import type { Campaign, UserProfile } from '$lib/stores/colyseus'
 
   let campaigns = $state<Campaign[]>([])
   let loading = $state(true)
   let error = $state<string | null>(null)
-  let playerName = $state('')
+  let userProfile = $state<UserProfile | null>(null)
   let selectedCampaign = $state<string | null>(null)
   let joining = $state(false)
 
   onMount(async () => {
     try {
+      // Create guest session first
+      const authResponse = await colyseusClient.createGuestSession()
+      userProfile = authResponse.user
+      gameStore.setUserProfile(authResponse.user)
+      
+      // Then load campaigns
       campaigns = await colyseusClient.getCampaigns()
       gameStore.setCampaigns(campaigns)
     } catch (err) {
-      error = 'Failed to load campaigns. Please try again later.'
-      console.error('Error loading campaigns:', err)
+      error = 'Failed to load game. Please try again later.'
+      console.error('Error during initialization:', err)
     } finally {
       loading = false
     }
   })
 
   async function joinGame() {
-    if (!selectedCampaign || !playerName.trim()) return
+    if (!selectedCampaign || !userProfile) return
 
     joining = true
     error = null
     
     try {
       gameStore.setConnectionStatus('connecting')
-      gameStore.setPlayerName(playerName.trim())
       
-      const room = await colyseusClient.joinRoom(selectedCampaign, playerName.trim())
+      const room = await colyseusClient.joinRoom(selectedCampaign, userProfile.displayName || userProfile.username)
       gameStore.setRoom(room)
       
       goto(`/game/${room.id}`)
@@ -58,8 +64,7 @@
 
 <div class="container">
   <header class="app-header">
-    <h1>🎮 Choose Your Own Adventure</h1>
-    <p>Join a multiplayer story where your votes determine the outcome!</p>
+    <h1>🎮 Lop Adventure</h1>
   </header>
 
   {#if loading}
@@ -75,17 +80,20 @@
       <div class="card">
         <h2>Join a Game</h2>
         
-        <div class="form-group">
-          <label for="player-name">Your Name</label>
-          <input
-            id="player-name"
-            type="text"
-            bind:value={playerName}
-            placeholder="Enter your player name"
-            maxlength="20"
-            disabled={joining}
-          />
-        </div>
+        {#if userProfile}
+          <div class="profile-display">
+            <h3>Your Player Profile</h3>
+            <div class="profile-info">
+              <Avatar 
+                seed={userProfile.avatarSeed || userProfile.username} 
+                size={60} 
+                showName={true}
+                name={userProfile.displayName ?? userProfile.username}
+                nickname={userProfile.nickname ?? undefined}
+              />
+            </div>
+          </div>
+        {/if}
 
         {#if campaigns.length === 0}
           <div class="no-campaigns">
@@ -115,7 +123,7 @@
             <button
               class="btn-primary join-button"
               onclick={joinGame}
-              disabled={!selectedCampaign || !playerName.trim() || joining}
+              disabled={!selectedCampaign || !userProfile || joining}
             >
               {#if joining}
                 Joining Game...
@@ -132,7 +140,7 @@
       <div class="card">
         <h2>How to Play</h2>
         <ol>
-          <li>Enter your name and select a campaign</li>
+          <li>Select a campaign to join</li>
           <li>Wait for other players to join (2-30 players)</li>
           <li>View the story scene and click on targets to vote</li>
           <li>The choice with the most votes wins</li>
@@ -260,6 +268,25 @@
   .how-to-play li {
     margin-bottom: 8px;
     line-height: 1.5;
+  }
+
+  .profile-display {
+    margin-bottom: 24px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .profile-display h3 {
+    margin-bottom: 16px;
+    color: white;
+    text-align: center;
+  }
+
+  .profile-info {
+    display: flex;
+    justify-content: center;
   }
 
   @media (max-width: 768px) {
