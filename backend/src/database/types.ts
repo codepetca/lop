@@ -27,4 +27,16 @@ export interface Database {
     next_scene_id: string | null
     created_at: Date
   }
+  users: {
+    id: string
+    username: string
+    password_hash: string | null
+    created_at: Date
+  }
+  sessions: {
+    id: string
+    user_id: string
+    expires_at: Date
+    created_at: Date
+  }
 }

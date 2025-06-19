@@ -25,7 +25,10 @@
     "lint:frontend": "cd frontend && npm run lint",
     "typecheck": "npm run typecheck:backend && npm run typecheck:frontend",
     "typecheck:backend": "cd backend && npm run build",
-    "typecheck:frontend": "cd frontend && npm run check"
+    "typecheck:frontend": "cd frontend && npm run check",
+    "db:migrate": "cd backend && npm run migrate",
+    "db:setup": "cd backend && npm run db:setup",
+    "db:reset": "cd backend && npm run db:reset"
   },
   "devDependencies": {
     "@playwright/test": "^1.40.0",

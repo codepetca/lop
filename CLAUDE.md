@@ -48,6 +48,15 @@ cd backend
 npm run dev          # Start development server
 npm run build        # Build for production
 npm run start        # Start production server
+npm run migrate      # Run database migrations
+npm run db:setup     # Setup database with sample data
+```
+
+**Database:**
+```bash
+npm run db:migrate   # Run database migrations
+npm run db:setup     # Setup database with sample data
+npm run db:reset     # Reset database (WARNING: deletes all data)
 ```
 
 **Frontend (SvelteKit):**
@@ -64,10 +73,11 @@ npm run lint         # ESLint
 
 **Backend (.env):**
 ```
-DATABASE_URL=postgresql://...
-LUCIA_SECRET=...
-CLOUDFLARE_R2_ACCESS_KEY_ID=...
-CLOUDFLARE_R2_SECRET_ACCESS_KEY=...
+DATABASE_URL=postgresql://username:password@hostname:5432/database
+PORT=2567
+NODE_ENV=development
+SESSION_SECRET=your-session-secret-here-change-in-production
+DEBUG=true
 ```
 
 **Frontend (.env):**
@@ -101,4 +111,7 @@ npm run test:coverage      # Coverage reports
 - Svelte 5 runes manage client-side reactive state
 - Scene targets use percentage-based positioning for responsive design
 - Voting timer runs server-side to prevent client manipulation
+- PostgreSQL with Kysely for type-safe database operations
+- Lucia Auth for session management (supports guest users)
+- Database migrations with automated setup
 - Comprehensive test coverage with Vitest + Playwright
