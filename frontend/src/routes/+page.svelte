@@ -187,41 +187,8 @@
     max-width: 20vw;
   }
 
-  .app-header p {
-    font-size: 1.2rem;
-    opacity: 0.8;
-  }
-
   .campaigns-section {
-    margin-bottom: 40px;
-  }
-
-  .form-group {
-    margin-bottom: 20px;
-  }
-
-  .form-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 600;
-  }
-
-  .form-group input {
-    width: 100%;
-    padding: 12px;
-    font-size: 1rem;
-    border-radius: 6px;
-    border: 1px solid #444;
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-  }
-
-  .form-group input::placeholder {
-    color: rgba(255, 255, 255, 0.5);
-  }
-
-  .campaigns-section {
-    margin: 24px 0;
+    margin: 24px 0 40px 0;
   }
 
   .campaigns-grid {

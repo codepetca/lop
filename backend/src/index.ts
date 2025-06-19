@@ -39,6 +39,7 @@ function setCORSHeaders(res: ServerResponse, req?: IncomingMessage) {
   // Allow specific origins for development
   const allowedOrigins = [
     'http://localhost:5173', // Vite dev server
+    'http://localhost:5174', // Vite dev server (alternative port)
     'http://localhost:4173', // Vite preview
     'http://localhost:3000'  // Alternative port
   ]
