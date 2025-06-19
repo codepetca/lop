@@ -64,7 +64,21 @@
 
 <div class="container">
   <header class="app-header">
-    <h1>🎮 Lop Adventure</h1>
+    <div class="header-content">
+      <h1>🎮 Lop Adventure</h1>
+      {#if userProfile}
+        <div class="header-profile">
+          <Avatar 
+            seed={userProfile.avatarSeed || userProfile.username} 
+            size={32} 
+            showName={true}
+            name={userProfile.displayName ?? userProfile.username}
+            nickname={userProfile.nickname ?? undefined}
+            class="responsive-avatar"
+          />
+        </div>
+      {/if}
+    </div>
   </header>
 
   {#if loading}
@@ -78,21 +92,7 @@
   {:else}
     <div class="join-game-section">
       <div class="card">
-        
-        {#if userProfile}
-          <div class="profile-display">
-            <h3>Your Player Profile</h3>
-            <div class="profile-info">
-              <Avatar 
-                seed={userProfile.avatarSeed || userProfile.username} 
-                size={60} 
-                showName={true}
-                name={userProfile.displayName ?? userProfile.username}
-                nickname={userProfile.nickname ?? undefined}
-              />
-            </div>
-          </div>
-        {/if}
+        <h2>Join a Game</h2>
 
         {#if campaigns.length === 0}
           <div class="no-campaigns">
@@ -150,18 +150,61 @@
 </div>
 
 <style>
+  .container {
+    max-width: 100vw;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+
   .app-header {
-    text-align: center;
-    margin-bottom: 40px;
+    margin-bottom: clamp(20px, 5vw, 40px);
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: clamp(8px, 2vw, 20px);
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .app-header h1 {
-    font-size: 3rem;
-    margin-bottom: 16px;
+    font-size: clamp(1.5rem, 4vw, 3rem);
+    margin: 0;
     background: linear-gradient(45deg, #4CAF50, #2196F3);
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    min-width: 0;
+    flex-shrink: 1;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  .header-profile {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    min-width: 0;
+    max-width: 50vw; /* Ensure profile never takes more than half screen */
+  }
+
+  .header-profile :global(.responsive-avatar) {
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .header-profile :global(.avatar-name) {
+    font-size: clamp(0.8rem, 1.5vw, 1rem);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 20vw;
   }
 
   .app-header p {
@@ -268,32 +311,32 @@
     line-height: 1.5;
   }
 
-  .profile-display {
-    margin-bottom: 24px;
-    padding: 20px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
 
-  .profile-display h3 {
-    margin-bottom: 16px;
-    color: white;
-    text-align: center;
-  }
-
-  .profile-info {
-    display: flex;
-    justify-content: center;
-  }
-
-  @media (max-width: 768px) {
-    .app-header h1 {
-      font-size: 2rem;
+  /* Force stacking when space is very tight */
+  @media (max-width: 600px) {
+    .header-content {
+      flex-direction: column;
+      text-align: center;
+      justify-content: center;
+    }
+    
+    .header-profile {
+      max-width: 80vw;
     }
     
     .campaigns-grid {
       grid-template-columns: 1fr;
+    }
+  }
+
+  /* Additional breakpoint for very tight spaces (high zoom) */
+  @media (max-width: 400px) {
+    .header-profile {
+      max-width: 90vw;
+    }
+    
+    .header-profile :global(.avatar-name) {
+      max-width: 30vw;
     }
   }
 </style>
