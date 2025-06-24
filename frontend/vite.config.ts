@@ -11,5 +11,8 @@ export default defineConfig({
 		alias: {
 			'@shared': path.resolve(__dirname, '../shared')
 		}
+	},
+	esbuild: {
+		target: 'es2022'
 	}
 });

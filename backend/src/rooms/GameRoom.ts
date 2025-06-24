@@ -1,5 +1,5 @@
 import { Room, Client } from '@colyseus/core'
-import { GameRoomState, Player } from '../schema/GameState'
+import { GameRoomState, Player, Scene, Target } from '../schema/GameState'
 import { getSceneWithTargets } from '../database/queries'
 
 export class GameRoom extends Room<GameRoomState> {
@@ -59,6 +59,9 @@ export class GameRoom extends Room<GameRoomState> {
         totalPlayers: this.state.players.size
       })
     })
+
+    // Scene sync now handled automatically by Colyseus state
+    // No need for manual scene requests
   }
 
   async onJoin(client: Client, options: { name?: string, campaignId?: string }) {
@@ -88,9 +91,9 @@ export class GameRoom extends Room<GameRoomState> {
       totalPlayers: this.state.players.size
     })
     
-    // Send current scene to the newly joined player
+    // Send current scene to the newly joined player via message
     if (this.state.currentSceneId) {
-      console.log('📤 Sending current scene to new player:', this.state.currentSceneId)
+      console.log('📤 Sending current scene to new player via message')
       this.sendSceneToClient(client, this.state.currentSceneId)
     }
   }
@@ -147,7 +150,7 @@ export class GameRoom extends Room<GameRoomState> {
         return
       }
 
-      console.log('🎬 Setting scene state...')
+      console.log('🎬 Setting scene state in Colyseus...')
       this.state.currentSceneId = sceneId
       this.state.timeLeft = scene.timer_seconds
       this.state.gameStatus = scene.is_final_scene ? 'ended' : 'waiting'
@@ -156,6 +159,7 @@ export class GameRoom extends Room<GameRoomState> {
       this.state.votes.clear()
       this.resetPlayerVotes()
       
+      // Send scene data via message (more reliable than schema for complex objects)
       const sceneData = {
         scene: {
           id: scene.id,
@@ -163,13 +167,21 @@ export class GameRoom extends Room<GameRoomState> {
           image_url: scene.image_url,
           timer_seconds: scene.timer_seconds,
           is_final_scene: scene.is_final_scene,
-          targets: scene.targets
+          targets: scene.targets.map(target => ({
+            id: target.id,
+            label: target.label,
+            x_percent: target.x_percent,
+            y_percent: target.y_percent,
+            width_percent: target.width_percent || 15,
+            height_percent: target.height_percent || 15,
+            next_scene_id: target.next_scene_id || ''
+          }))
         }
       }
       
-      console.log('📡 Broadcasting scene_loaded:', sceneData.scene.title, 'with', sceneData.scene.targets.length, 'targets')
+      console.log('📡 Broadcasting scene_loaded via message:', sceneData.scene.title, 'with', sceneData.scene.targets.length, 'targets')
       this.broadcast('scene_loaded', sceneData)
-      console.log('✅ Scene loaded successfully')
+      console.log('✅ Scene sent via reliable message system')
       
     } catch (error) {
       console.error('❌ Error loading scene:', error)
@@ -292,7 +304,15 @@ export class GameRoom extends Room<GameRoomState> {
           image_url: scene.image_url,
           timer_seconds: scene.timer_seconds,
           is_final_scene: scene.is_final_scene,
-          targets: scene.targets
+          targets: scene.targets.map(target => ({
+            id: target.id,
+            label: target.label,
+            x_percent: target.x_percent,
+            y_percent: target.y_percent,
+            width_percent: target.width_percent || 15,
+            height_percent: target.height_percent || 15,
+            next_scene_id: target.next_scene_id || ''
+          }))
         }
       }
       
