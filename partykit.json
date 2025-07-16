@@ -1,5 +1,8 @@
 {
 	"name": "easypoll",
 	"main": "party/index.ts",
+	"parties": {
+		"lobby": "party/lobby.ts"
+	},
 	"compatibilityDate": "2025-07-15"
 }

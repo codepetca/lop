@@ -15,4 +15,21 @@ export interface PollUpdateMessage {
 	poll: Poll;
 }
 
-export type Message = VoteMessage | PollUpdateMessage;
+export interface RoomMetadata {
+	id: string;
+	title: string;
+	createdAt: string;
+	activeConnections: number;
+	totalVotes: number;
+}
+
+export interface RoomListRequestMessage {
+	type: 'room-list-request';
+}
+
+export interface RoomListMessage {
+	type: 'room-list';
+	rooms: RoomMetadata[];
+}
+
+export type Message = VoteMessage | PollUpdateMessage | RoomListRequestMessage | RoomListMessage;

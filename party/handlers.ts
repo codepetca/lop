@@ -1,5 +1,5 @@
 import type * as Party from 'partykit/server';
-import { Poll, VoteMessage, PollUpdateMessage, PollSchema } from './types';
+import { Poll, VoteMessage, PollUpdateMessage, PollSchema, RoomMetadata } from './types';
 import { getRandomQuestion } from './questions';
 import { initializePollVotes } from './utils';
 
@@ -54,7 +54,46 @@ export async function handleCreatePollServerGenerated(room: Party.Room): Promise
 	// Save to storage
 	await room.storage.put('poll', validatedPoll);
 
+	// Register with lobby (don't await to avoid blocking poll creation)
+	registerRoomWithLobby(validatedPoll).catch(error => {
+		console.error('Failed to register room with lobby:', error);
+	});
+
 	return validatedPoll;
+}
+
+/**
+ * Register room with lobby
+ */
+export async function registerRoomWithLobby(poll: Poll): Promise<void> {
+	try {
+		const roomMetadata: RoomMetadata = {
+			id: poll.id,
+			title: poll.title,
+			createdAt: new Date().toISOString(),
+			activeConnections: 0,
+			totalVotes: 0
+		};
+
+		// Get the current host - in development this should be localhost:1999
+		const lobbyUrl = `http://127.0.0.1:1999/parties/lobby/main/register`;
+		
+		const response = await fetch(lobbyUrl, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(roomMetadata)
+		});
+
+		if (response.ok) {
+			console.log(`Successfully registered room ${poll.id} with lobby`);
+		} else {
+			console.error(`Failed to register room ${poll.id} with lobby:`, response.status);
+		}
+	} catch (error) {
+		console.error('Error registering room with lobby:', error);
+	}
 }
 
 /**

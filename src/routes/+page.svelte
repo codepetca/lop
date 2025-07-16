@@ -1,11 +1,18 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { onMount, onDestroy } from 'svelte';
+	import { browser } from '$app/environment';
+	import { PUBLIC_PARTYKIT_HOST } from '$env/static/public';
 	import type { ActionData } from './$types';
+	import type { RoomMetadata, Message, RoomListMessage } from '$lib/types';
 
 	export let form: ActionData;
 
 	let loading = false;
 	let joinRoomId = '';
+	let activeRooms: RoomMetadata[] = [];
+	let lobbySocket: WebSocket | null = null;
+	let connecting = true;
 
 	function copyToClipboard(text: string) {
 		navigator.clipboard.writeText(text);
@@ -16,6 +23,68 @@
 			window.location.href = `/${joinRoomId.trim()}`;
 		}
 	}
+
+	function joinActiveRoom(roomId: string) {
+		window.location.href = `/${roomId}`;
+	}
+
+	function connectToLobby() {
+		if (!browser) return;
+
+		const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+		const wsUrl = `${protocol}//${PUBLIC_PARTYKIT_HOST}/parties/lobby/main`;
+
+		lobbySocket = new WebSocket(wsUrl);
+
+		lobbySocket.onopen = () => {
+			connecting = false;
+			console.log('Connected to lobby');
+			
+			// Request current room list
+			if (lobbySocket) {
+				lobbySocket.send(JSON.stringify({ type: 'room-list-request' }));
+			}
+		};
+
+		lobbySocket.onmessage = (event) => {
+			try {
+				const message: Message = JSON.parse(event.data);
+
+				if (message.type === 'room-list') {
+					activeRooms = message.rooms;
+				}
+			} catch (error) {
+				console.error('Error parsing lobby message:', error);
+			}
+		};
+
+		lobbySocket.onclose = () => {
+			connecting = true;
+			console.log('Disconnected from lobby');
+			
+			// Reconnect after a delay
+			setTimeout(() => {
+				if (browser) {
+					connectToLobby();
+				}
+			}, 3000);
+		};
+
+		lobbySocket.onerror = (error) => {
+			console.error('Lobby connection error:', error);
+		};
+	}
+
+	onMount(() => {
+		connectToLobby();
+	});
+
+	onDestroy(() => {
+		if (lobbySocket) {
+			lobbySocket.close();
+			lobbySocket = null;
+		}
+	});
 </script>
 
 <svelte:head>
@@ -80,6 +149,35 @@
 				Join Poll
 			</button>
 		</div>
+	</div>
+
+	<!-- Active Rooms Section -->
+	<div class="section">
+		<h2>Browse Active Polls</h2>
+		
+		{#if connecting}
+			<p class="loading">Connecting to room list...</p>
+		{:else if activeRooms.length === 0}
+			<p class="no-rooms">No active polls found. Create one above!</p>
+		{:else}
+			<div class="rooms-list">
+				{#each activeRooms as room}
+					<div class="room-card" on:click={() => joinActiveRoom(room.id)}>
+						<div class="room-header">
+							<h3 class="room-title">{room.title}</h3>
+							<span class="room-id">{room.id}</span>
+						</div>
+						<div class="room-stats">
+							<span class="stat">👥 {room.activeConnections} active</span>
+							<span class="stat">🗳️ {room.totalVotes} votes</span>
+						</div>
+						<div class="room-time">
+							Created {new Date(room.createdAt).toLocaleTimeString()}
+						</div>
+					</div>
+				{/each}
+			</div>
+		{/if}
 	</div>
 </main>
 
@@ -242,5 +340,82 @@
 		border-radius: 8px;
 		border: 1px solid #fecaca;
 		margin-top: 1rem;
+	}
+
+	/* Room Browser Styles */
+	.loading,
+	.no-rooms {
+		text-align: center;
+		color: #6b7280;
+		font-style: italic;
+		padding: 2rem;
+	}
+
+	.rooms-list {
+		display: grid;
+		gap: 1rem;
+		margin-top: 1rem;
+	}
+
+	.room-card {
+		background: white;
+		border: 2px solid #e5e7eb;
+		border-radius: 12px;
+		padding: 1.5rem;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	}
+
+	.room-card:hover {
+		border-color: #3b82f6;
+		box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+		transform: translateY(-1px);
+	}
+
+	.room-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: start;
+		margin-bottom: 0.75rem;
+		gap: 1rem;
+	}
+
+	.room-title {
+		color: #1f2937;
+		margin: 0;
+		font-size: 1.1rem;
+		font-weight: 600;
+		flex: 1;
+		line-height: 1.3;
+	}
+
+	.room-id {
+		background: #f3f4f6;
+		color: #6b7280;
+		padding: 0.25rem 0.5rem;
+		border-radius: 6px;
+		font-size: 0.8rem;
+		font-family: monospace;
+		white-space: nowrap;
+	}
+
+	.room-stats {
+		display: flex;
+		gap: 1rem;
+		margin-bottom: 0.5rem;
+	}
+
+	.stat {
+		color: #6b7280;
+		font-size: 0.9rem;
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+	}
+
+	.room-time {
+		color: #9ca3af;
+		font-size: 0.8rem;
 	}
 </style>
