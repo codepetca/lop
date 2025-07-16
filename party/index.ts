@@ -1,14 +1,15 @@
 import type * as Party from 'partykit/server';
 import {
 	Poll,
-	VoteMessage,
 	PollUpdateMessage,
-	Message,
-	CreatePollRequest,
 	MessageSchema,
-	CreatePollRequestSchema,
-	PollSchema
+	CreatePollRequestSchema
 } from './types';
+import {
+	handleVote,
+	handleCreatePoll,
+	handleGetPoll
+} from './handlers';
 
 export default class PollServer implements Party.Server {
 	constructor(readonly room: Party.Room) {}
@@ -44,20 +45,9 @@ export default class PollServer implements Party.Server {
 			const validatedMessage = MessageSchema.parse(data);
 
 			if (validatedMessage.type === 'vote' && this.poll) {
-				// Process the vote
-				if (this.poll.options.includes(validatedMessage.option)) {
-					this.poll.votes[validatedMessage.option] = (this.poll.votes[validatedMessage.option] || 0) + 1;
-
-					// Save updated poll to storage
-					await this.savePoll();
-
-					// Broadcast updated poll to all connected clients
-					this.room.broadcast(
-						JSON.stringify({
-							type: 'poll-update',
-							poll: this.poll
-						} as PollUpdateMessage)
-					);
+				const updatedPoll = await handleVote(this.room, this.poll, validatedMessage);
+				if (updatedPoll) {
+					this.poll = updatedPoll;
 				}
 			}
 		} catch (error) {
@@ -74,61 +64,28 @@ export default class PollServer implements Party.Server {
 				const data = await req.json();
 				const validatedData = CreatePollRequestSchema.parse(data);
 
-				const title = validatedData.title || 'Anonymous poll';
-				const options = validatedData.options || [];
+				const poll = await handleCreatePoll(this.room, validatedData);
+				this.poll = poll;
 
-				// Validate options
-				if (options.length < 2) {
-					return new Response('At least 2 options required', { status: 400 });
-				}
-
-				// Create new poll
-				const poll: Poll = {
-					id: this.room.id,
-					title: title,
-					options: options,
-					votes: {}
-				};
-
-				// Initialize votes for each option
-				options.forEach((option: string) => {
-					poll.votes[option] = 0;
-				});
-
-				// Validate the created poll
-				const validatedPoll = PollSchema.parse(poll);
-				this.poll = validatedPoll;
-				await this.savePoll();
-
-				return new Response(JSON.stringify(validatedPoll), {
+				return new Response(JSON.stringify(poll), {
 					headers: { 'Content-Type': 'application/json' }
 				});
 			} catch (error) {
 				console.error('Error creating poll:', error);
+				if (error instanceof Error && error.message === 'At least 2 options required') {
+					return new Response(error.message, { status: 400 });
+				}
 				return new Response('Bad Request', { status: 400 });
 			}
 		}
 
 		if (req.method === 'GET') {
-			// Return current poll data
-			if (this.poll) {
-				return new Response(JSON.stringify(this.poll), {
-					headers: { 'Content-Type': 'application/json' }
-				});
-			} else {
-				return new Response('Not found', { status: 404 });
-			}
+			return handleGetPoll(this.poll);
 		}
 
 		return new Response('Method not allowed', { status: 405 });
 	}
 
-	// Helper method to save poll to storage
-	private async savePoll() {
-		if (this.poll) {
-			await this.room.storage.put('poll', this.poll);
-		}
-	}
 }
 
 PollServer satisfies Party.Worker;
