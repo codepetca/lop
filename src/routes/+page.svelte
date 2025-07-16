@@ -162,7 +162,7 @@
 		{:else}
 			<div class="rooms-list">
 				{#each activeRooms as room}
-					<div class="room-card" on:click={() => joinActiveRoom(room.id)}>
+					<button class="room-card" on:click={() => joinActiveRoom(room.id)}>
 						<div class="room-header">
 							<h3 class="room-title">{room.title}</h3>
 							<span class="room-id">{room.id}</span>
@@ -174,7 +174,7 @@
 						<div class="room-time">
 							Created {new Date(room.createdAt).toLocaleTimeString()}
 						</div>
-					</div>
+					</button>
 				{/each}
 			</div>
 		{/if}
@@ -365,12 +365,19 @@
 		cursor: pointer;
 		transition: all 0.2s ease;
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+		appearance: none;
+		width: 100%;
+		text-align: left;
+		font-family: inherit;
+		font-size: inherit;
 	}
 
-	.room-card:hover {
+	.room-card:hover,
+	.room-card:focus {
 		border-color: #3b82f6;
 		box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
 		transform: translateY(-1px);
+		outline: none;
 	}
 
 	.room-header {
