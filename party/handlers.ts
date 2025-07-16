@@ -75,8 +75,9 @@ export async function registerRoomWithLobby(poll: Poll): Promise<void> {
 			totalVotes: 0
 		};
 
-		// Get the current host - in development this should be localhost:1999
-		const lobbyUrl = `http://127.0.0.1:1999/parties/lobby/main/register`;
+		// Get lobby URL from environment or use default for development
+		const host = process.env.PARTYKIT_HOST || 'http://127.0.0.1:1999';
+		const lobbyUrl = `${host}/parties/lobby/main/register`;
 		
 		const response = await fetch(lobbyUrl, {
 			method: 'POST',
