@@ -1,4 +1,4 @@
-import type { PageLoad } from './$types';
+import type { PageServerLoad } from './$types';
 import { error } from '@sveltejs/kit';
 import type { Poll } from '$lib/types';
 import { env } from '$env/dynamic/private';
@@ -6,7 +6,7 @@ import { env } from '$env/dynamic/private';
 // Fallback to default development URL if not set
 const PARTYKIT_URL = env.PARTYKIT_URL || 'http://127.0.0.1:1999';
 
-export const load: PageLoad = async ({ params, fetch }) => {
+export const load: PageServerLoad = async ({ params, fetch }) => {
 	const pollId = params.poll_id;
 
 	try {

@@ -1,11 +1,7 @@
 import type * as Party from 'partykit/server';
-import {
-	Poll,
-	VoteMessage,
-	PollUpdateMessage,
-	CreatePollRequest,
-	PollSchema
-} from './types';
+import { Poll, VoteMessage, PollUpdateMessage, CreatePollRequest, PollSchema } from './types';
+import { getRandomQuestion } from './questions';
+import { initializePollVotes } from './utils';
 
 /**
  * Handle vote messages from WebSocket clients
@@ -61,9 +57,31 @@ export async function handleCreatePoll(
 	};
 
 	// Initialize votes for each option
-	options.forEach((option) => {
-		poll.votes[option] = 0;
-	});
+	poll.votes = initializePollVotes(options);
+
+	// Validate the created poll
+	const validatedPoll = PollSchema.parse(poll);
+
+	// Save to storage
+	await room.storage.put('poll', validatedPoll);
+
+	return validatedPoll;
+}
+
+/**
+ * Handle server-generated poll creation
+ */
+export async function handleCreatePollServerGenerated(room: Party.Room): Promise<Poll> {
+	// Get a random question from the bank
+	const question = getRandomQuestion();
+
+	// Create new poll with server-generated content
+	const poll: Poll = {
+		id: room.id,
+		title: question.title,
+		options: question.options,
+		votes: initializePollVotes(question.options)
+	};
 
 	// Validate the created poll
 	const validatedPoll = PollSchema.parse(poll);

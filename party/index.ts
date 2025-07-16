@@ -1,13 +1,9 @@
 import type * as Party from 'partykit/server';
-import {
-	Poll,
-	PollUpdateMessage,
-	MessageSchema,
-	CreatePollRequestSchema
-} from './types';
+import { Poll, PollUpdateMessage, MessageSchema, CreatePollRequestSchema } from './types';
 import {
 	handleVote,
 	handleCreatePoll,
+	handleCreatePollServerGenerated,
 	handleGetPoll
 } from './handlers';
 
@@ -64,7 +60,19 @@ export default class PollServer implements Party.Server {
 				const data = await req.json();
 				const validatedData = CreatePollRequestSchema.parse(data);
 
-				const poll = await handleCreatePoll(this.room, validatedData);
+				// Check if this is a server-generated poll request
+				// If no title and no options, or if serverGenerated flag is true
+				const isServerGenerated =
+					(!validatedData.title && !validatedData.options) ||
+					(data as any).serverGenerated === true;
+
+				let poll: Poll;
+				if (isServerGenerated) {
+					poll = await handleCreatePollServerGenerated(this.room);
+				} else {
+					poll = await handleCreatePoll(this.room, validatedData);
+				}
+
 				this.poll = poll;
 
 				return new Response(JSON.stringify(poll), {
@@ -85,7 +93,6 @@ export default class PollServer implements Party.Server {
 
 		return new Response('Method not allowed', { status: 405 });
 	}
-
 }
 
 PollServer satisfies Party.Worker;
