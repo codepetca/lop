@@ -26,15 +26,8 @@ export const MessageSchema = z.discriminatedUnion('type', [
 	PollUpdateMessageSchema
 ]);
 
-// HTTP request schema for creating a poll
-export const CreatePollRequestSchema = z.object({
-	title: z.string().optional(),
-	options: z.array(z.string()).optional()
-});
-
 // Export TypeScript types inferred from schemas
 export type Poll = z.infer<typeof PollSchema>;
 export type VoteMessage = z.infer<typeof VoteMessageSchema>;
 export type PollUpdateMessage = z.infer<typeof PollUpdateMessageSchema>;
 export type Message = z.infer<typeof MessageSchema>;
-export type CreatePollRequest = z.infer<typeof CreatePollRequestSchema>;

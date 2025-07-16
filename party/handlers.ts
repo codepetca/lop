@@ -1,5 +1,5 @@
 import type * as Party from 'partykit/server';
-import { Poll, VoteMessage, PollUpdateMessage, CreatePollRequest, PollSchema } from './types';
+import { Poll, VoteMessage, PollUpdateMessage, PollSchema } from './types';
 import { getRandomQuestion } from './questions';
 import { initializePollVotes } from './utils';
 
@@ -31,41 +31,6 @@ export async function handleVote(
 	room.broadcast(JSON.stringify(updateMessage));
 
 	return poll;
-}
-
-/**
- * Handle poll creation requests
- */
-export async function handleCreatePoll(
-	room: Party.Room,
-	request: CreatePollRequest
-): Promise<Poll> {
-	const title = request.title || 'Anonymous poll';
-	const options = request.options || [];
-
-	// Validate options
-	if (options.length < 2) {
-		throw new Error('At least 2 options required');
-	}
-
-	// Create new poll
-	const poll: Poll = {
-		id: room.id,
-		title: title,
-		options: options,
-		votes: {}
-	};
-
-	// Initialize votes for each option
-	poll.votes = initializePollVotes(options);
-
-	// Validate the created poll
-	const validatedPoll = PollSchema.parse(poll);
-
-	// Save to storage
-	await room.storage.put('poll', validatedPoll);
-
-	return validatedPoll;
 }
 
 /**

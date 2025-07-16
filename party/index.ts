@@ -1,11 +1,6 @@
 import type * as Party from 'partykit/server';
-import { Poll, PollUpdateMessage, MessageSchema, CreatePollRequestSchema } from './types';
-import {
-	handleVote,
-	handleCreatePoll,
-	handleCreatePollServerGenerated,
-	handleGetPoll
-} from './handlers';
+import { Poll, PollUpdateMessage, MessageSchema } from './types';
+import { handleVote, handleCreatePollServerGenerated, handleGetPoll } from './handlers';
 
 export default class PollServer implements Party.Server {
 	constructor(readonly room: Party.Room) {}
@@ -57,22 +52,8 @@ export default class PollServer implements Party.Server {
 
 		if (req.method === 'POST') {
 			try {
-				const data = await req.json();
-				const validatedData = CreatePollRequestSchema.parse(data);
-
-				// Check if this is a server-generated poll request
-				// If no title and no options, or if serverGenerated flag is true
-				const isServerGenerated =
-					(!validatedData.title && !validatedData.options) ||
-					(data as any).serverGenerated === true;
-
-				let poll: Poll;
-				if (isServerGenerated) {
-					poll = await handleCreatePollServerGenerated(this.room);
-				} else {
-					poll = await handleCreatePoll(this.room, validatedData);
-				}
-
+				// All POST requests now create server-generated polls
+				const poll = await handleCreatePollServerGenerated(this.room);
 				this.poll = poll;
 
 				return new Response(JSON.stringify(poll), {
@@ -80,10 +61,7 @@ export default class PollServer implements Party.Server {
 				});
 			} catch (error) {
 				console.error('Error creating poll:', error);
-				if (error instanceof Error && error.message === 'At least 2 options required') {
-					return new Response(error.message, { status: 400 });
-				}
-				return new Response('Bad Request', { status: 400 });
+				return new Response('Failed to create poll', { status: 500 });
 			}
 		}
 

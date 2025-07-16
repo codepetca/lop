@@ -19,9 +19,7 @@ export const actions: Actions = {
 			headers: {
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify({
-				serverGenerated: true
-			})
+			body: JSON.stringify({})
 		});
 
 		console.log(`Response status: ${response.status}`);
