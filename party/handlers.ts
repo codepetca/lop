@@ -55,7 +55,7 @@ export async function handleCreatePollServerGenerated(room: Party.Room): Promise
 	await room.storage.put('poll', validatedPoll);
 
 	// Register with lobby (don't await to avoid blocking poll creation)
-	registerRoomWithLobby(validatedPoll).catch(error => {
+	registerRoomWithLobby(validatedPoll).catch((error) => {
 		console.error('Failed to register room with lobby:', error);
 	});
 
@@ -78,7 +78,7 @@ export async function registerRoomWithLobby(poll: Poll): Promise<void> {
 		// Get lobby URL from environment or use default for development
 		const host = process.env.PARTYKIT_HOST || 'http://127.0.0.1:1999';
 		const lobbyUrl = `${host}/parties/lobby/main/register`;
-		
+
 		const response = await fetch(lobbyUrl, {
 			method: 'POST',
 			headers: {

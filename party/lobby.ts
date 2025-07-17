@@ -10,7 +10,7 @@ export default class LobbyServer implements Party.Server {
 	// Handle new WebSocket connections
 	async onConnect(conn: Party.Connection, ctx: Party.ConnectionContext) {
 		console.log('New connection to lobby:', conn.id);
-		
+
 		// Send current room list to new connection
 		this.sendRoomList(conn);
 	}
@@ -36,7 +36,7 @@ export default class LobbyServer implements Party.Server {
 			type: 'room-list',
 			rooms: rooms
 		};
-		
+
 		conn.send(JSON.stringify(message));
 	}
 
@@ -47,7 +47,7 @@ export default class LobbyServer implements Party.Server {
 			type: 'room-list',
 			rooms: rooms
 		};
-		
+
 		this.room.broadcast(JSON.stringify(message));
 	}
 
@@ -56,18 +56,21 @@ export default class LobbyServer implements Party.Server {
 		const url = new URL(req.url);
 		console.log(`Lobby received ${req.method} request to: ${url.pathname} (full URL: ${req.url})`);
 
-		if (req.method === 'POST' && (url.pathname === '/register' || url.pathname.endsWith('/register'))) {
+		if (
+			req.method === 'POST' &&
+			(url.pathname === '/register' || url.pathname.endsWith('/register'))
+		) {
 			try {
-				const roomData = await req.json() as RoomMetadata;
-				
+				const roomData = (await req.json()) as RoomMetadata;
+
 				// Add room to registry
 				this.roomRegistry.set(roomData.id, roomData);
-				
+
 				// Broadcast updated room list
 				this.broadcastRoomList();
-				
+
 				console.log(`Registered room: ${roomData.id} - ${roomData.title}`);
-				
+
 				return new Response('Room registered', { status: 200 });
 			} catch (error) {
 				console.error('Error registering room:', error);
@@ -75,18 +78,21 @@ export default class LobbyServer implements Party.Server {
 			}
 		}
 
-		if (req.method === 'DELETE' && (url.pathname.startsWith('/unregister/') || url.pathname.includes('/unregister/'))) {
+		if (
+			req.method === 'DELETE' &&
+			(url.pathname.startsWith('/unregister/') || url.pathname.includes('/unregister/'))
+		) {
 			const roomId = url.pathname.split('/').pop();
-			
+
 			if (roomId && this.roomRegistry.has(roomId)) {
 				this.roomRegistry.delete(roomId);
 				this.broadcastRoomList();
-				
+
 				console.log(`Unregistered room: ${roomId}`);
-				
+
 				return new Response('Room unregistered', { status: 200 });
 			}
-			
+
 			return new Response('Room not found', { status: 404 });
 		}
 

@@ -1,18 +1,33 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
-	import { PUBLIC_PARTYKIT_HOST } from '$env/static/public';
 	import type { ActionData } from './$types';
-	import type { RoomMetadata, Message, RoomListMessage } from '$lib/types';
+	import type { RoomMetadata, Message, RoomListRequestMessage } from '$lib/types';
+	import { useWebSocket } from '$lib/hooks/useWebSocket.svelte';
 
-	export let form: ActionData;
+	let { form }: { form: ActionData } = $props();
 
-	let loading = false;
-	let joinRoomId = '';
-	let activeRooms: RoomMetadata[] = [];
-	let lobbySocket: WebSocket | null = null;
-	let connecting = true;
+	let loading = $state(false);
+	let joinRoomId = $state('');
+	let activeRooms = $state<RoomMetadata[]>([]);
+
+	// Initialize WebSocket hook for lobby
+	const ws = useWebSocket<Message, RoomListRequestMessage>('lobby', 'main', {
+		onOpen: () => {
+			console.log('Connected to lobby');
+			// Request current room list when connected
+			ws.send({ type: 'room-list-request' });
+		},
+		onClose: () => console.log('Disconnected from lobby')
+	});
+
+	// Handle incoming messages
+	$effect(() => {
+		if (ws.lastMessage?.type === 'room-list') {
+			activeRooms = ws.lastMessage.rooms;
+		}
+	});
 
 	function copyToClipboard(text: string) {
 		navigator.clipboard.writeText(text);
@@ -28,62 +43,12 @@
 		window.location.href = `/${roomId}`;
 	}
 
-	function connectToLobby() {
-		if (!browser) return;
-
-		const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-		const wsUrl = `${protocol}//${PUBLIC_PARTYKIT_HOST}/parties/lobby/main`;
-
-		lobbySocket = new WebSocket(wsUrl);
-
-		lobbySocket.onopen = () => {
-			connecting = false;
-			console.log('Connected to lobby');
-			
-			// Request current room list
-			if (lobbySocket) {
-				lobbySocket.send(JSON.stringify({ type: 'room-list-request' }));
-			}
-		};
-
-		lobbySocket.onmessage = (event) => {
-			try {
-				const message: Message = JSON.parse(event.data);
-
-				if (message.type === 'room-list') {
-					activeRooms = message.rooms;
-				}
-			} catch (error) {
-				console.error('Error parsing lobby message:', error);
-			}
-		};
-
-		lobbySocket.onclose = () => {
-			connecting = true;
-			console.log('Disconnected from lobby');
-			
-			// Reconnect after a delay
-			setTimeout(() => {
-				if (browser) {
-					connectToLobby();
-				}
-			}, 3000);
-		};
-
-		lobbySocket.onerror = (error) => {
-			console.error('Lobby connection error:', error);
-		};
-	}
-
 	onMount(() => {
-		connectToLobby();
-	});
+		ws.connect();
 
-	onDestroy(() => {
-		if (lobbySocket) {
-			lobbySocket.close();
-			lobbySocket = null;
-		}
+		return () => {
+			ws.cleanup();
+		};
 	});
 </script>
 
@@ -119,7 +84,7 @@
 				<h3>Poll Created! 🎉</h3>
 				<div class="room-info">
 					<p>Room ID: <strong>{form.pollId}</strong></p>
-					<button class="copy-btn" on:click={() => copyToClipboard(form.pollId)}>
+					<button class="copy-btn" onclick={() => copyToClipboard(form.pollId)}>
 						📋 Copy ID
 					</button>
 					<a href="/{form.pollId}" class="join-btn"> Join Poll → </a>
@@ -143,26 +108,26 @@
 				type="text"
 				placeholder="Enter room ID"
 				bind:value={joinRoomId}
-				on:keydown={(e) => e.key === 'Enter' && joinRoom()}
+				onkeydown={(e) => e.key === 'Enter' && joinRoom()}
 			/>
-			<button class="join-btn" on:click={joinRoom} disabled={!joinRoomId.trim()}>
-				Join Poll
-			</button>
+			<button class="join-btn" onclick={joinRoom} disabled={!joinRoomId.trim()}> Join Poll </button>
 		</div>
 	</div>
 
 	<!-- Active Rooms Section -->
 	<div class="section">
 		<h2>Browse Active Polls</h2>
-		
-		{#if connecting}
+
+		{#if ws.status === 'connecting'}
 			<p class="loading">Connecting to room list...</p>
+		{:else if ws.status === 'error'}
+			<p class="loading error">Connection error - retrying...</p>
 		{:else if activeRooms.length === 0}
 			<p class="no-rooms">No active polls found. Create one above!</p>
 		{:else}
 			<div class="rooms-list">
 				{#each activeRooms as room}
-					<button class="room-card" on:click={() => joinActiveRoom(room.id)}>
+					<button class="room-card" onclick={() => joinActiveRoom(room.id)}>
 						<div class="room-header">
 							<h3 class="room-title">{room.title}</h3>
 							<span class="room-id">{room.id}</span>
@@ -296,6 +261,7 @@
 		font-size: 0.9rem;
 		text-decoration: none;
 		transition: background-color 0.2s;
+		display: inline-block;
 	}
 
 	.join-btn:hover:not(:disabled) {
@@ -349,6 +315,10 @@
 		color: #6b7280;
 		font-style: italic;
 		padding: 2rem;
+	}
+
+	.loading.error {
+		color: #dc2626;
 	}
 
 	.rooms-list {

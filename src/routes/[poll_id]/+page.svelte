@@ -1,73 +1,47 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
-	import { PUBLIC_PARTYKIT_HOST } from '$env/static/public';
 	import type { PageData } from './$types';
-	import type { Poll, Message, VoteMessage, PollUpdateMessage } from '$lib/types';
+	import type { Poll, Message, VoteMessage } from '$lib/types';
+	import { useWebSocket } from '$lib/hooks/useWebSocket.svelte';
 
-	export let data: PageData;
+	let { data }: { data: PageData } = $props();
 
-	let poll: Poll = data.poll;
-	let socket: WebSocket | null = null;
-	let connecting = true;
-	let hasVoted = false;
+	let poll = $state<Poll>(data.poll);
+	let hasVoted = $state(false);
+
+	// Initialize WebSocket hook
+	const ws = useWebSocket<Message, VoteMessage>('main', data.pollId, {
+		onOpen: () => console.log('Connected to PartyKit'),
+		onClose: () => console.log('Disconnected from PartyKit')
+	});
 
 	// Calculate total votes
-	$: totalVotes = Object.values(poll.votes).reduce((sum, count) => sum + count, 0);
+	const totalVotes = $derived(Object.values(poll.votes).reduce((sum, count) => sum + count, 0));
 
 	// Calculate percentages for each option
-	$: optionStats = poll.options.map((option) => ({
-		option,
-		votes: poll.votes[option] || 0,
-		percentage: totalVotes > 0 ? ((poll.votes[option] || 0) / totalVotes) * 100 : 0
-	}));
+	const optionStats = $derived(
+		poll.options.map((option) => ({
+			option,
+			votes: poll.votes[option] || 0,
+			percentage: totalVotes > 0 ? ((poll.votes[option] || 0) / totalVotes) * 100 : 0
+		}))
+	);
 
-	function connectToPartyKit() {
-		if (!browser) return;
-
-		const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-		const wsUrl = `${protocol}//${PUBLIC_PARTYKIT_HOST}/parties/main/${data.pollId}`;
-
-		socket = new WebSocket(wsUrl);
-
-		socket.onopen = () => {
-			connecting = false;
-			console.log('Connected to PartyKit');
-		};
-
-		socket.onmessage = (event) => {
-			try {
-				const message: Message = JSON.parse(event.data);
-
-				if (message.type === 'poll-update') {
-					poll = message.poll;
-				}
-			} catch (error) {
-				console.error('Error parsing message:', error);
-			}
-		};
-
-		socket.onclose = () => {
-			console.log('Disconnected from PartyKit');
-			// Attempt to reconnect after a delay
-			setTimeout(connectToPartyKit, 3000);
-		};
-
-		socket.onerror = (error) => {
-			console.error('WebSocket error:', error);
-			connecting = false;
-		};
-	}
+	// Handle incoming messages
+	$effect(() => {
+		if (ws.lastMessage?.type === 'poll-update') {
+			poll = ws.lastMessage.poll;
+		}
+	});
 
 	function vote(option: string) {
-		if (!socket || socket.readyState !== WebSocket.OPEN || hasVoted) return;
+		if (!ws.isConnected || hasVoted) return;
 
-		const message: VoteMessage = {
+		ws.send({
 			type: 'vote',
 			option
-		};
-
-		socket.send(JSON.stringify(message));
+		});
 		hasVoted = true;
 
 		// Store vote in localStorage to prevent multiple votes
@@ -84,18 +58,16 @@
 	}
 
 	onMount(() => {
-		connectToPartyKit();
+		ws.connect();
 
 		// Check if user has already voted
 		if (browser) {
 			hasVoted = localStorage.getItem(`voted_${data.pollId}`) === 'true';
 		}
-	});
 
-	onDestroy(() => {
-		if (socket) {
-			socket.close();
-		}
+		return () => {
+			ws.cleanup();
+		};
 	});
 </script>
 
@@ -106,11 +78,13 @@
 <main class="container">
 	<div class="poll-header">
 		<h1>{poll.title}</h1>
-		<button class="share-btn" on:click={copyPollLink}> 📋 Copy Link </button>
+		<button class="share-btn" onclick={copyPollLink}> 📋 Copy Link </button>
 	</div>
 
-	{#if connecting}
+	{#if ws.status === 'connecting'}
 		<div class="status">Connecting to live updates...</div>
+	{:else if ws.status === 'error'}
+		<div class="status error">Connection error - retrying...</div>
 	{/if}
 
 	<div class="poll-stats">
@@ -126,8 +100,8 @@
 				<button
 					class="option-btn"
 					class:voted={hasVoted}
-					on:click={() => vote(option)}
-					disabled={hasVoted || connecting}
+					onclick={() => vote(option)}
+					disabled={hasVoted || ws.status !== 'connected'}
 				>
 					<div class="option-content">
 						<span class="option-text">{option}</span>
@@ -145,7 +119,7 @@
 		{/each}
 	</div>
 
-	{#if !hasVoted && !connecting}
+	{#if !hasVoted && ws.status === 'connected'}
 		<p class="instruction">Click an option to vote!</p>
 	{/if}
 
@@ -198,6 +172,10 @@
 		color: #6b7280;
 		margin-bottom: 1rem;
 		font-style: italic;
+	}
+
+	.status.error {
+		color: #dc2626;
 	}
 
 	.poll-stats {
@@ -323,6 +301,7 @@
 		border-radius: 8px;
 		font-weight: 500;
 		transition: background-color 0.2s;
+		display: inline-block;
 	}
 
 	.create-new-btn:hover {
