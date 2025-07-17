@@ -1,5 +1,6 @@
 import { browser } from '$app/environment';
 import { PUBLIC_PARTYKIT_HOST } from '$env/static/public';
+import { MessageSchema } from '$shared/schemas/index.js';
 
 export type WebSocketStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
 
@@ -55,10 +56,11 @@ export function useWebSocket<TMessage = any, TSendMessage = any>(
 
 			socket.onmessage = (event) => {
 				try {
-					const message: TMessage = JSON.parse(event.data);
-					lastMessage = message;
+					const rawMessage = JSON.parse(event.data);
+					const validatedMessage = MessageSchema.parse(rawMessage);
+					lastMessage = validatedMessage as TMessage;
 				} catch (error) {
-					console.error('Error parsing WebSocket message:', error);
+					console.error('Error parsing or validating WebSocket message:', error);
 				}
 			};
 

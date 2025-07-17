@@ -1,6 +1,7 @@
-import { redirect, fail } from '@sveltejs/kit';
+import { fail } from '@sveltejs/kit';
 import type { Actions } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
+import { CreatePollResponseSchema } from '$shared/schemas/index.js';
 
 // Fallback to default development URL if not set
 const PARTYKIT_URL = env.PARTYKIT_URL || 'http://127.0.0.1:1999';
@@ -29,13 +30,29 @@ export const actions: Actions = {
 			});
 		}
 
-		// Get the poll data from the response
-		const pollData = await response.json();
-		console.log(`Poll created with ID: ${pollData.id}`);
+		try {
+			// Validate the response data
+			const rawData = await response.json();
+			const validatedData = CreatePollResponseSchema.parse(rawData);
 
-		// Return the poll ID to display in the frontend
-		return {
-			pollId: pollData.id
-		};
+			if (!validatedData.success || !validatedData.poll) {
+				console.error(`Poll creation failed: ${validatedData.error}`);
+				return fail(500, {
+					error: 'Failed to create poll. Please try again.'
+				});
+			}
+
+			console.log(`Poll created with ID: ${validatedData.poll.id}`);
+
+			// Return the poll ID to display in the frontend
+			return {
+				pollId: validatedData.poll.id
+			};
+		} catch (error) {
+			console.error('Error validating poll creation response:', error);
+			return fail(500, {
+				error: 'Failed to create poll. Please try again.'
+			});
+		}
 	}
 };

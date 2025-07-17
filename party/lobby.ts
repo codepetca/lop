@@ -4,8 +4,12 @@ import {
 	RoomListRequestMessage,
 	RoomListMessage,
 	MessageSchema,
-	Poll
-} from './types';
+	Poll,
+	RegisterRoomRequestSchema,
+	RegisterRoomResponseSchema,
+	CreatePollResponseSchema,
+	ApiErrorResponseSchema
+} from '../shared/schemas/index.js';
 
 export default class LobbyServer implements Party.Server {
 	constructor(readonly room: Party.Room) {}
@@ -82,10 +86,20 @@ export default class LobbyServer implements Party.Server {
 			(url.pathname === '/register' || url.pathname.endsWith('/register'))
 		) {
 			try {
-				const roomData = (await req.json()) as RoomMetadata;
+				const requestData = await req.json();
+				const roomData = RegisterRoomRequestSchema.parse(requestData);
+
+				// Create room metadata
+				const roomMetadata: RoomMetadata = {
+					id: roomData.id,
+					title: roomData.title,
+					createdAt: new Date().toISOString(),
+					activeConnections: 0,
+					totalVotes: 0
+				};
 
 				// Add room to registry
-				this.roomRegistry.set(roomData.id, roomData);
+				this.roomRegistry.set(roomData.id, roomMetadata);
 
 				// Save registry to storage
 				await this.saveRegistry();
@@ -95,10 +109,20 @@ export default class LobbyServer implements Party.Server {
 
 				console.log(`Registered room: ${roomData.id} - ${roomData.title}`);
 
-				return new Response('Room registered', { status: 200 });
+				const response = RegisterRoomResponseSchema.parse({ success: true });
+				return new Response(JSON.stringify(response), {
+					headers: { 'Content-Type': 'application/json' }
+				});
 			} catch (error) {
 				console.error('Error registering room:', error);
-				return new Response('Failed to register room', { status: 500 });
+				const errorResponse = ApiErrorResponseSchema.parse({
+					error: 'registration_failed',
+					message: 'Failed to register room'
+				});
+				return new Response(JSON.stringify(errorResponse), {
+					status: 500,
+					headers: { 'Content-Type': 'application/json' }
+				});
 			}
 		}
 
@@ -110,10 +134,10 @@ export default class LobbyServer implements Party.Server {
 
 			if (roomId && this.roomRegistry.has(roomId)) {
 				this.roomRegistry.delete(roomId);
-				
+
 				// Save registry to storage
 				await this.saveRegistry();
-				
+
 				this.broadcastRoomList();
 
 				console.log(`Unregistered room: ${roomId}`);
@@ -130,7 +154,7 @@ export default class LobbyServer implements Party.Server {
 				// Consume the request body even though we don't need it
 				// This prevents PartyKit from trying to read it after response is sent
 				await req.json().catch(() => ({}));
-				
+
 				// Generate a random poll ID
 				const pollId = Math.random().toString(36).substr(2, 9);
 				console.log(`Creating new poll with ID: ${pollId}`);
@@ -150,10 +174,35 @@ export default class LobbyServer implements Party.Server {
 
 				if (!pollResponse.ok) {
 					console.error('Failed to create poll, status:', pollResponse.status);
-					return new Response('Failed to create poll', { status: 500 });
+					const errorResponse = CreatePollResponseSchema.parse({
+						success: false,
+						error: 'poll_creation_failed'
+					});
+					return new Response(JSON.stringify(errorResponse), {
+						status: 500,
+						headers: { 'Content-Type': 'application/json' }
+					});
 				}
 
-				const poll = (await pollResponse.json()) as Poll;
+				const pollResponseData = await pollResponse.json();
+				console.log('Poll response data:', JSON.stringify(pollResponseData, null, 2));
+				
+				const validatedPollResponse = CreatePollResponseSchema.parse(pollResponseData);
+				console.log('Validated poll response:', JSON.stringify(validatedPollResponse, null, 2));
+
+				if (!validatedPollResponse.success || !validatedPollResponse.poll) {
+					console.error('Poll creation failed:', validatedPollResponse.error);
+					const errorResponse = CreatePollResponseSchema.parse({
+						success: false,
+						error: 'poll_creation_failed'
+					});
+					return new Response(JSON.stringify(errorResponse), {
+						status: 500,
+						headers: { 'Content-Type': 'application/json' }
+					});
+				}
+
+				const poll = validatedPollResponse.poll;
 				console.log(`Poll created successfully: ${poll.title}`);
 
 				// Register the poll room with actual poll metadata
@@ -167,19 +216,30 @@ export default class LobbyServer implements Party.Server {
 
 				// Add to registry
 				this.roomRegistry.set(pollId, roomMetadata);
-				
+
 				// Save registry to storage
 				await this.saveRegistry();
-				
+
 				this.broadcastRoomList();
 
-				// Return the poll data from the actual poll server
-				return new Response(JSON.stringify(poll), {
+				// Return validated response
+				const response = CreatePollResponseSchema.parse({
+					success: true,
+					poll: poll
+				});
+				return new Response(JSON.stringify(response), {
 					headers: { 'Content-Type': 'application/json' }
 				});
 			} catch (error) {
 				console.error('Error creating poll:', error);
-				return new Response('Failed to create poll', { status: 500 });
+				const errorResponse = CreatePollResponseSchema.parse({
+					success: false,
+					error: 'poll_creation_failed'
+				});
+				return new Response(JSON.stringify(errorResponse), {
+					status: 500,
+					headers: { 'Content-Type': 'application/json' }
+				});
 			}
 		}
 

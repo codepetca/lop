@@ -2,6 +2,7 @@ import type { PageServerLoad } from './$types';
 import { error } from '@sveltejs/kit';
 import type { Poll } from '$lib/types';
 import { env } from '$env/dynamic/private';
+import { GetPollResponseSchema } from '$shared/schemas/index.js';
 
 // Fallback to default development URL if not set
 const PARTYKIT_URL = env.PARTYKIT_URL || 'http://127.0.0.1:1999';
@@ -19,10 +20,15 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
 			throw error(500, 'Failed to load poll');
 		}
 
-		const poll: Poll = await response.json();
+		const rawData = await response.json();
+		const validatedData = GetPollResponseSchema.parse(rawData);
+
+		if (!validatedData.poll) {
+			throw error(404, 'Poll not found');
+		}
 
 		return {
-			poll,
+			poll: validatedData.poll,
 			pollId
 		};
 	} catch (err) {

@@ -1,12 +1,5 @@
 import { z } from 'zod';
-
-// Poll schema
-export const PollSchema = z.object({
-	id: z.string(),
-	title: z.string(),
-	options: z.array(z.string()).min(2),
-	votes: z.record(z.string(), z.number())
-});
+import { PollSchema } from './poll.js';
 
 // Vote message schema
 export const VoteMessageSchema = z.object({
@@ -49,7 +42,6 @@ export const MessageSchema = z.discriminatedUnion('type', [
 ]);
 
 // Export TypeScript types inferred from schemas
-export type Poll = z.infer<typeof PollSchema>;
 export type VoteMessage = z.infer<typeof VoteMessageSchema>;
 export type PollUpdateMessage = z.infer<typeof PollUpdateMessageSchema>;
 export type RoomMetadata = z.infer<typeof RoomMetadataSchema>;

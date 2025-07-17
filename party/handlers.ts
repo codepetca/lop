@@ -1,5 +1,12 @@
 import type * as Party from 'partykit/server';
-import { Poll, VoteMessage, PollUpdateMessage, PollSchema, RoomMetadata } from './types';
+import {
+	Poll,
+	VoteMessage,
+	PollUpdateMessage,
+	PollSchema,
+	RoomMetadata,
+	RegisterRoomRequestSchema
+} from '../shared/schemas/index.js';
 import { getRandomQuestion } from './questions';
 import { initializePollVotes } from './utils';
 
@@ -95,13 +102,10 @@ export async function handleCreatePollServerGeneratedNoRegistration(
  */
 export async function registerRoomWithLobby(poll: Poll): Promise<void> {
 	try {
-		const roomMetadata: RoomMetadata = {
+		const roomData = RegisterRoomRequestSchema.parse({
 			id: poll.id,
-			title: poll.title,
-			createdAt: new Date().toISOString(),
-			activeConnections: 0,
-			totalVotes: 0
-		};
+			title: poll.title
+		});
 
 		// Get lobby URL from environment or use default for development
 		const host = process.env.PARTYKIT_HOST || 'http://127.0.0.1:1999';
@@ -112,7 +116,7 @@ export async function registerRoomWithLobby(poll: Poll): Promise<void> {
 			headers: {
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify(roomMetadata)
+			body: JSON.stringify(roomData)
 		});
 
 		if (response.ok) {

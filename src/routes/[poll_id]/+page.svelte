@@ -17,11 +17,13 @@
 	});
 
 	// Calculate total votes
-	const totalVotes = $derived(Object.values(poll.votes).reduce((sum, count) => sum + count, 0));
+	const totalVotes = $derived(
+		Object.values(poll.votes).reduce((sum: number, count: number) => sum + count, 0)
+	);
 
 	// Calculate percentages for each option
 	const optionStats = $derived(
-		poll.options.map((option) => ({
+		poll.options.map((option: string) => ({
 			option,
 			votes: poll.votes[option] || 0,
 			percentage: totalVotes > 0 ? ((poll.votes[option] || 0) / totalVotes) * 100 : 0

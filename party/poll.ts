@@ -1,5 +1,11 @@
 import type * as Party from 'partykit/server';
-import { Poll, PollUpdateMessage, MessageSchema } from './types';
+import {
+	Poll,
+	PollUpdateMessage,
+	MessageSchema,
+	GetPollResponseSchema,
+	CreatePollResponseSchema
+} from '../shared/schemas/index.js';
 import {
 	handleVote,
 	handleCreatePollServerGenerated,
@@ -61,17 +67,41 @@ export default class PollServer implements Party.Server {
 				const poll = await handleCreatePollServerGeneratedNoRegistration(this.room);
 				this.poll = poll;
 
-				return new Response(JSON.stringify(this.poll), {
+				console.log('Created poll:', JSON.stringify(poll, null, 2));
+
+				const response = CreatePollResponseSchema.parse({
+					success: true,
+					poll: poll
+				});
+				
+				console.log('Response after validation:', JSON.stringify(response, null, 2));
+				
+				return new Response(JSON.stringify(response), {
 					headers: { 'Content-Type': 'application/json' }
 				});
 			} catch (error) {
 				console.error('Error creating poll:', error);
-				return new Response('Failed to create poll', { status: 500 });
+				if (error instanceof Error) {
+					console.error('Error details:', error.message);
+				}
+				const errorResponse = CreatePollResponseSchema.parse({
+					success: false,
+					error: 'poll_creation_failed'
+				});
+				return new Response(JSON.stringify(errorResponse), {
+					status: 500,
+					headers: { 'Content-Type': 'application/json' }
+				});
 			}
 		}
 
 		if (req.method === 'GET') {
-			return handleGetPoll(this.poll);
+			const response = GetPollResponseSchema.parse({
+				poll: this.poll
+			});
+			return new Response(JSON.stringify(response), {
+				headers: { 'Content-Type': 'application/json' }
+			});
 		}
 
 		return new Response('Method not allowed', { status: 405 });
