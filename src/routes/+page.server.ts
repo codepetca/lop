@@ -86,8 +86,7 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const storyId = formData.get('storyId') as string;
 		const title = formData.get('title') as string;
-		const maxPlayers = parseInt(formData.get('maxPlayers') as string) || 20;
-		const requiresVoting = formData.get('requiresVoting') === 'on';
+		const maxPlayers = parseInt(formData.get('maxPlayers') as string) || 6;
 
 		if (!storyId) {
 			return fail(400, {
@@ -107,8 +106,7 @@ export const actions: Actions = {
 			body: JSON.stringify({
 				storyId,
 				title: title || undefined,
-				maxPlayers,
-				requiresVoting
+				maxPlayers
 			})
 		});
 

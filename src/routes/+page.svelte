@@ -15,8 +15,7 @@
 	let activeGames = $state<GameMetadata[]>([]);
 	let selectedStoryId = $state('');
 	let gameTitle = $state('');
-	let maxPlayers = $state(20);
-	let requiresVoting = $state(true);
+	let maxPlayers = $state(6);
 	let currentTab = $state<'polls' | 'games'>('games');
 
 	// Initialize WebSocket hook for lobby (lobby is main server now)
@@ -137,12 +136,6 @@
 							max="50"
 							bind:value={maxPlayers}
 						/>
-					</div>
-					<div class="form-group">
-						<label>
-							<input type="checkbox" name="requiresVoting" bind:checked={requiresVoting} />
-							Multiplayer voting
-						</label>
 					</div>
 				</div>
 

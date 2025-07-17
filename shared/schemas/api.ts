@@ -43,7 +43,7 @@ export const ApiErrorResponseSchema = z.object({
 export const CreateGameRequestSchema = z.object({
 	title: z.string().optional(), // custom title, falls back to story title
 	storyId: z.string(), // which story template to use
-	maxPlayers: z.number().min(1).max(50).default(20),
+	maxPlayers: z.number().min(1).max(50).default(6),
 	requiresVoting: z.boolean().default(true),
 	settings: z
 		.object({

@@ -196,8 +196,8 @@ export async function handleCreateGame(
 		votingOptions: startingScene.choices,
 		votes: {},
 		votingEndsAt: null,
-		maxPlayers: request.maxPlayers || 20,
-		requiresVoting: request.requiresVoting !== undefined ? request.requiresVoting : true,
+		maxPlayers: request.maxPlayers || 6,
+		requiresVoting: true,
 		settings: {
 			votingTimeLimit: request.settings?.votingTimeLimit || 60,
 			allowSpectators:
