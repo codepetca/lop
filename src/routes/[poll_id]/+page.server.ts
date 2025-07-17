@@ -10,7 +10,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
 	const pollId = params.poll_id;
 
 	try {
-		const response = await fetch(`${PARTYKIT_URL}/parties/main/${pollId}`);
+		const response = await fetch(`${PARTYKIT_URL}/parties/poll/${pollId}`);
 
 		if (!response.ok) {
 			if (response.status === 404) {

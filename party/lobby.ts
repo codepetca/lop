@@ -1,5 +1,13 @@
 import type * as Party from 'partykit/server';
-import { RoomMetadata, RoomListRequestMessage, RoomListMessage, MessageSchema } from './types';
+import {
+	RoomMetadata,
+	RoomListRequestMessage,
+	RoomListMessage,
+	MessageSchema,
+	Poll
+} from './types';
+import { getRandomQuestion } from './questions';
+import { initializePollVotes } from './utils';
 
 export default class LobbyServer implements Party.Server {
 	constructor(readonly room: Party.Room) {}
@@ -94,6 +102,50 @@ export default class LobbyServer implements Party.Server {
 			}
 
 			return new Response('Room not found', { status: 404 });
+		}
+
+		// Handle poll creation requests
+		if (req.method === 'POST' && url.pathname.endsWith('/create-poll')) {
+			try {
+				// Generate a random poll ID
+				const pollId = Math.random().toString(36).substr(2, 9);
+				console.log(`Creating new poll with ID: ${pollId}`);
+
+				// Get a random question from the bank
+				const question = getRandomQuestion();
+
+				// Create the poll data
+				const poll: Poll = {
+					id: pollId,
+					title: question.title,
+					options: question.options,
+					votes: initializePollVotes(question.options)
+				};
+
+				console.log(`Poll created successfully: ${poll.title}`);
+
+				// Register the poll room
+				const roomMetadata: RoomMetadata = {
+					id: pollId,
+					title: poll.title,
+					createdAt: new Date().toISOString(),
+					activeConnections: 0,
+					totalVotes: 0
+				};
+
+				// Add to registry
+				this.roomRegistry.set(pollId, roomMetadata);
+				this.broadcastRoomList();
+
+				// Return the poll data
+				// The poll server will create its own poll when first accessed
+				return new Response(JSON.stringify(poll), {
+					headers: { 'Content-Type': 'application/json' }
+				});
+			} catch (error) {
+				console.error('Error creating poll:', error);
+				return new Response('Failed to create poll', { status: 500 });
+			}
 		}
 
 		return new Response('Method not allowed', { status: 405 });

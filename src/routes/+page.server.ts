@@ -7,14 +7,11 @@ const PARTYKIT_URL = env.PARTYKIT_URL || 'http://127.0.0.1:1999';
 
 export const actions: Actions = {
 	createPoll: async ({ request }) => {
-		// Generate a random poll ID
-		const pollId = Math.random().toString(36).substr(2, 9);
-
-		console.log(`Creating server-generated poll with ID: ${pollId}`);
+		console.log(`Creating server-generated poll via lobby`);
 		console.log(`PartyKit URL: ${PARTYKIT_URL}`);
 
-		// Create server-generated poll on PartyKit server
-		const response = await fetch(`${PARTYKIT_URL}/parties/main/${pollId}`, {
+		// Create poll through the lobby server (lobby is main, not a party)
+		const response = await fetch(`${PARTYKIT_URL}/parties/main/create-poll`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
@@ -32,9 +29,13 @@ export const actions: Actions = {
 			});
 		}
 
+		// Get the poll data from the response
+		const pollData = await response.json();
+		console.log(`Poll created with ID: ${pollData.id}`);
+
 		// Return the poll ID to display in the frontend
 		return {
-			pollId: pollId
+			pollId: pollData.id
 		};
 	}
 };

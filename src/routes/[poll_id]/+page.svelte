@@ -11,7 +11,7 @@
 	let hasVoted = $state(false);
 
 	// Initialize WebSocket hook
-	const ws = useWebSocket<Message, VoteMessage>('main', data.pollId, {
+	const ws = useWebSocket<Message, VoteMessage>('poll', data.pollId, {
 		onOpen: () => console.log('Connected to PartyKit'),
 		onClose: () => console.log('Disconnected from PartyKit')
 	});

@@ -52,11 +52,20 @@ export default class PollServer implements Party.Server {
 
 		if (req.method === 'POST') {
 			try {
-				// All POST requests now create server-generated polls
-				const poll = await handleCreatePollServerGenerated(this.room);
-				this.poll = poll;
+				// Check if poll data is provided in the request body
+				const body = await req.text();
+				if (body) {
+					// Poll data provided by lobby
+					const pollData = JSON.parse(body) as Poll;
+					this.poll = pollData;
+					await this.room.storage.put('poll', this.poll);
+				} else {
+					// Create server-generated poll
+					const poll = await handleCreatePollServerGenerated(this.room);
+					this.poll = poll;
+				}
 
-				return new Response(JSON.stringify(poll), {
+				return new Response(JSON.stringify(this.poll), {
 					headers: { 'Content-Type': 'application/json' }
 				});
 			} catch (error) {
@@ -66,6 +75,11 @@ export default class PollServer implements Party.Server {
 		}
 
 		if (req.method === 'GET') {
+			// Auto-create poll if it doesn't exist (for polls created by lobby)
+			if (!this.poll) {
+				const poll = await handleCreatePollServerGenerated(this.room);
+				this.poll = poll;
+			}
 			return handleGetPoll(this.poll);
 		}
 

@@ -12,8 +12,8 @@
 	let joinRoomId = $state('');
 	let activeRooms = $state<RoomMetadata[]>([]);
 
-	// Initialize WebSocket hook for lobby
-	const ws = useWebSocket<Message, RoomListRequestMessage>('lobby', 'main', {
+	// Initialize WebSocket hook for lobby (lobby is main server now)
+	const ws = useWebSocket<Message, RoomListRequestMessage>('main', 'main', {
 		onOpen: () => {
 			console.log('Connected to lobby');
 			// Request current room list when connected

@@ -77,7 +77,7 @@ export async function registerRoomWithLobby(poll: Poll): Promise<void> {
 
 		// Get lobby URL from environment or use default for development
 		const host = process.env.PARTYKIT_HOST || 'http://127.0.0.1:1999';
-		const lobbyUrl = `${host}/parties/lobby/main/register`;
+		const lobbyUrl = `${host}/register`;
 
 		const response = await fetch(lobbyUrl, {
 			method: 'POST',
