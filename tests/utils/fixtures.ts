@@ -129,6 +129,7 @@ export const createTestCharacterState = (
 ): CharacterState => ({
 	id: 'player-1',
 	name: 'Alice',
+	joinedAt: new Date().toISOString(),
 	stats: { health: 100, coins: 10 },
 	inventory: ['torch'],
 	choices: [],

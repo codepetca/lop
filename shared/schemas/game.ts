@@ -1,14 +1,12 @@
 import { z } from 'zod';
+import { GamePlayerSchema } from './player';
 
-// Character state schema - tracks player progression
-export const CharacterStateSchema = z.object({
-	id: z.string(),
-	name: z.string().min(1),
-	stats: z.record(z.string(), z.number()).default({}), // e.g., { health: 100, coins: 50 }
-	inventory: z.array(z.string()).default([]), // item IDs
-	choices: z.array(z.string()).default([]), // history of choice IDs made
-	currentScene: z.string() // current scene ID
-});
+/**
+ * Game Schema System
+ * 
+ * Defines schemas for story-based multiplayer games with voting mechanics.
+ * Players progress through scenes by making collective choices.
+ */
 
 // Story choice schema - individual choice option
 export const StoryChoiceSchema = z.object({
@@ -54,7 +52,7 @@ export const GameSessionSchema = z.object({
 	currentScene: z.string(),
 	isActive: z.boolean().default(true),
 	isCompleted: z.boolean().default(false),
-	players: z.array(CharacterStateSchema).default([]),
+	players: z.array(GamePlayerSchema).default([]),
 	votingOptions: z.array(StoryChoiceSchema).default([]), // current choices being voted on
 	votes: z.record(z.string(), z.number()).default({}), // choiceId -> vote count
 	votingEndsAt: z.string().nullable(), // ISO timestamp
@@ -99,10 +97,12 @@ export const VoteResultSchema = z.object({
 });
 
 // Export TypeScript types inferred from schemas
-export type CharacterState = z.infer<typeof CharacterStateSchema>;
+export type GameSession = z.infer<typeof GameSessionSchema>;
+export type GameMetadata = z.infer<typeof GameMetadataSchema>;
 export type StoryChoice = z.infer<typeof StoryChoiceSchema>;
 export type StoryScene = z.infer<typeof StorySceneSchema>;
 export type StoryTemplate = z.infer<typeof StoryTemplateSchema>;
-export type GameSession = z.infer<typeof GameSessionSchema>;
-export type GameMetadata = z.infer<typeof GameMetadataSchema>;
 export type VoteResult = z.infer<typeof VoteResultSchema>;
+
+// Re-export player types for convenience
+export type { GamePlayer, CharacterState } from './player';

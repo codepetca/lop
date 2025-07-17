@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import {
-	CharacterStateSchema,
 	StoryChoiceSchema,
 	StorySceneSchema,
 	StoryTemplateSchema,
@@ -8,6 +7,7 @@ import {
 	GameMetadataSchema,
 	VoteResultSchema
 } from '../../shared/schemas/game';
+import { GamePlayerSchema as CharacterStateSchema } from '../../shared/schemas/player';
 import { StoryGenre, StoryDifficulty } from '../../shared/schemas/story';
 import {
 	createTestCharacterState,

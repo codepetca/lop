@@ -1,44 +1,55 @@
 import { z } from 'zod';
 import { PollSchema } from './poll';
+import { PollPlayerSchema, GamePlayerSchema } from './player';
 import {
 	GameSessionSchema,
 	GameMetadataSchema,
 	StoryChoiceSchema,
-	CharacterStateSchema,
 	VoteResultSchema
 } from './game';
 
-// Vote message schema
+/**
+ * WebSocket Message Schema System
+ * 
+ * Defines all WebSocket message types used for real-time communication.
+ * Messages are organized by domain: polls, games, and lobby management.
+ */
+
+// ===========================================
+// POLL MESSAGES
+// ===========================================
+
+/** Vote for a poll option (requires player to be joined to poll) */
 export const VoteMessageSchema = z.object({
 	type: z.literal('vote'),
 	option: z.string(),
 	playerId: z.string().uuid()
 });
 
-// Player join poll message schema
+/** Request to join a poll (sent by client) */
 export const PlayerJoinPollMessageSchema = z.object({
 	type: z.literal('player-join-poll'),
-	playerName: z.string().min(1).optional(), // Optional - will generate if not provided
+	playerName: z.string().min(1).max(50).optional(), // Optional - will generate if not provided
 	playerId: z.string().uuid().optional() // Optional - will generate if not provided
 });
 
-// Player joined poll message schema (broadcast to all)
+/** Broadcast when a player joins a poll */
 export const PlayerJoinedPollMessageSchema = z.object({
 	type: z.literal('player-joined-poll'),
-	player: z.object({
-		id: z.string().uuid(),
-		name: z.string(),
-		joinedAt: z.string()
-	})
+	player: PollPlayerSchema
 });
 
-// Poll update message schema
+/** Broadcast poll state updates to all connected clients */
 export const PollUpdateMessageSchema = z.object({
 	type: z.literal('poll-update'),
 	poll: PollSchema
 });
 
-// Room metadata schema for lobby (legacy poll support)
+// ===========================================
+// LOBBY MANAGEMENT MESSAGES
+// ===========================================
+
+/** Room metadata for lobby listings (legacy poll support) */
 export const RoomMetadataSchema = z.object({
 	id: z.string(),
 	title: z.string(),
@@ -47,43 +58,65 @@ export const RoomMetadataSchema = z.object({
 	totalVotes: z.number().default(0)
 });
 
-// Game-specific message schemas
+/** Request list of available rooms/polls */
+export const RoomListRequestMessageSchema = z.object({
+	type: z.literal('room-list-request')
+});
+
+/** Response with list of available rooms/polls */
+export const RoomListMessageSchema = z.object({
+	type: z.literal('room-list'),
+	rooms: z.array(RoomMetadataSchema)
+});
+
+// ===========================================
+// GAME MESSAGES
+// ===========================================
+
+/** Vote for a choice in a story game */
 export const GameChoiceMessageSchema = z.object({
 	type: z.literal('game-choice'),
 	choiceId: z.string(),
-	playerId: z.string().optional() // for player identification
+	playerId: z.string().uuid().optional() // for player identification
 });
 
+/** Broadcast game state updates to all connected clients */
 export const GameUpdateMessageSchema = z.object({
 	type: z.literal('game-update'),
 	game: GameSessionSchema
 });
 
+/** Request list of available games */
 export const GameListRequestMessageSchema = z.object({
 	type: z.literal('game-list-request')
 });
 
+/** Response with list of available games */
 export const GameListMessageSchema = z.object({
 	type: z.literal('game-list'),
 	games: z.array(GameMetadataSchema)
 });
 
+/** Request to join a game (sent by client) */
 export const PlayerJoinMessageSchema = z.object({
 	type: z.literal('player-join'),
-	playerName: z.string().min(1),
-	playerId: z.string().optional()
+	playerName: z.string().min(1).max(50),
+	playerId: z.string().uuid().optional()
 });
 
+/** Broadcast when a player joins a game */
 export const PlayerJoinedMessageSchema = z.object({
 	type: z.literal('player-joined'),
-	player: CharacterStateSchema
+	player: GamePlayerSchema
 });
 
+/** Broadcast when a player leaves a game */
 export const PlayerLeftMessageSchema = z.object({
 	type: z.literal('player-left'),
-	playerId: z.string()
+	playerId: z.string().uuid()
 });
 
+/** Broadcast when voting begins for story choices */
 export const VotingStartedMessageSchema = z.object({
 	type: z.literal('voting-started'),
 	choices: z.array(StoryChoiceSchema),
@@ -91,11 +124,13 @@ export const VotingStartedMessageSchema = z.object({
 	endsAt: z.string() // ISO timestamp
 });
 
+/** Broadcast when voting ends with results */
 export const VotingEndedMessageSchema = z.object({
 	type: z.literal('voting-ended'),
 	result: VoteResultSchema
 });
 
+/** Broadcast when transitioning to a new story scene */
 export const SceneTransitionMessageSchema = z.object({
 	type: z.literal('scene-transition'),
 	currentScene: z.string(),
@@ -104,26 +139,17 @@ export const SceneTransitionMessageSchema = z.object({
 	isEnding: z.boolean().default(false)
 });
 
+/** Broadcast when a game is completed */
 export const GameCompletedMessageSchema = z.object({
 	type: z.literal('game-completed'),
 	finalStats: z.record(z.string(), z.number()).default({})
 });
 
+/** Broadcast when a game error occurs */
 export const GameErrorMessageSchema = z.object({
 	type: z.literal('game-error'),
 	error: z.string(),
 	message: z.string().optional()
-});
-
-// Room list request message schema
-export const RoomListRequestMessageSchema = z.object({
-	type: z.literal('room-list-request')
-});
-
-// Room list message schema
-export const RoomListMessageSchema = z.object({
-	type: z.literal('room-list'),
-	rooms: z.array(RoomMetadataSchema)
 });
 
 // Union of all WebSocket message types
