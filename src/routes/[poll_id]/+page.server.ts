@@ -2,7 +2,7 @@ import type { PageServerLoad } from './$types';
 import { error } from '@sveltejs/kit';
 import type { Poll } from '$lib/types';
 import { env } from '$env/dynamic/private';
-import { GetPollResponseSchema } from '$shared/schemas/index.js';
+import { GetPollResponseSchema } from '$shared/schemas/index';
 
 // Fallback to default development URL if not set
 const PARTYKIT_URL = env.PARTYKIT_URL || 'http://127.0.0.1:1999';

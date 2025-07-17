@@ -1,7 +1,7 @@
 import { fail } from '@sveltejs/kit';
 import type { Actions } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
-import { CreatePollResponseSchema } from '$shared/schemas/index.js';
+import { CreatePollResponseSchema } from '$shared/schemas/index';
 
 // Fallback to default development URL if not set
 const PARTYKIT_URL = env.PARTYKIT_URL || 'http://127.0.0.1:1999';

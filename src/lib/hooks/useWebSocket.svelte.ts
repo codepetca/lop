@@ -1,6 +1,6 @@
 import { browser } from '$app/environment';
 import { PUBLIC_PARTYKIT_HOST } from '$env/static/public';
-import { MessageSchema } from '$shared/schemas/index.js';
+import { MessageSchema } from '$shared/schemas/index';
 
 export type WebSocketStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
 

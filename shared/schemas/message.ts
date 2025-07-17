@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PollSchema } from './poll.js';
+import { PollSchema } from './poll';
 
 // Vote message schema
 export const VoteMessageSchema = z.object({

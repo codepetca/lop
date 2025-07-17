@@ -1,99 +1,102 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Real-time polling app: SvelteKit frontend + PartyKit WebSocket backend. Server-generated questions, anonymous voting.
 
-## Project Overview
-
-Lop is a real-time polling application built with SvelteKit and PartyKit. It generates random poll questions server-side and allows users to vote and see live results via WebSocket connections.
-
-## Key Commands
-
-### Development
+## Commands
 
 ```bash
-npm run dev              # Run both SvelteKit and PartyKit dev servers
-npm run dev:sveltekit    # Run only SvelteKit frontend
-npm run dev:party        # Run only PartyKit WebSocket server
-```
+# Development
+npm run dev              # Full stack (SvelteKit + PartyKit)
+npm run dev:sveltekit    # Frontend only
+npm run dev:party        # WebSocket server only
 
-### Build & Deploy
+# Quality
+npm run check            # TypeScript check
+npm run lint             # Prettier check  
+npm run format           # Auto-format
 
-```bash
-npm run build            # Build production SvelteKit app
-npm run preview          # Preview production build
-npm run party:deploy     # Deploy PartyKit server to production
-```
-
-### Code Quality
-
-```bash
-npm run check            # TypeScript type checking
-npm run check:watch      # Type check in watch mode
-npm run lint             # Check code formatting
-npm run format           # Auto-format code with Prettier
+# Production
+npm run build            # Build frontend
+npm run party:deploy     # Deploy PartyKit
 ```
 
 ## Architecture
 
-This is a full-stack real-time application with organized backend modules:
+```
+src/
+├── routes/
+│   ├── +page.svelte           # Home: create/join polls
+│   ├── +page.server.ts        # Poll creation via lobby API
+│   └── [poll_id]/
+│       └── +page.svelte       # Poll voting UI + WebSocket
 
-1. **SvelteKit Frontend** (`src/routes/`)
-   - Server-side rendering with client-side interactivity
-   - Simple poll creation and room joining interface
-   - WebSocket client for real-time updates
+party/                          # PartyKit servers
+├── lobby.ts                   # Main server: room registry, poll creation
+├── poll.ts                    # Poll server: voting, state management
+├── handlers.ts                # Business logic for messages/requests
+├── questions.ts               # 15+ question bank
+└── utils.ts                   # Helper functions
 
-2. **PartyKit Backend** (modular structure)
-   - `party/index.ts` - Main server class and WebSocket handling
-   - `party/handlers.ts` - Request/message handlers with business logic
-   - `party/types.ts` - Zod schemas and TypeScript types
-   - `party/questions.ts` - Question bank with 15+ diverse questions
-   - `party/utils.ts` - Utility functions for poll management
+shared/schemas/                 # Zod schemas (runtime validation)
+├── poll.ts                    # Poll, RoomMetadata types
+├── message.ts                 # WebSocket message types
+└── api.ts                     # HTTP request/response types
 
-3. **Shared Types** (`src/lib/types.ts`)
-   - TypeScript interfaces used by frontend
-   - PartyKit backend uses its own type definitions for better validation
+src/lib/
+├── types.ts                   # Frontend TypeScript types
+└── hooks/useWebSocket.svelte.ts  # WebSocket connection hook
+```
 
 ## Key Patterns
 
+### Type Safety
+- Backend: Zod schemas in `shared/schemas/` for runtime validation
+- Frontend: TypeScript types in `src/lib/types.ts`
+- All messages validated with `MessageSchema.parse()`
+
+### WebSocket Messages
+```typescript
+// Discriminated union in shared/schemas/message.ts
+type Message = 
+  | { type: 'vote'; option: string }
+  | { type: 'poll-update'; poll: Poll }
+  | { type: 'room-list-request' }
+  | { type: 'room-list'; rooms: RoomMetadata[] }
+```
+
 ### Poll Creation Flow
+1. SvelteKit action posts to `/parties/main/main/create-poll`
+2. Lobby generates poll ID, creates poll room via `context.parties.poll.get(pollId)`
+3. Poll server generates random question, saves to storage
+4. Lobby registers room in registry, broadcasts update to WebSocket clients
+5. Returns poll data to frontend
 
-1. User clicks "Create Random Poll" button on homepage (`src/routes/+page.svelte`)
-2. SvelteKit server action (`src/routes/+page.server.ts`) generates poll ID and requests server-generated poll
-3. PartyKit selects random question from question bank and creates poll
-4. Frontend displays poll ID for sharing, user can join poll immediately
+### Environment Variables
+```bash
+# .env
+PARTYKIT_URL=http://127.0.0.1:1999        # Backend URL (private)
+PUBLIC_PARTYKIT_HOST=127.0.0.1:1999       # WebSocket host (public)
+```
 
-### Real-time Voting Flow
+## Code Standards
 
-1. Poll page establishes WebSocket connection to PartyKit room
-2. User clicks vote option, sends WebSocket message
-3. PartyKit updates vote count and broadcasts to all connected clients
-4. All clients receive update and re-render vote counts
+### Imports
+- No extensions needed for TypeScript imports
+- Import types with `import type`
+- Prefer alias paths (`$shared/`, `$lib/`) over relative paths
 
-### Data Storage
+### Frontend (IMPORTANT)
+- **Always use Svelte 5** with runes (`$state`, `$derived`, `$effect`)
+- Never use Svelte 4 patterns (stores, reactive statements)
 
-- Polls are stored in PartyKit room storage (persisted automatically)
-- Each poll has its own room identified by poll ID
-- Questions are server-generated from a curated question bank
-- Vote tracking uses client-side localStorage (not secure, suitable for casual polls)
+### Validation (IMPORTANT)
+- **Always validate with Zod** - use `MessageSchema.parse()` for all external data
+- Return typed error responses with proper status codes
 
-## Important Files
+### State Management
+- PartyKit: Room storage (persistent)
+- Frontend: Svelte 5 runes only
+- Vote tracking: localStorage (prevents duplicate votes per browser)
 
-- `party/index.ts` - Main PartyKit server class
-- `party/handlers.ts` - Request and message handlers
-- `party/types.ts` - Zod schemas and TypeScript types
-- `party/questions.ts` - Question bank with 15+ diverse questions
-- `party/utils.ts` - Utility functions
-- `src/routes/+page.server.ts` - Poll creation server logic
-- `src/routes/+page.svelte` - Home page with poll creation and room joining
-- `src/routes/[poll_id]/+page.svelte` - Poll voting interface with WebSocket client
-- `src/lib/types.ts` - Frontend TypeScript types
-
-## Development Notes
-
-- The app uses PartyKit's development server for local WebSocket testing
-- Both servers must run for full functionality (`npm run dev`)
-- Poll IDs are 9-character random strings generated by SvelteKit
-- Questions are randomly selected from a curated bank of 15+ diverse questions
-- No authentication system - all polls are anonymous
-- Vote prevention is client-side only using localStorage
-- Runtime type safety provided by Zod validation in PartyKit backend
+### Testing
+No test framework configured. Check README or ask user for testing approach.
