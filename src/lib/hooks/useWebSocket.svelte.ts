@@ -61,6 +61,7 @@ export function useWebSocket<TMessage = any, TSendMessage = any>(
 					lastMessage = validatedMessage as TMessage;
 				} catch (error) {
 					console.error('Error parsing or validating WebSocket message:', error);
+					console.error('Raw message that failed validation:', event.data);
 				}
 			};
 

@@ -185,10 +185,7 @@ export default class LobbyServer implements Party.Server {
 				}
 
 				const pollResponseData = await pollResponse.json();
-				console.log('Poll response data:', JSON.stringify(pollResponseData, null, 2));
-				
 				const validatedPollResponse = CreatePollResponseSchema.parse(pollResponseData);
-				console.log('Validated poll response:', JSON.stringify(validatedPollResponse, null, 2));
 
 				if (!validatedPollResponse.success || !validatedPollResponse.poll) {
 					console.error('Poll creation failed:', validatedPollResponse.error);
@@ -203,7 +200,6 @@ export default class LobbyServer implements Party.Server {
 				}
 
 				const poll = validatedPollResponse.poll;
-				console.log(`Poll created successfully: ${poll.title}`);
 
 				// Register the poll room with actual poll metadata
 				const roomMetadata: RoomMetadata = {

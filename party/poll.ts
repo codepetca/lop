@@ -67,23 +67,16 @@ export default class PollServer implements Party.Server {
 				const poll = await handleCreatePollServerGeneratedNoRegistration(this.room);
 				this.poll = poll;
 
-				console.log('Created poll:', JSON.stringify(poll, null, 2));
-
 				const response = CreatePollResponseSchema.parse({
 					success: true,
 					poll: poll
 				});
-				
-				console.log('Response after validation:', JSON.stringify(response, null, 2));
-				
+
 				return new Response(JSON.stringify(response), {
 					headers: { 'Content-Type': 'application/json' }
 				});
 			} catch (error) {
 				console.error('Error creating poll:', error);
-				if (error instanceof Error) {
-					console.error('Error details:', error.message);
-				}
 				const errorResponse = CreatePollResponseSchema.parse({
 					success: false,
 					error: 'poll_creation_failed'
