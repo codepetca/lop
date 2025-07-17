@@ -57,7 +57,7 @@
 </svelte:head>
 
 <main class="container">
-	<h1>EasyPoll</h1>
+	<h1>Lop</h1>
 	<p class="subtitle">Create instant polls with random questions</p>
 
 	<!-- Create New Poll Section -->

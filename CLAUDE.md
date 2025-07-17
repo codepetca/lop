@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-EasyPoll is a real-time polling application built with SvelteKit and PartyKit. It generates random poll questions server-side and allows users to vote and see live results via WebSocket connections.
+Lop is a real-time polling application built with SvelteKit and PartyKit. It generates random poll questions server-side and allows users to vote and see live results via WebSocket connections.
 
 ## Key Commands
 
