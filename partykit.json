@@ -2,7 +2,8 @@
 	"name": "lop",
 	"main": "party/lobby.ts",
 	"parties": {
-		"poll": "party/poll.ts"
+		"poll": "party/poll.ts",
+		"game": "party/game.ts"
 	},
 	"compatibilityDate": "2025-07-15"
 }

@@ -10,7 +10,7 @@ function getPartyKitUrl(): string {
 }
 
 export const load: PageServerLoad = async ({ params, fetch }) => {
-	const pollId = params.poll_id;
+	const pollId = params.id;
 	const partyKitUrl = getPartyKitUrl();
 
 	try {

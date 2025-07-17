@@ -11,11 +11,7 @@ import {
 	RegisterGameRequestSchema,
 	RegisterGameResponseSchema
 } from '../../shared/schemas/api';
-import {
-	createTestGameSession,
-	createTestGameMetadata,
-	testStories
-} from '../utils/fixtures';
+import { createTestGameSession, createTestGameMetadata, testStories } from '../utils/fixtures';
 
 describe('Game API Schema Validation', () => {
 	describe('CreateGameRequestSchema', () => {
@@ -58,7 +54,7 @@ describe('Game API Schema Validation', () => {
 				{ storyId: 'test', maxPlayers: -1 },
 				{ storyId: 'test', maxPlayers: 100 }
 			];
-			invalidRequests.forEach(request => {
+			invalidRequests.forEach((request) => {
 				const result = CreateGameRequestSchema.safeParse(request);
 				expect(result.success).toBe(false);
 			});
@@ -69,7 +65,7 @@ describe('Game API Schema Validation', () => {
 				{ storyId: 'test', settings: { votingTimeLimit: 5 } },
 				{ storyId: 'test', settings: { votingTimeLimit: 500 } }
 			];
-			invalidRequests.forEach(request => {
+			invalidRequests.forEach((request) => {
 				const result = CreateGameRequestSchema.safeParse(request);
 				expect(result.success).toBe(false);
 			});
@@ -386,7 +382,7 @@ describe('Game API Schema Validation', () => {
 
 		it('should require all fields', () => {
 			const requiredFields = ['id', 'title', 'storyTitle', 'genre', 'difficulty'];
-			requiredFields.forEach(field => {
+			requiredFields.forEach((field) => {
 				const invalidRequest = {
 					id: 'game-123',
 					title: 'My Adventure Game',

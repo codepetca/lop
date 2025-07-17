@@ -1,11 +1,11 @@
 import type { Poll } from '$shared/schemas/poll';
 import type { VoteMessage, PollUpdateMessage, RoomMetadata } from '$shared/schemas/message';
-import type { 
-	GameSession, 
-	GameMetadata, 
-	StoryTemplate, 
-	StoryScene, 
-	StoryChoice, 
+import type {
+	GameSession,
+	GameMetadata,
+	StoryTemplate,
+	StoryScene,
+	StoryChoice,
 	CharacterState,
 	VoteResult
 } from '$shared/schemas/game';
@@ -93,7 +93,11 @@ export const createTestStoryScene = (overrides: Partial<StoryScene> = {}): Story
 	description: 'You stand at the entrance of a mysterious forest...',
 	choices: [
 		createTestStoryChoice(),
-		createTestStoryChoice({ id: 'choice-2', text: 'Take the mountain path', nextScene: 'mountain-scene' })
+		createTestStoryChoice({
+			id: 'choice-2',
+			text: 'Take the mountain path',
+			nextScene: 'mountain-scene'
+		})
 	],
 	isEnding: false,
 	requirements: {},
@@ -118,7 +122,9 @@ export const createTestStoryTemplate = (overrides: Partial<StoryTemplate> = {}):
 	...overrides
 });
 
-export const createTestCharacterState = (overrides: Partial<CharacterState> = {}): CharacterState => ({
+export const createTestCharacterState = (
+	overrides: Partial<CharacterState> = {}
+): CharacterState => ({
 	id: 'player-1',
 	name: 'Alice',
 	stats: { health: 100, coins: 10 },

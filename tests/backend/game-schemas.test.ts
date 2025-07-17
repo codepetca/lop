@@ -196,7 +196,7 @@ describe('Game Schema Validation', () => {
 
 		it('should validate all difficulty levels', () => {
 			const difficulties = ['easy', 'medium', 'hard'] as const;
-			difficulties.forEach(difficulty => {
+			difficulties.forEach((difficulty) => {
 				const validTemplate = createTestStoryTemplate({ difficulty });
 				const result = StoryTemplateSchema.safeParse(validTemplate);
 				expect(result.success).toBe(true);
@@ -307,7 +307,7 @@ describe('Game Schema Validation', () => {
 
 		it('should validate all difficulty levels', () => {
 			const difficulties = ['easy', 'medium', 'hard'] as const;
-			difficulties.forEach(difficulty => {
+			difficulties.forEach((difficulty) => {
 				const validMetadata = createTestGameMetadata({ difficulty });
 				const result = GameMetadataSchema.safeParse(validMetadata);
 				expect(result.success).toBe(true);

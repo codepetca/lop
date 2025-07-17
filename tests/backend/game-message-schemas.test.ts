@@ -397,7 +397,10 @@ describe('Game Message Schema Validation', () => {
 		it('should still validate legacy poll messages', () => {
 			const legacyMessages = [
 				{ type: 'vote', option: 'Red' },
-				{ type: 'poll-update', poll: { id: 'test', title: 'Test', options: ['A', 'B'], votes: { A: 0, B: 0 } } },
+				{
+					type: 'poll-update',
+					poll: { id: 'test', title: 'Test', options: ['A', 'B'], votes: { A: 0, B: 0 } }
+				},
 				{ type: 'room-list-request' },
 				{ type: 'room-list', rooms: [] }
 			];

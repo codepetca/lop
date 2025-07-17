@@ -60,15 +60,17 @@ export const GameSessionSchema = z.object({
 	votingEndsAt: z.string().nullable(), // ISO timestamp
 	maxPlayers: z.number().min(1).max(50).default(20),
 	requiresVoting: z.boolean().default(true), // false for single-player
-	settings: z.object({
-		votingTimeLimit: z.number().min(10).max(300).default(60), // seconds
-		allowSpectators: z.boolean().default(true),
-		showVoteCount: z.boolean().default(true)
-	}).default({
-		votingTimeLimit: 60,
-		allowSpectators: true,
-		showVoteCount: true
-	})
+	settings: z
+		.object({
+			votingTimeLimit: z.number().min(10).max(300).default(60), // seconds
+			allowSpectators: z.boolean().default(true),
+			showVoteCount: z.boolean().default(true)
+		})
+		.default({
+			votingTimeLimit: 60,
+			allowSpectators: true,
+			showVoteCount: true
+		})
 });
 
 // Game metadata for lobby listing

@@ -45,11 +45,13 @@ export const CreateGameRequestSchema = z.object({
 	storyId: z.string(), // which story template to use
 	maxPlayers: z.number().min(1).max(50).default(20),
 	requiresVoting: z.boolean().default(true),
-	settings: z.object({
-		votingTimeLimit: z.number().min(10).max(300).default(60),
-		allowSpectators: z.boolean().default(true),
-		showVoteCount: z.boolean().default(true)
-	}).optional()
+	settings: z
+		.object({
+			votingTimeLimit: z.number().min(10).max(300).default(60),
+			allowSpectators: z.boolean().default(true),
+			showVoteCount: z.boolean().default(true)
+		})
+		.optional()
 });
 
 export const CreateGameResponseSchema = z.object({
@@ -74,14 +76,16 @@ export const GetGameListResponseSchema = z.object({
 });
 
 export const GetStoriesResponseSchema = z.object({
-	stories: z.array(z.object({
-		id: z.string(),
-		title: z.string(),
-		description: z.string(),
-		genre: z.string(),
-		difficulty: z.enum(['easy', 'medium', 'hard']),
-		estimatedTime: z.number()
-	}))
+	stories: z.array(
+		z.object({
+			id: z.string(),
+			title: z.string(),
+			description: z.string(),
+			genre: z.string(),
+			difficulty: z.enum(['easy', 'medium', 'hard']),
+			estimatedTime: z.number()
+		})
+	)
 });
 
 export const JoinGameRequestSchema = z.object({

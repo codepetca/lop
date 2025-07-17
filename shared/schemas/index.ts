@@ -2,3 +2,5 @@
 export * from './poll';
 export * from './message';
 export * from './api';
+export * from './game';
+export * from './story';

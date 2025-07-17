@@ -1,6 +1,12 @@
 import { z } from 'zod';
 import { PollSchema } from './poll';
-import { GameSessionSchema, GameMetadataSchema, StoryChoiceSchema, CharacterStateSchema, VoteResultSchema } from './game';
+import {
+	GameSessionSchema,
+	GameMetadataSchema,
+	StoryChoiceSchema,
+	CharacterStateSchema,
+	VoteResultSchema
+} from './game';
 
 // Vote message schema
 export const VoteMessageSchema = z.object({

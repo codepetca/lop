@@ -8,7 +8,15 @@ import {
 	RegisterRoomRequestSchema,
 	RegisterRoomResponseSchema,
 	CreatePollResponseSchema,
-	ApiErrorResponseSchema
+	ApiErrorResponseSchema,
+	GameListRequestMessage,
+	GameListMessage,
+	GameMetadata,
+	CreateGameRequestSchema,
+	CreateGameResponseSchema,
+	GetStoriesResponseSchema,
+	RegisterGameRequestSchema,
+	RegisterGameResponseSchema
 } from '../shared/schemas/index.js';
 import { PartyKitServer } from './lib/server';
 import { useMessageHandler, useBroadcast, useStorage } from './lib/hooks';
@@ -16,12 +24,15 @@ import { generatePollId } from './utils';
 
 type LobbyStorage = {
 	roomRegistry: [string, RoomMetadata][];
+	gameRegistry: [string, GameMetadata][];
 };
 
 export default class LobbyServer extends PartyKitServer {
 	private roomRegistry: Map<string, RoomMetadata> = new Map();
+	private gameRegistry: Map<string, GameMetadata> = new Map();
 	private storage = useStorage<LobbyStorage>(this.room);
-	private broadcast = useBroadcast<RoomListMessage>(this.room);
+	private roomBroadcast = useBroadcast<RoomListMessage>(this.room);
+	private gameBroadcast = useBroadcast<GameListMessage>(this.room);
 	private messageHandler = useMessageHandler(MessageSchema, this.room);
 
 	async setup() {
@@ -32,9 +43,20 @@ export default class LobbyServer extends PartyKitServer {
 			console.log(`Loaded ${this.roomRegistry.size} rooms from storage`);
 		}
 
+		// Load game registry from storage
+		const storedGameRegistry = await this.storage.get('gameRegistry');
+		if (storedGameRegistry) {
+			this.gameRegistry = new Map(storedGameRegistry);
+			console.log(`Loaded ${this.gameRegistry.size} games from storage`);
+		}
+
 		// Set up message handlers
 		this.messageHandler.handle('room-list-request', async (message, sender) => {
 			this.sendRoomList(sender);
+		});
+
+		this.messageHandler.handle('game-list-request', async (message, sender) => {
+			this.sendGameList(sender);
 		});
 	}
 
@@ -46,19 +68,39 @@ export default class LobbyServer extends PartyKitServer {
 		const url = new URL(req.url);
 		console.log(`Lobby received ${req.method} request to: ${url.pathname}`);
 
-		// Room registration
+		// Room registration (legacy polls)
 		if (req.method === 'POST' && url.pathname.endsWith('/register')) {
 			return this.handleRoomRegistration(req);
 		}
 
-		// Room unregistration
+		// Room unregistration (legacy polls)
 		if (req.method === 'DELETE' && url.pathname.includes('/unregister/')) {
 			return this.handleRoomUnregistration(url);
 		}
 
-		// Poll creation
+		// Poll creation (legacy)
 		if (req.method === 'POST' && url.pathname.endsWith('/create-poll')) {
 			return this.handlePollCreation(req);
+		}
+
+		// Game creation
+		if (req.method === 'POST' && url.pathname.endsWith('/create-game')) {
+			return this.handleGameCreation(req);
+		}
+
+		// Game registration
+		if (req.method === 'POST' && url.pathname.endsWith('/register-game')) {
+			return this.handleGameRegistration(req);
+		}
+
+		// Game unregistration
+		if (req.method === 'DELETE' && url.pathname.includes('/unregister-game/')) {
+			return this.handleGameUnregistration(url);
+		}
+
+		// Get stories
+		if (req.method === 'GET' && url.pathname.endsWith('/stories')) {
+			return this.handleGetStories(req);
 		}
 
 		return this.http.methodNotAllowed();
@@ -67,6 +109,7 @@ export default class LobbyServer extends PartyKitServer {
 	protected async onConnectionOpen(conn: Party.Connection) {
 		console.log('New connection to lobby:', conn.id);
 		this.sendRoomList(conn);
+		this.sendGameList(conn);
 	}
 
 	// Private methods
@@ -77,7 +120,7 @@ export default class LobbyServer extends PartyKitServer {
 			rooms: rooms
 		};
 
-		this.broadcast.send(conn, message);
+		this.roomBroadcast.send(conn, message);
 	}
 
 	private broadcastRoomList() {
@@ -87,12 +130,34 @@ export default class LobbyServer extends PartyKitServer {
 			rooms: rooms
 		};
 
-		this.broadcast.broadcast(message);
+		this.roomBroadcast.broadcast(message);
+	}
+
+	private sendGameList(conn: Party.Connection) {
+		const games = Array.from(this.gameRegistry.values());
+		const message: GameListMessage = {
+			type: 'game-list',
+			games: games
+		};
+
+		this.gameBroadcast.send(conn, message);
+	}
+
+	private broadcastGameList() {
+		const games = Array.from(this.gameRegistry.values());
+		const message: GameListMessage = {
+			type: 'game-list',
+			games: games
+		};
+
+		this.gameBroadcast.broadcast(message);
 	}
 
 	private async saveRegistry() {
 		const registryArray = Array.from(this.roomRegistry.entries());
+		const gameRegistryArray = Array.from(this.gameRegistry.entries());
 		await this.storage.set('roomRegistry', registryArray);
+		await this.storage.set('gameRegistry', gameRegistryArray);
 	}
 
 	private async handleRoomRegistration(req: Party.Request): Promise<Response> {
@@ -214,6 +279,202 @@ export default class LobbyServer extends PartyKitServer {
 		} catch (error) {
 			console.error('Error creating poll:', error);
 			return this.http.error('Failed to create poll', 500);
+		}
+	}
+
+	private async handleGameCreation(req: Party.Request): Promise<Response> {
+		try {
+			const requestData = await req.json();
+			const gameRequest = CreateGameRequestSchema.parse(requestData);
+
+			// Generate a random game ID
+			const gameId = generatePollId(); // Reuse the same ID generator
+			console.log(`Creating new game with ID: ${gameId}`);
+
+			// Use context.parties to create game in game server
+			const gameParty = this.room.context.parties.game;
+			const gameRoom = gameParty.get(gameId);
+
+			// Create the game by making a POST request to the game server
+			const gameResponse = await gameRoom.fetch({
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(gameRequest)
+			});
+
+			if (!gameResponse.ok) {
+				console.error('Failed to create game, status:', gameResponse.status);
+				return this.http.error('Game creation failed', 500);
+			}
+
+			const gameResponseData = await gameResponse.json();
+			const validatedGameResponse = CreateGameResponseSchema.parse(gameResponseData);
+
+			if (!validatedGameResponse.success || !validatedGameResponse.game) {
+				console.error(`Game creation failed: ${validatedGameResponse.error}`);
+				return this.http.error('Game creation failed', 500);
+			}
+
+			const game = validatedGameResponse.game;
+
+			// Create game metadata for lobby
+			const gameMetadata: GameMetadata = {
+				id: gameId,
+				title: game.title,
+				storyTitle: game.title, // Will be updated when story is loaded
+				genre: 'adventure', // Will be updated when story is loaded
+				difficulty: 'medium', // Will be updated when story is loaded
+				createdAt: game.createdAt,
+				currentScene: game.currentScene,
+				isActive: game.isActive,
+				isCompleted: game.isCompleted,
+				playerCount: game.players.length,
+				maxPlayers: game.maxPlayers,
+				estimatedTime: 30, // Will be updated when story is loaded
+				requiresVoting: game.requiresVoting
+			};
+
+			// Add to game registry
+			this.gameRegistry.set(gameId, gameMetadata);
+
+			// Save registry to storage
+			await this.saveRegistry();
+
+			this.broadcastGameList();
+
+			// Return validated response
+			const response = CreateGameResponseSchema.parse({
+				success: true,
+				game: game
+			});
+			return this.http.success(response);
+		} catch (error) {
+			console.error('Error creating game:', error);
+			return this.http.error('Failed to create game', 500);
+		}
+	}
+
+	private async handleGameRegistration(req: Party.Request): Promise<Response> {
+		try {
+			const requestData = await req.json();
+			const gameData = RegisterGameRequestSchema.parse(requestData);
+
+			// Create game metadata
+			const gameMetadata: GameMetadata = {
+				id: gameData.id,
+				title: gameData.title,
+				storyTitle: gameData.storyTitle,
+				genre: gameData.genre,
+				difficulty: gameData.difficulty,
+				createdAt: new Date().toISOString(),
+				currentScene: 'start',
+				isActive: true,
+				isCompleted: false,
+				playerCount: 0,
+				maxPlayers: 20,
+				estimatedTime: 30,
+				requiresVoting: true
+			};
+
+			// Add game to registry
+			this.gameRegistry.set(gameData.id, gameMetadata);
+
+			// Save registry to storage
+			await this.saveRegistry();
+
+			// Broadcast updated game list
+			this.broadcastGameList();
+
+			console.log(`Registered game: ${gameData.id} - ${gameData.title}`);
+
+			const response = RegisterGameResponseSchema.parse({ success: true });
+			return this.http.success(response);
+		} catch (error) {
+			console.error('Error registering game:', error);
+			const errorResponse = ApiErrorResponseSchema.parse({
+				error: 'registration_failed',
+				message: 'Failed to register game'
+			});
+			return this.http.error(errorResponse.message, 500);
+		}
+	}
+
+	private async handleGameUnregistration(url: URL): Promise<Response> {
+		const gameId = url.pathname.split('/').pop();
+
+		if (gameId && this.gameRegistry.has(gameId)) {
+			this.gameRegistry.delete(gameId);
+
+			// Save registry to storage
+			await this.saveRegistry();
+
+			this.broadcastGameList();
+
+			console.log(`Unregistered game: ${gameId}`);
+
+			return this.http.success({ message: 'Game unregistered' });
+		}
+
+		return this.http.notFound('Game not found');
+	}
+
+	private async handleGetStories(req: Party.Request): Promise<Response> {
+		try {
+			// For now, return a hardcoded list of stories
+			// In a real implementation, this would load from a database or file
+			const stories = [
+				{
+					id: 'fantasy-adventure',
+					title: 'The Enchanted Forest',
+					description:
+						'A magical adventure through an enchanted forest filled with mystical creatures and ancient secrets.',
+					genre: 'fantasy',
+					difficulty: 'easy',
+					estimatedTime: 30
+				},
+				{
+					id: 'sci-fi-station',
+					title: 'Space Station Alpha',
+					description:
+						'A thrilling sci-fi adventure aboard a space station where things are not as they seem.',
+					genre: 'sci-fi',
+					difficulty: 'medium',
+					estimatedTime: 45
+				},
+				{
+					id: 'horror-mansion',
+					title: 'The Haunted Mansion',
+					description: 'A spine-chilling horror mystery in an abandoned mansion with dark secrets.',
+					genre: 'horror',
+					difficulty: 'hard',
+					estimatedTime: 60
+				},
+				{
+					id: 'mystery-detective',
+					title: 'The Case of the Missing Artifact',
+					description:
+						'A detective mystery where you must solve the case of a stolen ancient artifact.',
+					genre: 'mystery',
+					difficulty: 'medium',
+					estimatedTime: 40
+				},
+				{
+					id: 'comedy-office',
+					title: 'Office Shenanigans',
+					description: 'A lighthearted comedy adventure in a quirky office environment.',
+					genre: 'comedy',
+					difficulty: 'easy',
+					estimatedTime: 25
+				}
+			];
+
+			const response = GetStoriesResponseSchema.parse({ stories });
+			return this.http.success(response);
+		} catch (error) {
+			console.error('Error getting stories:', error);
+			return this.http.error('Failed to get stories', 500);
 		}
 	}
 }

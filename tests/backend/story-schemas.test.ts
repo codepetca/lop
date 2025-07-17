@@ -24,7 +24,7 @@ describe('Story Schema Validation', () => {
 				'post-apocalyptic'
 			];
 
-			validGenres.forEach(genre => {
+			validGenres.forEach((genre) => {
 				const result = StoryGenre.safeParse(genre);
 				expect(result.success).toBe(true);
 			});
@@ -32,7 +32,7 @@ describe('Story Schema Validation', () => {
 
 		it('should reject invalid genre', () => {
 			const invalidGenres = ['invalid', 'unknown', 'drama'];
-			invalidGenres.forEach(genre => {
+			invalidGenres.forEach((genre) => {
 				const result = StoryGenre.safeParse(genre);
 				expect(result.success).toBe(false);
 			});
@@ -42,7 +42,7 @@ describe('Story Schema Validation', () => {
 	describe('StoryDifficulty', () => {
 		it('should validate all story difficulties', () => {
 			const validDifficulties = ['easy', 'medium', 'hard'];
-			validDifficulties.forEach(difficulty => {
+			validDifficulties.forEach((difficulty) => {
 				const result = StoryDifficulty.safeParse(difficulty);
 				expect(result.success).toBe(true);
 			});
@@ -50,7 +50,7 @@ describe('Story Schema Validation', () => {
 
 		it('should reject invalid difficulty', () => {
 			const invalidDifficulties = ['beginner', 'expert', 'extreme'];
-			invalidDifficulties.forEach(difficulty => {
+			invalidDifficulties.forEach((difficulty) => {
 				const result = StoryDifficulty.safeParse(difficulty);
 				expect(result.success).toBe(false);
 			});
@@ -156,11 +156,8 @@ describe('Story Schema Validation', () => {
 		});
 
 		it('should reject zero or negative time limits', () => {
-			const invalidFilters = [
-				{ maxTime: 0 },
-				{ maxTime: -10 }
-			];
-			invalidFilters.forEach(filter => {
+			const invalidFilters = [{ maxTime: 0 }, { maxTime: -10 }];
+			invalidFilters.forEach((filter) => {
 				const result = StoryFilterSchema.safeParse(filter);
 				expect(result.success).toBe(false);
 			});
@@ -173,7 +170,7 @@ describe('Story Schema Validation', () => {
 				{ maxPlayers: 0 },
 				{ maxPlayers: -1 }
 			];
-			invalidFilters.forEach(filter => {
+			invalidFilters.forEach((filter) => {
 				const result = StoryFilterSchema.safeParse(filter);
 				expect(result.success).toBe(false);
 			});
@@ -218,7 +215,7 @@ describe('Story Schema Validation', () => {
 				{ storyId: 'test', averageRating: 6 },
 				{ storyId: 'test', averageRating: -1 }
 			];
-			invalidStats.forEach(stats => {
+			invalidStats.forEach((stats) => {
 				const result = StoryStatsSchema.safeParse(stats);
 				expect(result.success).toBe(false);
 			});
@@ -229,7 +226,7 @@ describe('Story Schema Validation', () => {
 				{ storyId: 'test', averagePlayTime: 0 },
 				{ storyId: 'test', averagePlayTime: -5 }
 			];
-			invalidStats.forEach(stats => {
+			invalidStats.forEach((stats) => {
 				const result = StoryStatsSchema.safeParse(stats);
 				expect(result.success).toBe(false);
 			});
@@ -240,7 +237,7 @@ describe('Story Schema Validation', () => {
 				{ storyId: 'test', completionRate: -1 },
 				{ storyId: 'test', completionRate: 101 }
 			];
-			invalidStats.forEach(stats => {
+			invalidStats.forEach((stats) => {
 				const result = StoryStatsSchema.safeParse(stats);
 				expect(result.success).toBe(false);
 			});
@@ -252,7 +249,7 @@ describe('Story Schema Validation', () => {
 				{ storyId: 'test', completionRate: 50 },
 				{ storyId: 'test', completionRate: 100 }
 			];
-			validStats.forEach(stats => {
+			validStats.forEach((stats) => {
 				const result = StoryStatsSchema.safeParse(stats);
 				expect(result.success).toBe(true);
 			});
