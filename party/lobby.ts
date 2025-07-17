@@ -13,6 +13,15 @@ export default class LobbyServer implements Party.Server {
 	// In-memory registry of active rooms
 	private roomRegistry: Map<string, RoomMetadata> = new Map();
 
+	// Load room registry from storage when the lobby starts
+	async onStart() {
+		const storedRegistry = await this.room.storage.get<[string, RoomMetadata][]>('roomRegistry');
+		if (storedRegistry) {
+			this.roomRegistry = new Map(storedRegistry);
+			console.log(`Loaded ${this.roomRegistry.size} rooms from storage`);
+		}
+	}
+
 	// Handle new WebSocket connections
 	async onConnect(conn: Party.Connection, ctx: Party.ConnectionContext) {
 		console.log('New connection to lobby:', conn.id);
@@ -57,6 +66,12 @@ export default class LobbyServer implements Party.Server {
 		this.room.broadcast(JSON.stringify(message));
 	}
 
+	// Save room registry to storage
+	private async saveRegistry() {
+		const registryArray = Array.from(this.roomRegistry.entries());
+		await this.room.storage.put('roomRegistry', registryArray);
+	}
+
 	// Handle HTTP requests for room registration (from poll rooms)
 	async onRequest(req: Party.Request): Promise<Response> {
 		const url = new URL(req.url);
@@ -71,6 +86,9 @@ export default class LobbyServer implements Party.Server {
 
 				// Add room to registry
 				this.roomRegistry.set(roomData.id, roomData);
+
+				// Save registry to storage
+				await this.saveRegistry();
 
 				// Broadcast updated room list
 				this.broadcastRoomList();
@@ -92,6 +110,10 @@ export default class LobbyServer implements Party.Server {
 
 			if (roomId && this.roomRegistry.has(roomId)) {
 				this.roomRegistry.delete(roomId);
+				
+				// Save registry to storage
+				await this.saveRegistry();
+				
 				this.broadcastRoomList();
 
 				console.log(`Unregistered room: ${roomId}`);
@@ -145,6 +167,10 @@ export default class LobbyServer implements Party.Server {
 
 				// Add to registry
 				this.roomRegistry.set(pollId, roomMetadata);
+				
+				// Save registry to storage
+				await this.saveRegistry();
+				
 				this.broadcastRoomList();
 
 				// Return the poll data from the actual poll server
