@@ -28,22 +28,26 @@ A real-time multiplayer voting game built with SvelteKit and PartyKit. Create po
 ### Installation
 
 1. Clone the repository
+
 ```bash
 git clone https://github.com/yourusername/lop.git
 cd lop
 ```
 
 2. Install dependencies
+
 ```bash
 npm install
 ```
 
 3. Copy environment variables
+
 ```bash
 cp .env.example .env
 ```
 
 4. Start development servers
+
 ```bash
 npm run dev
 ```
@@ -104,12 +108,14 @@ npm run party:deploy
 ## Environment Variables
 
 See `.env.example` for required variables:
+
 - `PARTYKIT_URL` - Backend HTTP endpoint
 - `PUBLIC_PARTYKIT_HOST` - WebSocket host for frontend
 
 ## Contributing
 
 Pull requests are welcome! Please ensure:
+
 - Code passes TypeScript checks (`npm run check`)
 - Code is formatted (`npm run format`)
 - Follow existing patterns for consistency

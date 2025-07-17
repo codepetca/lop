@@ -10,45 +10,65 @@ import {
 	CreatePollResponseSchema,
 	ApiErrorResponseSchema
 } from '../shared/schemas/index.js';
+import { PartyKitServer } from './lib/server';
+import { useMessageHandler, useBroadcast, useStorage } from './lib/hooks';
 
-export default class LobbyServer implements Party.Server {
-	constructor(readonly room: Party.Room) {}
+type LobbyStorage = {
+	roomRegistry: [string, RoomMetadata][];
+};
 
-	// In-memory registry of active rooms
+export default class LobbyServer extends PartyKitServer {
 	private roomRegistry: Map<string, RoomMetadata> = new Map();
+	private storage = useStorage<LobbyStorage>(this.room);
+	private broadcast = useBroadcast<RoomListMessage>(this.room);
+	private messageHandler = useMessageHandler(MessageSchema, this.room);
 
-	// Load room registry from storage when the lobby starts
-	async onStart() {
-		const storedRegistry = await this.room.storage.get<[string, RoomMetadata][]>('roomRegistry');
+	async setup() {
+		// Load room registry from storage
+		const storedRegistry = await this.storage.get('roomRegistry');
 		if (storedRegistry) {
 			this.roomRegistry = new Map(storedRegistry);
 			console.log(`Loaded ${this.roomRegistry.size} rooms from storage`);
 		}
+
+		// Set up message handlers
+		this.messageHandler.handle('room-list-request', async (message, sender) => {
+			this.sendRoomList(sender);
+		});
 	}
 
-	// Handle new WebSocket connections
-	async onConnect(conn: Party.Connection, ctx: Party.ConnectionContext) {
-		console.log('New connection to lobby:', conn.id);
+	async handleMessage(message: string, sender: Party.Connection) {
+		await this.messageHandler.processMessage(message, sender);
+	}
 
-		// Send current room list to new connection
+	async handleRequest(req: Party.Request): Promise<Response> {
+		const url = new URL(req.url);
+		console.log(`Lobby received ${req.method} request to: ${url.pathname}`);
+
+		// Room registration
+		if (req.method === 'POST' && url.pathname.endsWith('/register')) {
+			return this.handleRoomRegistration(req);
+		}
+
+		// Room unregistration
+		if (req.method === 'DELETE' && url.pathname.includes('/unregister/')) {
+			return this.handleRoomUnregistration(url);
+		}
+
+		// Poll creation
+		if (req.method === 'POST' && url.pathname.endsWith('/create-poll')) {
+			return this.handlePollCreation(req);
+		}
+
+		return this.http.methodNotAllowed();
+	}
+
+	protected async onConnectionOpen(conn: Party.Connection) {
+		console.log('New connection to lobby:', conn.id);
 		this.sendRoomList(conn);
 	}
 
-	// Handle incoming WebSocket messages
-	async onMessage(message: string, sender: Party.Connection) {
-		try {
-			const data = JSON.parse(message);
-			const validatedMessage = MessageSchema.parse(data);
-
-			if (validatedMessage.type === 'room-list-request') {
-				this.sendRoomList(sender);
-			}
-		} catch (error) {
-			console.error('Error processing lobby message:', error);
-		}
-	}
-
-	// Send room list to a specific connection
+	// Private methods
 	private sendRoomList(conn: Party.Connection) {
 		const rooms = Array.from(this.roomRegistry.values());
 		const message: RoomListMessage = {
@@ -56,10 +76,9 @@ export default class LobbyServer implements Party.Server {
 			rooms: rooms
 		};
 
-		conn.send(JSON.stringify(message));
+		this.broadcast.send(conn, message);
 	}
 
-	// Broadcast room list to all connected clients
 	private broadcastRoomList() {
 		const rooms = Array.from(this.roomRegistry.values());
 		const message: RoomListMessage = {
@@ -67,179 +86,134 @@ export default class LobbyServer implements Party.Server {
 			rooms: rooms
 		};
 
-		this.room.broadcast(JSON.stringify(message));
+		this.broadcast.broadcast(message);
 	}
 
-	// Save room registry to storage
 	private async saveRegistry() {
 		const registryArray = Array.from(this.roomRegistry.entries());
-		await this.room.storage.put('roomRegistry', registryArray);
+		await this.storage.set('roomRegistry', registryArray);
 	}
 
-	// Handle HTTP requests for room registration (from poll rooms)
-	async onRequest(req: Party.Request): Promise<Response> {
-		const url = new URL(req.url);
-		console.log(`Lobby received ${req.method} request to: ${url.pathname} (full URL: ${req.url})`);
+	private async handleRoomRegistration(req: Party.Request): Promise<Response> {
+		try {
+			const requestData = await req.json();
+			const roomData = RegisterRoomRequestSchema.parse(requestData);
 
-		if (
-			req.method === 'POST' &&
-			(url.pathname === '/register' || url.pathname.endsWith('/register'))
-		) {
-			try {
-				const requestData = await req.json();
-				const roomData = RegisterRoomRequestSchema.parse(requestData);
+			// Create room metadata
+			const roomMetadata: RoomMetadata = {
+				id: roomData.id,
+				title: roomData.title,
+				createdAt: new Date().toISOString(),
+				activeConnections: 0,
+				totalVotes: 0
+			};
 
-				// Create room metadata
-				const roomMetadata: RoomMetadata = {
-					id: roomData.id,
-					title: roomData.title,
-					createdAt: new Date().toISOString(),
-					activeConnections: 0,
-					totalVotes: 0
-				};
+			// Add room to registry
+			this.roomRegistry.set(roomData.id, roomMetadata);
 
-				// Add room to registry
-				this.roomRegistry.set(roomData.id, roomMetadata);
+			// Save registry to storage
+			await this.saveRegistry();
 
-				// Save registry to storage
-				await this.saveRegistry();
+			// Broadcast updated room list
+			this.broadcastRoomList();
 
-				// Broadcast updated room list
-				this.broadcastRoomList();
+			console.log(`Registered room: ${roomData.id} - ${roomData.title}`);
 
-				console.log(`Registered room: ${roomData.id} - ${roomData.title}`);
+			const response = RegisterRoomResponseSchema.parse({ success: true });
+			return this.http.success(response);
+		} catch (error) {
+			console.error('Error registering room:', error);
+			const errorResponse = ApiErrorResponseSchema.parse({
+				error: 'registration_failed',
+				message: 'Failed to register room'
+			});
+			return this.http.error('Failed to register room', 500);
+		}
+	}
 
-				const response = RegisterRoomResponseSchema.parse({ success: true });
-				return new Response(JSON.stringify(response), {
-					headers: { 'Content-Type': 'application/json' }
-				});
-			} catch (error) {
-				console.error('Error registering room:', error);
-				const errorResponse = ApiErrorResponseSchema.parse({
-					error: 'registration_failed',
-					message: 'Failed to register room'
-				});
-				return new Response(JSON.stringify(errorResponse), {
-					status: 500,
-					headers: { 'Content-Type': 'application/json' }
-				});
-			}
+	private async handleRoomUnregistration(url: URL): Promise<Response> {
+		const roomId = url.pathname.split('/').pop();
+
+		if (roomId && this.roomRegistry.has(roomId)) {
+			this.roomRegistry.delete(roomId);
+
+			// Save registry to storage
+			await this.saveRegistry();
+
+			this.broadcastRoomList();
+
+			console.log(`Unregistered room: ${roomId}`);
+
+			return this.http.success({ message: 'Room unregistered' });
 		}
 
-		if (
-			req.method === 'DELETE' &&
-			(url.pathname.startsWith('/unregister/') || url.pathname.includes('/unregister/'))
-		) {
-			const roomId = url.pathname.split('/').pop();
+		return this.http.notFound('Room not found');
+	}
 
-			if (roomId && this.roomRegistry.has(roomId)) {
-				this.roomRegistry.delete(roomId);
+	private async handlePollCreation(req: Party.Request): Promise<Response> {
+		try {
+			// Consume the request body
+			await req.json().catch(() => ({}));
 
-				// Save registry to storage
-				await this.saveRegistry();
+			// Generate a random poll ID
+			const pollId = Math.random().toString(36).substr(2, 9);
+			console.log(`Creating new poll with ID: ${pollId}`);
 
-				this.broadcastRoomList();
+			// Use context.parties to create poll in poll server
+			const pollParty = this.room.context.parties.poll;
+			const pollRoom = pollParty.get(pollId);
 
-				console.log(`Unregistered room: ${roomId}`);
+			// Create the poll by making a POST request to the poll server
+			const pollResponse = await pollRoom.fetch({
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({})
+			});
 
-				return new Response('Room unregistered', { status: 200 });
+			if (!pollResponse.ok) {
+				console.error('Failed to create poll, status:', pollResponse.status);
+				return this.http.error('Poll creation failed', 500);
 			}
 
-			return new Response('Room not found', { status: 404 });
-		}
+			const pollResponseData = await pollResponse.json();
+			const validatedPollResponse = CreatePollResponseSchema.parse(pollResponseData);
 
-		// Handle poll creation requests
-		if (req.method === 'POST' && url.pathname.endsWith('/create-poll')) {
-			try {
-				// Consume the request body even though we don't need it
-				// This prevents PartyKit from trying to read it after response is sent
-				await req.json().catch(() => ({}));
-
-				// Generate a random poll ID
-				const pollId = Math.random().toString(36).substr(2, 9);
-				console.log(`Creating new poll with ID: ${pollId}`);
-
-				// Use context.parties to create poll in poll server
-				const pollParty = this.room.context.parties.poll;
-				const pollRoom = pollParty.get(pollId);
-
-				// Create the poll by making a POST request to the poll server
-				const pollResponse = await pollRoom.fetch({
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json'
-					},
-					body: JSON.stringify({})
-				});
-
-				if (!pollResponse.ok) {
-					console.error('Failed to create poll, status:', pollResponse.status);
-					const errorResponse = CreatePollResponseSchema.parse({
-						success: false,
-						error: 'poll_creation_failed'
-					});
-					return new Response(JSON.stringify(errorResponse), {
-						status: 500,
-						headers: { 'Content-Type': 'application/json' }
-					});
-				}
-
-				const pollResponseData = await pollResponse.json();
-				const validatedPollResponse = CreatePollResponseSchema.parse(pollResponseData);
-
-				if (!validatedPollResponse.success || !validatedPollResponse.poll) {
-					console.error('Poll creation failed:', validatedPollResponse.error);
-					const errorResponse = CreatePollResponseSchema.parse({
-						success: false,
-						error: 'poll_creation_failed'
-					});
-					return new Response(JSON.stringify(errorResponse), {
-						status: 500,
-						headers: { 'Content-Type': 'application/json' }
-					});
-				}
-
-				const poll = validatedPollResponse.poll;
-
-				// Register the poll room with actual poll metadata
-				const roomMetadata: RoomMetadata = {
-					id: pollId,
-					title: poll.title,
-					createdAt: new Date().toISOString(),
-					activeConnections: 0,
-					totalVotes: 0
-				};
-
-				// Add to registry
-				this.roomRegistry.set(pollId, roomMetadata);
-
-				// Save registry to storage
-				await this.saveRegistry();
-
-				this.broadcastRoomList();
-
-				// Return validated response
-				const response = CreatePollResponseSchema.parse({
-					success: true,
-					poll: poll
-				});
-				return new Response(JSON.stringify(response), {
-					headers: { 'Content-Type': 'application/json' }
-				});
-			} catch (error) {
-				console.error('Error creating poll:', error);
-				const errorResponse = CreatePollResponseSchema.parse({
-					success: false,
-					error: 'poll_creation_failed'
-				});
-				return new Response(JSON.stringify(errorResponse), {
-					status: 500,
-					headers: { 'Content-Type': 'application/json' }
-				});
+			if (!validatedPollResponse.success || !validatedPollResponse.poll) {
+				console.error(`Poll creation failed: ${validatedPollResponse.error}`);
+				return this.http.error('Poll creation failed', 500);
 			}
-		}
 
-		return new Response('Method not allowed', { status: 405 });
+			const poll = validatedPollResponse.poll;
+
+			// Register the poll room with actual poll metadata
+			const roomMetadata: RoomMetadata = {
+				id: pollId,
+				title: poll.title,
+				createdAt: new Date().toISOString(),
+				activeConnections: 0,
+				totalVotes: 0
+			};
+
+			// Add to registry
+			this.roomRegistry.set(pollId, roomMetadata);
+
+			// Save registry to storage
+			await this.saveRegistry();
+
+			this.broadcastRoomList();
+
+			// Return validated response
+			const response = CreatePollResponseSchema.parse({
+				success: true,
+				poll: poll
+			});
+			return this.http.success(response);
+		} catch (error) {
+			console.error('Error creating poll:', error);
+			return this.http.error('Failed to create poll', 500);
+		}
 	}
 }
 

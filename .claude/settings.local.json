@@ -1,6 +1,12 @@
 {
 	"permissions": {
-		"allow": ["Bash(npm run check:*)", "WebFetch(domain:docs.partykit.io)", "Bash(curl:*)"],
+		"allow": [
+			"Bash(npm run check:*)",
+			"WebFetch(domain:docs.partykit.io)",
+			"Bash(curl:*)",
+			"Bash(npm run lint)",
+			"Bash(npm run format:*)"
+		],
 		"deny": []
 	}
 }

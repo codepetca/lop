@@ -12,7 +12,7 @@ npm run dev:party        # WebSocket server only
 
 # Quality
 npm run check            # TypeScript check
-npm run lint             # Prettier check  
+npm run lint             # Prettier check
 npm run format           # Auto-format
 
 # Production
@@ -35,7 +35,10 @@ party/                          # PartyKit servers
 ├── poll.ts                    # Poll server: voting, state management
 ├── handlers.ts                # Business logic for messages/requests
 ├── questions.ts               # 15+ question bank
-└── utils.ts                   # Helper functions
+├── utils.ts                   # Helper functions
+└── lib/                       # Backend utilities
+    ├── hooks.ts               # WebSocket & storage hooks
+    └── server.ts              # Base server class
 
 shared/schemas/                 # Zod schemas (runtime validation)
 ├── poll.ts                    # Poll, RoomMetadata types
@@ -50,21 +53,24 @@ src/lib/
 ## Key Patterns
 
 ### Type Safety
+
 - Backend: Zod schemas in `shared/schemas/` for runtime validation
 - Frontend: TypeScript types in `src/lib/types.ts`
 - All messages validated with `MessageSchema.parse()`
 
 ### WebSocket Messages
+
 ```typescript
 // Discriminated union in shared/schemas/message.ts
-type Message = 
-  | { type: 'vote'; option: string }
-  | { type: 'poll-update'; poll: Poll }
-  | { type: 'room-list-request' }
-  | { type: 'room-list'; rooms: RoomMetadata[] }
+type Message =
+	| { type: 'vote'; option: string }
+	| { type: 'poll-update'; poll: Poll }
+	| { type: 'room-list-request' }
+	| { type: 'room-list'; rooms: RoomMetadata[] };
 ```
 
 ### Poll Creation Flow
+
 1. SvelteKit action posts to `/parties/main/main/create-poll`
 2. Lobby generates poll ID, creates poll room via `context.parties.poll.get(pollId)`
 3. Poll server generates random question, saves to storage
@@ -72,6 +78,7 @@ type Message =
 5. Returns poll data to frontend
 
 ### Environment Variables
+
 ```bash
 # .env
 PARTYKIT_URL=http://127.0.0.1:1999        # Backend URL (private)
@@ -81,22 +88,51 @@ PUBLIC_PARTYKIT_HOST=127.0.0.1:1999       # WebSocket host (public)
 ## Code Standards
 
 ### Imports
+
 - No extensions needed for TypeScript imports
 - Import types with `import type`
 - Prefer alias paths (`$shared/`, `$lib/`) over relative paths
 
 ### Frontend (IMPORTANT)
+
 - **Always use Svelte 5** with runes (`$state`, `$derived`, `$effect`)
 - Never use Svelte 4 patterns (stores, reactive statements)
 
+### Backend (IMPORTANT)
+
+- **Use hooks from `party/lib/hooks.ts`** for WebSocket/storage operations
+- Extend `PartyKitServer` class for consistent structure
+- Keep business logic in `handlers.ts`, use hooks for plumbing
+
+### Backend Patterns
+
+```typescript
+// Message handling - auto-validates and routes
+const messageHandler = useMessageHandler(MessageSchema, room);
+messageHandler.handle('vote', async (msg, sender) => {
+	// Type-safe message handling
+});
+
+// Broadcasting - auto-serializes
+const { send, broadcast } = useBroadcast<MessageType>(room);
+broadcast(message);
+
+// Storage - type-safe operations
+const storage = useStorage<{ poll: Poll }>(room);
+await storage.set('poll', pollData);
+```
+
 ### Validation (IMPORTANT)
+
 - **Always validate with Zod** - use `MessageSchema.parse()` for all external data
 - Return typed error responses with proper status codes
 
 ### State Management
+
 - PartyKit: Room storage (persistent)
 - Frontend: Svelte 5 runes only
 - Vote tracking: localStorage (prevents duplicate votes per browser)
 
 ### Testing
+
 No test framework configured. Check README or ask user for testing approach.

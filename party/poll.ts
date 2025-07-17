@@ -6,59 +6,41 @@ import {
 	GetPollResponseSchema,
 	CreatePollResponseSchema
 } from '../shared/schemas/index.js';
-import {
-	handleVote,
-	handleCreatePollServerGenerated,
-	handleCreatePollServerGeneratedNoRegistration,
-	handleGetPoll
-} from './handlers';
+import { handleVote, handleCreatePollServerGeneratedNoRegistration } from './handlers';
+import { PartyKitServer } from './lib/server';
+import { useMessageHandler, useBroadcast, useStorage } from './lib/hooks';
 
-export default class PollServer implements Party.Server {
-	constructor(readonly room: Party.Room) {}
+type PollStorage = {
+	poll: Poll;
+};
 
-	// Store poll data in memory
-	poll: Poll | null = null;
+export default class PollServer extends PartyKitServer {
+	private poll: Poll | null = null;
+	private storage = useStorage<PollStorage>(this.room);
+	private broadcast = useBroadcast<PollUpdateMessage>(this.room);
+	private messageHandler = useMessageHandler(MessageSchema, this.room);
 
-	// Load poll data from storage when the room starts
-	async onStart() {
-		const storedPoll = await this.room.storage.get<Poll>('poll');
-		if (storedPoll) {
-			this.poll = storedPoll;
-		}
-	}
+	async setup() {
+		// Load poll from storage
+		this.poll = await this.storage.get('poll');
 
-	// Handle new WebSocket connections
-	async onConnect(conn: Party.Connection, ctx: Party.ConnectionContext) {
-		// Send current poll data to new connections
-		if (this.poll) {
-			conn.send(
-				JSON.stringify({
-					type: 'poll-update',
-					poll: this.poll
-				} as PollUpdateMessage)
-			);
-		}
-	}
+		// Set up message handlers
+		this.messageHandler.handle('vote', async (message, sender) => {
+			if (!this.poll) return;
 
-	// Handle incoming WebSocket messages
-	async onMessage(message: string, sender: Party.Connection) {
-		try {
-			const data = JSON.parse(message);
-			const validatedMessage = MessageSchema.parse(data);
-
-			if (validatedMessage.type === 'vote' && this.poll) {
-				const updatedPoll = await handleVote(this.room, this.poll, validatedMessage);
-				if (updatedPoll) {
-					this.poll = updatedPoll;
-				}
+			const updatedPoll = await handleVote(this.room, this.poll, message);
+			if (updatedPoll) {
+				this.poll = updatedPoll;
+				await this.storage.set('poll', updatedPoll);
 			}
-		} catch (error) {
-			console.error('Error processing message:', error);
-		}
+		});
 	}
 
-	// Handle HTTP requests (for creating polls)
-	async onRequest(req: Party.Request): Promise<Response> {
+	async handleMessage(message: string, sender: Party.Connection) {
+		await this.messageHandler.processMessage(message, sender);
+	}
+
+	async handleRequest(req: Party.Request): Promise<Response> {
 		const url = new URL(req.url);
 
 		if (req.method === 'POST') {
@@ -66,25 +48,21 @@ export default class PollServer implements Party.Server {
 				// Create server-generated poll (without registration since lobby handles it)
 				const poll = await handleCreatePollServerGeneratedNoRegistration(this.room);
 				this.poll = poll;
+				await this.storage.set('poll', poll);
 
 				const response = CreatePollResponseSchema.parse({
 					success: true,
 					poll: poll
 				});
 
-				return new Response(JSON.stringify(response), {
-					headers: { 'Content-Type': 'application/json' }
-				});
+				return this.http.success(response);
 			} catch (error) {
 				console.error('Error creating poll:', error);
 				const errorResponse = CreatePollResponseSchema.parse({
 					success: false,
 					error: 'poll_creation_failed'
 				});
-				return new Response(JSON.stringify(errorResponse), {
-					status: 500,
-					headers: { 'Content-Type': 'application/json' }
-				});
+				return this.http.error('Failed to create poll', 500);
 			}
 		}
 
@@ -92,12 +70,20 @@ export default class PollServer implements Party.Server {
 			const response = GetPollResponseSchema.parse({
 				poll: this.poll
 			});
-			return new Response(JSON.stringify(response), {
-				headers: { 'Content-Type': 'application/json' }
-			});
+			return this.http.success(response);
 		}
 
-		return new Response('Method not allowed', { status: 405 });
+		return this.http.methodNotAllowed();
+	}
+
+	// Send current poll data to new connections
+	protected async onConnectionOpen(conn: Party.Connection) {
+		if (this.poll) {
+			this.broadcast.send(conn, {
+				type: 'poll-update',
+				poll: this.poll
+			});
+		}
 	}
 }
 
