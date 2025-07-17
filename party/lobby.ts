@@ -105,6 +105,10 @@ export default class LobbyServer implements Party.Server {
 		// Handle poll creation requests
 		if (req.method === 'POST' && url.pathname.endsWith('/create-poll')) {
 			try {
+				// Consume the request body even though we don't need it
+				// This prevents PartyKit from trying to read it after response is sent
+				await req.json().catch(() => ({}));
+				
 				// Generate a random poll ID
 				const pollId = Math.random().toString(36).substr(2, 9);
 				console.log(`Creating new poll with ID: ${pollId}`);
@@ -115,11 +119,15 @@ export default class LobbyServer implements Party.Server {
 
 				// Create the poll by making a POST request to the poll server
 				const pollResponse = await pollRoom.fetch({
-					method: 'POST'
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({})
 				});
 
 				if (!pollResponse.ok) {
-					console.error('Failed to create poll:', await pollResponse.text());
+					console.error('Failed to create poll, status:', pollResponse.status);
 					return new Response('Failed to create poll', { status: 500 });
 				}
 

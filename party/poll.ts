@@ -57,25 +57,9 @@ export default class PollServer implements Party.Server {
 
 		if (req.method === 'POST') {
 			try {
-				// Check if poll data is provided in the request body
-				let body = '';
-				try {
-					body = await req.text();
-				} catch (e) {
-					// No body or body already consumed - that's fine
-					console.log('No request body or body already consumed');
-				}
-
-				if (body && body !== '{}' && body.trim() !== '') {
-					// Poll data provided by lobby
-					const pollData = JSON.parse(body) as Poll;
-					this.poll = pollData;
-					await this.room.storage.put('poll', this.poll);
-				} else {
-					// Create server-generated poll (without registration since lobby handles it)
-					const poll = await handleCreatePollServerGeneratedNoRegistration(this.room);
-					this.poll = poll;
-				}
+				// Create server-generated poll (without registration since lobby handles it)
+				const poll = await handleCreatePollServerGeneratedNoRegistration(this.room);
+				this.poll = poll;
 
 				return new Response(JSON.stringify(this.poll), {
 					headers: { 'Content-Type': 'application/json' }
