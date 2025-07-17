@@ -134,5 +134,20 @@ await storage.set('poll', pollData);
 - Vote tracking: localStorage (prevents duplicate votes per browser)
 
 ### Testing
+```bash
+npm run test              # Run all tests
+npm run test:watch        # Run tests in watch mode
+npm run test:ui           # Run tests with UI
+npm run test:coverage     # Run tests with coverage
+```
 
-No test framework configured. Check README or ask user for testing approach.
+**Test Structure:**
+- `tests/backend/` - Backend logic tests (schemas, voting, hooks)
+- `tests/frontend/` - Frontend tests (WebSocket, actions)
+- `tests/utils/` - Test utilities (fixtures, mocks)
+
+**Key Testing Patterns:**
+- Use `fixtures.ts` for test data generation
+- Mock external dependencies in `mocks.ts`
+- Focus on behavior, not implementation details
+- Test critical paths: message validation, vote counting, WebSocket reliability
