@@ -73,7 +73,6 @@
 
 <main class="container">
 	<h1>Lop</h1>
-	<p class="subtitle">Create choose-your-own-adventure games or quick polls</p>
 
 	<!-- Tab Navigation -->
 	<div class="tabs">
