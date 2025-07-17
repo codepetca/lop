@@ -15,51 +15,58 @@ npm run check            # TypeScript check
 npm run lint             # Prettier check
 npm run format           # Auto-format
 
-# Production
+# Production  
 npm run build            # Build frontend
 npm run party:deploy     # Deploy PartyKit
+
+# Testing
+npm run test             # Run all tests
+npm run test:watch       # Run tests in watch mode
+npm run test:ui          # Run tests with UI
+npm run test:coverage    # Run tests with coverage
 ```
 
 ## Architecture
 
 ```
-src/
-├── routes/
-│   ├── +page.svelte           # Home: create/join polls
-│   ├── +page.server.ts        # Poll creation via lobby API
-│   └── [poll_id]/
-│       └── +page.svelte       # Poll voting UI + WebSocket
+src/routes/
+├── +page.svelte           # Home: create/join polls
+├── +page.server.ts        # Poll creation via lobby API
+└── [poll_id]/+page.svelte # Poll voting UI + WebSocket
 
-party/                          # PartyKit servers
-├── lobby.ts                   # Main server: room registry, poll creation
-├── poll.ts                    # Poll server: voting, state management
-├── handlers.ts                # Business logic for messages/requests
-├── questions.ts               # 15+ question bank
-├── utils.ts                   # Helper functions
-└── lib/                       # Backend utilities
-    ├── hooks.ts               # WebSocket & storage hooks
-    └── server.ts              # Base server class
+party/                     # PartyKit servers
+├── lobby.ts              # Main server: room registry, poll creation
+├── poll.ts               # Poll server: voting, state management
+├── handlers.ts           # Business logic for messages/requests
+├── questions.ts          # 15 question bank
+├── utils.ts              # Helper functions
+└── lib/
+    ├── hooks.ts          # WebSocket & storage hooks
+    └── server.ts         # Base server class
 
-shared/schemas/                 # Zod schemas (runtime validation)
-├── poll.ts                    # Poll, RoomMetadata types
-├── message.ts                 # WebSocket message types
-└── api.ts                     # HTTP request/response types
+shared/schemas/           # Zod schemas (runtime validation)
+├── poll.ts              # Poll, RoomMetadata types
+├── message.ts           # WebSocket message types
+└── api.ts               # HTTP request/response types
 
 src/lib/
-├── types.ts                   # Frontend TypeScript types
+├── types.ts             # Frontend TypeScript types
 └── hooks/useWebSocket.svelte.ts  # WebSocket connection hook
+
+tests/
+├── backend/             # Backend logic tests
+├── frontend/            # Frontend tests
+└── utils/               # Test utilities (fixtures, mocks)
 ```
 
 ## Key Patterns
 
 ### Type Safety
-
 - Backend: Zod schemas in `shared/schemas/` for runtime validation
 - Frontend: TypeScript types in `src/lib/types.ts`
 - All messages validated with `MessageSchema.parse()`
 
 ### WebSocket Messages
-
 ```typescript
 // Discriminated union in shared/schemas/message.ts
 type Message =
@@ -70,7 +77,6 @@ type Message =
 ```
 
 ### Poll Creation Flow
-
 1. SvelteKit action posts to `/parties/main/main/create-poll`
 2. Lobby generates poll ID, creates poll room via `context.parties.poll.get(pollId)`
 3. Poll server generates random question, saves to storage
@@ -78,7 +84,6 @@ type Message =
 5. Returns poll data to frontend
 
 ### Environment Variables
-
 ```bash
 # .env
 PARTYKIT_URL=http://127.0.0.1:1999        # Backend URL (private)
@@ -88,24 +93,20 @@ PUBLIC_PARTYKIT_HOST=127.0.0.1:1999       # WebSocket host (public)
 ## Code Standards
 
 ### Imports
-
 - No extensions needed for TypeScript imports
 - Import types with `import type`
 - Prefer alias paths (`$shared/`, `$lib/`) over relative paths
 
 ### Frontend (IMPORTANT)
-
 - **Always use Svelte 5** with runes (`$state`, `$derived`, `$effect`)
 - Never use Svelte 4 patterns (stores, reactive statements)
 
 ### Backend (IMPORTANT)
-
 - **Use hooks from `party/lib/hooks.ts`** for WebSocket/storage operations
 - Extend `PartyKitServer` class for consistent structure
 - Keep business logic in `handlers.ts`, use hooks for plumbing
 
 ### Backend Patterns
-
 ```typescript
 // Message handling - auto-validates and routes
 const messageHandler = useMessageHandler(MessageSchema, room);
@@ -123,31 +124,20 @@ await storage.set('poll', pollData);
 ```
 
 ### Validation (IMPORTANT)
-
 - **Always validate with Zod** - use `MessageSchema.parse()` for all external data
 - Return typed error responses with proper status codes
 
 ### State Management
-
 - PartyKit: Room storage (persistent)
 - Frontend: Svelte 5 runes only
 - Vote tracking: localStorage (prevents duplicate votes per browser)
 
-### Testing
-```bash
-npm run test              # Run all tests
-npm run test:watch        # Run tests in watch mode
-npm run test:ui           # Run tests with UI
-npm run test:coverage     # Run tests with coverage
-```
-
-**Test Structure:**
-- `tests/backend/` - Backend logic tests (schemas, voting, hooks)
-- `tests/frontend/` - Frontend tests (WebSocket, actions)
-- `tests/utils/` - Test utilities (fixtures, mocks)
-
-**Key Testing Patterns:**
-- Use `fixtures.ts` for test data generation
-- Mock external dependencies in `mocks.ts`
-- Focus on behavior, not implementation details
-- Test critical paths: message validation, vote counting, WebSocket reliability
+### Testing Strategy
+- **Schema Validation**: Comprehensive Zod schema tests (valid/invalid data, edge cases)
+- **WebSocket Testing**: Mock WebSocket connections with lifecycle simulation
+  - Mock `window.location`, `window.setTimeout` for test environment
+  - Use `vi.resetModules()` for isolated environment tests
+- **Server Actions**: Mock fetch responses and environment variables
+- **Backend Logic**: Test business logic with mocked PartyKit rooms
+  - Mock room storage and context
+  - Test vote counting and poll state management

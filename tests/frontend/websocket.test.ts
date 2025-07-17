@@ -21,11 +21,43 @@ vi.mock('../../shared/schemas/index', () => ({
 describe('WebSocket Hook', () => {
 	let mockWebSocket: ReturnType<typeof createMockWebSocket>;
 	let useWebSocket: any;
+	let WebSocketSpy: any;
 
 	beforeEach(async () => {
 		vi.clearAllMocks();
 		mockWebSocket = createMockWebSocket();
-		global.WebSocket = vi.fn().mockImplementation(() => mockWebSocket);
+		WebSocketSpy = vi.fn().mockImplementation(() => mockWebSocket);
+		global.WebSocket = WebSocketSpy;
+		
+		// Mock window.location for getWebSocketUrl
+		Object.defineProperty(global, 'window', {
+			value: {
+				location: {
+					protocol: 'http:'
+				},
+				setTimeout: vi.fn().mockImplementation((callback, delay) => {
+					setTimeout(callback, delay);
+					return 123; // Return a fake timeout ID
+				})
+			},
+			writable: true
+		});
+
+		// Mock WebSocket constants
+		Object.defineProperty(global, 'WebSocket', {
+			value: WebSocketSpy,
+			writable: true
+		});
+
+		// Add WebSocket constants
+		WebSocketSpy.CONNECTING = 0;
+		WebSocketSpy.OPEN = 1;
+		WebSocketSpy.CLOSING = 2;
+		WebSocketSpy.CLOSED = 3;
+		global.WebSocket.CONNECTING = 0;
+		global.WebSocket.OPEN = 1;
+		global.WebSocket.CLOSING = 2;
+		global.WebSocket.CLOSED = 3;
 		
 		// Dynamically import to ensure mocks are applied
 		const module = await import('../../src/lib/hooks/useWebSocket.svelte');
@@ -35,9 +67,17 @@ describe('WebSocket Hook', () => {
 	describe('useWebSocket', () => {
 		it('should create WebSocket connection', () => {
 			const ws = useWebSocket('poll', 'test-room');
+			
+			// Verify initial state
+			expect(ws.status).toBe('disconnected');
+			expect(ws.isConnected).toBe(false);
+			
+			// Call connect
 			ws.connect();
 
-			expect(global.WebSocket).toHaveBeenCalledWith('ws://localhost:1999/parties/poll/test-room');
+			// Verify WebSocket was created
+			expect(WebSocketSpy).toHaveBeenCalledWith('ws://localhost:1999/parties/poll/test-room');
+			expect(ws.status).toBe('connecting');
 		});
 
 		it('should handle connection lifecycle', () => {
@@ -86,8 +126,13 @@ describe('WebSocket Hook', () => {
 			const ws = useWebSocket('poll', 'test-room');
 			ws.connect();
 			
+			// Simulate connection open to properly set up the socket
+			if (mockWebSocket.onopen) {
+				mockWebSocket.onopen(new Event('open'));
+			}
+			
 			// Set socket to connected state
-			mockWebSocket.readyState = WebSocket.OPEN;
+			mockWebSocket.readyState = 1; // WebSocket.OPEN
 			
 			const message = createVoteMessage();
 			ws.send(message);
@@ -134,6 +179,11 @@ describe('WebSocket Hook', () => {
 			const ws = useWebSocket('poll', 'test-room');
 			ws.connect();
 			
+			// Simulate connection open
+			if (mockWebSocket.onopen) {
+				mockWebSocket.onopen(new Event('open'));
+			}
+			
 			ws.disconnect();
 			
 			expect(mockWebSocket.close).toHaveBeenCalled();
@@ -144,25 +194,34 @@ describe('WebSocket Hook', () => {
 			const ws = useWebSocket('poll', 'test-room');
 			ws.connect();
 			
+			// Simulate connection open
+			if (mockWebSocket.onopen) {
+				mockWebSocket.onopen(new Event('open'));
+			}
+			
 			ws.cleanup();
 			
 			expect(mockWebSocket.close).toHaveBeenCalled();
 		});
 
 		it('should not create connection in non-browser environment', async () => {
-			// Mock non-browser environment
+			// Clear the previous spy calls
+			WebSocketSpy.mockClear();
+			
+			// Mock non-browser environment - this test verifies the browser check works
+			// by temporarily overriding the browser environment
+			vi.resetModules();
 			vi.doMock('$app/environment', () => ({
 				browser: false
 			}));
 			
-			// Re-import with new mock
-			const module = await import('../../src/lib/hooks/useWebSocket.svelte');
-			const useWebSocketNonBrowser = module.useWebSocket;
+			// Re-import with new mock - the module cache is cleared
+			const { useWebSocket: useWebSocketNonBrowser } = await import('../../src/lib/hooks/useWebSocket.svelte');
 			
 			const ws = useWebSocketNonBrowser('poll', 'test-room');
 			ws.connect();
 			
-			expect(global.WebSocket).not.toHaveBeenCalled();
+			expect(WebSocketSpy).not.toHaveBeenCalled();
 		});
 	});
 });

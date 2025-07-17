@@ -154,7 +154,7 @@ describe('Server Actions', () => {
 			};
 
 			mockFetch = createMockFetch({
-				'http://127.0.0.1:1999/parties/main/main/create-poll': successResponse
+				'http://localhost:1999/parties/main/main/create-poll': successResponse
 			});
 			global.fetch = mockFetch;
 
