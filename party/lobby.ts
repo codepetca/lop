@@ -12,6 +12,7 @@ import {
 } from '../shared/schemas/index.js';
 import { PartyKitServer } from './lib/server';
 import { useMessageHandler, useBroadcast, useStorage } from './lib/hooks';
+import { generatePollId } from './utils';
 
 type LobbyStorage = {
 	roomRegistry: [string, RoomMetadata][];
@@ -127,7 +128,7 @@ export default class LobbyServer extends PartyKitServer {
 				error: 'registration_failed',
 				message: 'Failed to register room'
 			});
-			return this.http.error('Failed to register room', 500);
+			return this.http.error(errorResponse.message, 500);
 		}
 	}
 
@@ -156,7 +157,7 @@ export default class LobbyServer extends PartyKitServer {
 			await req.json().catch(() => ({}));
 
 			// Generate a random poll ID
-			const pollId = Math.random().toString(36).substr(2, 9);
+			const pollId = generatePollId();
 			console.log(`Creating new poll with ID: ${pollId}`);
 
 			// Use context.parties to create poll in poll server

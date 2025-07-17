@@ -62,7 +62,7 @@ export default class PollServer extends PartyKitServer {
 					success: false,
 					error: 'poll_creation_failed'
 				});
-				return this.http.error('Failed to create poll', 500);
+				return this.http.error(errorResponse.error, 500);
 			}
 		}
 

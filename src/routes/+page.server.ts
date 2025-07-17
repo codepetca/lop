@@ -3,16 +3,19 @@ import type { Actions } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { CreatePollResponseSchema } from '$shared/schemas/index';
 
-// Fallback to default development URL if not set
-const PARTYKIT_URL = env.PARTYKIT_URL || 'http://127.0.0.1:1999';
+// Get PartyKit URL from environment or use default for development
+function getPartyKitUrl(): string {
+	return env.PARTYKIT_URL || 'http://127.0.0.1:1999';
+}
 
 export const actions: Actions = {
 	createPoll: async ({ request }) => {
+		const partyKitUrl = getPartyKitUrl();
 		console.log(`Creating server-generated poll via lobby`);
-		console.log(`PartyKit URL: ${PARTYKIT_URL}`);
+		console.log(`PartyKit URL: ${partyKitUrl}`);
 
 		// Create poll through the lobby server (same room as WebSocket connection)
-		const response = await fetch(`${PARTYKIT_URL}/parties/main/main/create-poll`, {
+		const response = await fetch(`${partyKitUrl}/parties/main/main/create-poll`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'

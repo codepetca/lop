@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import type { Poll } from '../../shared/schemas/message';
+import type { Poll } from '$shared/schemas/poll';
 
 /**
  * Reusable mock helpers for PartyKit and WebSocket
@@ -9,7 +9,7 @@ import type { Poll } from '../../shared/schemas/message';
 export const createMockRoom = () => {
 	const storage = new Map();
 	const connections = new Set();
-	
+
 	return {
 		id: 'test-room',
 		storage: {
@@ -66,7 +66,7 @@ export const createMockWebSocket = () => {
 		onmessage: null as ((event: MessageEvent) => void) | null,
 		onclose: null as ((event: CloseEvent) => void) | null,
 		onerror: null as ((event: Event) => void) | null,
-		
+
 		// Helper methods for testing
 		_triggerOpen: () => {
 			if (socket.onopen) socket.onopen(new Event('open'));
@@ -83,7 +83,7 @@ export const createMockWebSocket = () => {
 			if (socket.onerror) socket.onerror(new Event('error'));
 		}
 	};
-	
+
 	return socket;
 };
 
@@ -92,7 +92,7 @@ export const createMockFetch = (responses: Record<string, any> = {}) => {
 	return vi.fn().mockImplementation((url: string | URL, options?: RequestInit) => {
 		const urlStr = typeof url === 'string' ? url : url.toString();
 		const response = responses[urlStr] || { ok: true, json: () => Promise.resolve({}) };
-		
+
 		return Promise.resolve({
 			ok: response.ok || true,
 			status: response.status || 200,
@@ -106,11 +106,11 @@ export const createMockFetch = (responses: Record<string, any> = {}) => {
 // Mock environment variables
 export const mockEnv = (env: Record<string, string> = {}) => {
 	const originalEnv = process.env;
-	
+
 	beforeEach(() => {
 		process.env = { ...originalEnv, ...env };
 	});
-	
+
 	afterEach(() => {
 		process.env = originalEnv;
 	});

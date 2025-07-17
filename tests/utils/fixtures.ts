@@ -1,4 +1,5 @@
-import type { Poll, RoomMetadata, VoteMessage, PollUpdateMessage } from '../../shared/schemas/message';
+import type { Poll } from '$shared/schemas/poll';
+import type { VoteMessage, PollUpdateMessage, RoomMetadata } from '$shared/schemas/message';
 
 /**
  * Centralized test data generators - easy to update when schemas change

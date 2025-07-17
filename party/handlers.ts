@@ -6,9 +6,11 @@ import {
 	PollSchema,
 	RoomMetadata,
 	RegisterRoomRequestSchema
-} from '../shared/schemas/index.js';
+} from '$shared/schemas';
 import { getRandomQuestion } from './questions';
 import { initializePollVotes } from './utils';
+import { getLobbyUrl } from './lib/config';
+import { useStorage, useBroadcast, useHttpResponse } from './lib/hooks';
 
 /**
  * Handle vote messages from WebSocket clients
@@ -27,15 +29,19 @@ export async function handleVote(
 	// Increment the vote count
 	poll.votes[message.option] = (poll.votes[message.option] || 0) + 1;
 
+	// Use hooks for consistent storage and broadcasting
+	const storage = useStorage<{ poll: Poll }>(room);
+	const { broadcast } = useBroadcast<PollUpdateMessage>(room);
+
 	// Save updated poll to storage
-	await room.storage.put('poll', poll);
+	await storage.set('poll', poll);
 
 	// Broadcast updated poll to all connected clients
 	const updateMessage: PollUpdateMessage = {
 		type: 'poll-update',
 		poll: poll
 	};
-	room.broadcast(JSON.stringify(updateMessage));
+	broadcast(updateMessage);
 
 	return poll;
 }
@@ -58,8 +64,9 @@ export async function handleCreatePollServerGenerated(room: Party.Room): Promise
 	// Validate the created poll
 	const validatedPoll = PollSchema.parse(poll);
 
-	// Save to storage
-	await room.storage.put('poll', validatedPoll);
+	// Use hooks for consistent storage
+	const storage = useStorage<{ poll: Poll }>(room);
+	await storage.set('poll', validatedPoll);
 
 	// Register with lobby (don't await to avoid blocking poll creation)
 	registerRoomWithLobby(validatedPoll).catch((error) => {
@@ -90,8 +97,9 @@ export async function handleCreatePollServerGeneratedNoRegistration(
 	// Validate the created poll
 	const validatedPoll = PollSchema.parse(poll);
 
-	// Save to storage
-	await room.storage.put('poll', validatedPoll);
+	// Use hooks for consistent storage
+	const storage = useStorage<{ poll: Poll }>(room);
+	await storage.set('poll', validatedPoll);
 
 	// No lobby registration - handled by lobby itself
 	return validatedPoll;
@@ -107,9 +115,8 @@ export async function registerRoomWithLobby(poll: Poll): Promise<void> {
 			title: poll.title
 		});
 
-		// Get lobby URL from environment or use default for development
-		const host = process.env.PARTYKIT_HOST || 'http://127.0.0.1:1999';
-		const lobbyUrl = `${host}/register`;
+		// Get lobby URL using centralized config
+		const lobbyUrl = getLobbyUrl('/register');
 
 		const response = await fetch(lobbyUrl, {
 			method: 'POST',
@@ -133,11 +140,11 @@ export async function registerRoomWithLobby(poll: Poll): Promise<void> {
  * Handle GET poll requests
  */
 export function handleGetPoll(poll: Poll | null): Response {
+	const { success, notFound } = useHttpResponse();
+
 	if (poll) {
-		return new Response(JSON.stringify(poll), {
-			headers: { 'Content-Type': 'application/json' }
-		});
+		return success(poll);
 	} else {
-		return new Response('Not found', { status: 404 });
+		return notFound('Poll not found');
 	}
 }

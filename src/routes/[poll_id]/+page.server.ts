@@ -4,14 +4,17 @@ import type { Poll } from '$lib/types';
 import { env } from '$env/dynamic/private';
 import { GetPollResponseSchema } from '$shared/schemas/index';
 
-// Fallback to default development URL if not set
-const PARTYKIT_URL = env.PARTYKIT_URL || 'http://127.0.0.1:1999';
+// Get PartyKit URL from environment or use default for development
+function getPartyKitUrl(): string {
+	return env.PARTYKIT_URL || 'http://127.0.0.1:1999';
+}
 
 export const load: PageServerLoad = async ({ params, fetch }) => {
 	const pollId = params.poll_id;
+	const partyKitUrl = getPartyKitUrl();
 
 	try {
-		const response = await fetch(`${PARTYKIT_URL}/parties/poll/${pollId}`);
+		const response = await fetch(`${partyKitUrl}/parties/poll/${pollId}`);
 
 		if (!response.ok) {
 			if (response.status === 404) {

@@ -102,7 +102,7 @@ describe('Server Actions', () => {
 			const invalidResponse = {
 				ok: true,
 				data: {
-					success: true,
+					success: true
 					// Missing poll data
 				}
 			};

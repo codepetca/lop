@@ -38,11 +38,11 @@ describe('Voting Logic', () => {
 		it('should handle votes for different options', async () => {
 			const room = createMockRoom();
 			const poll = createTestPoll();
-			
+
 			// Vote for Red
 			const redVote = createVoteMessage({ option: 'Red' });
 			const result1 = await handleVote(room, poll, redVote);
-			
+
 			// Vote for Blue
 			const blueVote = createVoteMessage({ option: 'Blue' });
 			const result2 = await handleVote(room, result1!, blueVote);

@@ -151,7 +151,7 @@ describe('Schema Validation', () => {
 				{ type: 'room-list', rooms: [] }
 			];
 
-			messages.forEach(message => {
+			messages.forEach((message) => {
 				const result = MessageSchema.safeParse(message);
 				expect(result.success).toBe(true);
 			});

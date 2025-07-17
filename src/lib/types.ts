@@ -11,4 +11,4 @@ export type {
 	GetPollResponse,
 	RegisterRoomResponse,
 	ApiErrorResponse
-} from '$shared/schemas/index.js';
+} from '$shared/schemas';

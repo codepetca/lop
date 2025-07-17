@@ -15,7 +15,7 @@ npm run check            # TypeScript check
 npm run lint             # Prettier check
 npm run format           # Auto-format
 
-# Production  
+# Production
 npm run build            # Build frontend
 npm run party:deploy     # Deploy PartyKit
 
@@ -62,11 +62,13 @@ tests/
 ## Key Patterns
 
 ### Type Safety
+
 - Backend: Zod schemas in `shared/schemas/` for runtime validation
 - Frontend: TypeScript types in `src/lib/types.ts`
 - All messages validated with `MessageSchema.parse()`
 
 ### WebSocket Messages
+
 ```typescript
 // Discriminated union in shared/schemas/message.ts
 type Message =
@@ -77,6 +79,7 @@ type Message =
 ```
 
 ### Poll Creation Flow
+
 1. SvelteKit action posts to `/parties/main/main/create-poll`
 2. Lobby generates poll ID, creates poll room via `context.parties.poll.get(pollId)`
 3. Poll server generates random question, saves to storage
@@ -84,29 +87,87 @@ type Message =
 5. Returns poll data to frontend
 
 ### Environment Variables
+
 ```bash
 # .env
 PARTYKIT_URL=http://127.0.0.1:1999        # Backend URL (private)
+PARTYKIT_HOST=http://127.0.0.1:1999       # Backend host (private)
 PUBLIC_PARTYKIT_HOST=127.0.0.1:1999       # WebSocket host (public)
+```
+
+**Configuration Management:**
+
+- **Use centralized config** from `party/lib/config.ts` for all environment variables
+- **Don't duplicate environment logic** across files
+- **Use helper functions** for URL construction
+
+```typescript
+// ✅ Correct - Use centralized config
+import { getLobbyUrl } from './lib/config';
+const lobbyUrl = getLobbyUrl('/register');
+
+// ❌ Incorrect - Duplicate env logic
+const host = process.env.PARTYKIT_HOST || 'http://127.0.0.1:1999';
+const lobbyUrl = `${host}/register`;
 ```
 
 ## Code Standards
 
-### Imports
-- No extensions needed for TypeScript imports
-- Import types with `import type`
-- Prefer alias paths (`$shared/`, `$lib/`) over relative paths
+### Imports (IMPORTANT)
+
+- **Always use alias paths** (`$shared/`, `$lib/`) instead of relative paths
+- **Never use file extensions** in imports (`.js`, `.ts`, etc.)
+- **Import types with `import type`** for type-only imports
+- **Use centralized exports** - import from `$lib` instead of deep imports where possible
+
+**Examples:**
+
+```typescript
+// ✅ Correct
+import { Poll, VoteMessage } from '$shared/schemas';
+import type { Poll } from '$lib/types';
+import { useWebSocket } from '$lib';
+
+// ❌ Incorrect
+import { Poll } from '../shared/schemas/index.js';
+import { Poll } from '../../shared/schemas/poll.ts';
+import { useWebSocket } from './hooks/useWebSocket.svelte';
+```
 
 ### Frontend (IMPORTANT)
+
 - **Always use Svelte 5** with runes (`$state`, `$derived`, `$effect`)
 - Never use Svelte 4 patterns (stores, reactive statements)
 
 ### Backend (IMPORTANT)
-- **Use hooks from `party/lib/hooks.ts`** for WebSocket/storage operations
-- Extend `PartyKitServer` class for consistent structure
-- Keep business logic in `handlers.ts`, use hooks for plumbing
+
+- **Always use hooks from `party/lib/hooks.ts`** for WebSocket/storage operations
+- **Never use direct `room.storage.put()` or `room.broadcast()`** - use hooks instead
+- **Extend `PartyKitServer`** class for consistent structure
+- **Keep business logic in `handlers.ts`**, use hooks for plumbing
+- **Use centralized config** from `party/lib/config.ts` for environment variables
+- **Use common utilities** from `party/utils.ts` for shared logic
+
+**Examples:**
+
+```typescript
+// ✅ Correct - Use hooks
+const storage = useStorage<{ poll: Poll }>(room);
+const { broadcast } = useBroadcast<PollUpdateMessage>(room);
+const { success, error } = useHttpResponse();
+
+await storage.set('poll', poll);
+broadcast(updateMessage);
+return success(data);
+
+// ❌ Incorrect - Direct usage
+await room.storage.put('poll', poll);
+room.broadcast(JSON.stringify(updateMessage));
+return new Response(JSON.stringify(data));
+```
 
 ### Backend Patterns
+
 ```typescript
 // Message handling - auto-validates and routes
 const messageHandler = useMessageHandler(MessageSchema, room);
@@ -124,15 +185,34 @@ await storage.set('poll', pollData);
 ```
 
 ### Validation (IMPORTANT)
+
 - **Always validate with Zod** - use `MessageSchema.parse()` for all external data
-- Return typed error responses with proper status codes
+- **Use validated schemas in responses** - don't validate and then ignore the result
+- **Return typed error responses** with proper status codes using hooks
+
+**Examples:**
+
+```typescript
+// ✅ Correct - Use validated response
+const errorResponse = ApiErrorResponseSchema.parse({
+    error: 'registration_failed',
+    message: 'Failed to register room'
+});
+return this.http.error(errorResponse.message, 500);
+
+// ❌ Incorrect - Validate but ignore result
+const errorResponse = ApiErrorResponseSchema.parse({...});
+return this.http.error('Hard-coded message', 500);
+```
 
 ### State Management
+
 - PartyKit: Room storage (persistent)
 - Frontend: Svelte 5 runes only
 - Vote tracking: localStorage (prevents duplicate votes per browser)
 
 ### Testing Strategy
+
 - **Schema Validation**: Comprehensive Zod schema tests (valid/invalid data, edge cases)
 - **WebSocket Testing**: Mock WebSocket connections with lifecycle simulation
   - Mock `window.location`, `window.setTimeout` for test environment
