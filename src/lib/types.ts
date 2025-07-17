@@ -1,8 +1,11 @@
 // Re-export shared types for frontend use
 export type {
 	Poll,
+	PollPlayer,
 	VoteMessage,
 	PollUpdateMessage,
+	PlayerJoinPollMessage,
+	PlayerJoinedPollMessage,
 	RoomMetadata,
 	RoomListRequestMessage,
 	RoomListMessage,

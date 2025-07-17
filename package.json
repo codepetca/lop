@@ -38,8 +38,10 @@
 		"vitest": "^3.2.4"
 	},
 	"dependencies": {
+		"@types/uuid": "^10.0.0",
 		"partykit": "^0.0.115",
 		"partysocket": "^1.1.4",
+		"uuid": "^11.1.0",
 		"zod": "^4.0.5"
 	}
 }

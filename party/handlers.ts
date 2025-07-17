@@ -1,8 +1,11 @@
 import type * as Party from 'partykit/server';
 import {
 	Poll,
+	PollPlayer,
 	VoteMessage,
 	PollUpdateMessage,
+	PlayerJoinPollMessage,
+	PlayerJoinedPollMessage,
 	PollSchema,
 	RoomMetadata,
 	RegisterRoomRequestSchema,
@@ -20,13 +23,14 @@ import {
 	RegisterGameRequestSchema
 } from '$shared/schemas';
 import { getRandomQuestion } from './questions';
-import { initializePollVotes, generatePollId } from './utils';
+import { initializePollVotes, generatePollId, generatePlayerId } from './utils';
+import { generatePlayerName } from './name-generator';
 import { getLobbyUrl } from './lib/config';
 import { useStorage, useBroadcast, useHttpResponse } from './lib/hooks';
 import { getStoryTemplate, getStoryScene } from './stories';
 
 /**
- * Handle vote messages from WebSocket clients
+ * Handle vote messages from WebSocket clients with UUID tracking
  */
 export async function handleVote(
 	room: Party.Room,
@@ -39,8 +43,25 @@ export async function handleVote(
 		return null;
 	}
 
-	// Increment the vote count
-	poll.votes[message.option] = (poll.votes[message.option] || 0) + 1;
+	// Check if player exists in the poll
+	const player = poll.players.find(p => p.id === message.playerId);
+	if (!player) {
+		console.warn(`Player not found: ${message.playerId}`);
+		return null;
+	}
+
+	// Check if player has already voted for any option
+	const hasVoted = Object.values(poll.votes).some(voterIds => voterIds.includes(message.playerId));
+	if (hasVoted) {
+		console.warn(`Player ${message.playerId} has already voted`);
+		return null;
+	}
+
+	// Add player's vote to the option
+	if (!poll.votes[message.option]) {
+		poll.votes[message.option] = [];
+	}
+	poll.votes[message.option].push(message.playerId);
 
 	// Use hooks for consistent storage and broadcasting
 	const storage = useStorage<{ poll: Poll }>(room);
@@ -60,6 +81,58 @@ export async function handleVote(
 }
 
 /**
+ * Handle player joining a poll
+ */
+export async function handlePlayerJoinPoll(
+	room: Party.Room,
+	poll: Poll,
+	message: PlayerJoinPollMessage
+): Promise<{ updatedPoll?: Poll; player?: PollPlayer; error?: string }> {
+	// Generate player ID and name if not provided
+	const playerId = message.playerId || generatePlayerId();
+	const playerName = message.playerName || generatePlayerName();
+
+	// Check if player name is already taken
+	if (poll.players.some(p => p.name === playerName)) {
+		return { error: 'Player name is already taken' };
+	}
+
+	// Check if player ID already exists
+	if (poll.players.some(p => p.id === playerId)) {
+		return { error: 'Player ID already exists' };
+	}
+
+	// Create new player
+	const player: PollPlayer = {
+		id: playerId,
+		name: playerName,
+		joinedAt: new Date().toISOString()
+	};
+
+	// Add player to poll
+	const updatedPoll = {
+		...poll,
+		players: [...poll.players, player]
+	};
+
+	// Use hooks for consistent storage and broadcasting
+	const storage = useStorage<{ poll: Poll }>(room);
+	const { broadcast } = useBroadcast<PlayerJoinedPollMessage>(room);
+
+	// Save updated poll to storage
+	await storage.set('poll', updatedPoll);
+
+	// Broadcast player joined message to all connected clients
+	const joinedMessage: PlayerJoinedPollMessage = {
+		type: 'player-joined-poll',
+		player: player
+	};
+	broadcast(joinedMessage);
+
+	return { updatedPoll, player };
+}
+
+/**
  * Handle server-generated poll creation
  */
 export async function handleCreatePollServerGenerated(room: Party.Room): Promise<Poll> {
@@ -71,7 +144,8 @@ export async function handleCreatePollServerGenerated(room: Party.Room): Promise
 		id: room.id,
 		title: question.title,
 		options: question.options,
-		votes: initializePollVotes(question.options)
+		votes: initializePollVotes(question.options),
+		players: []
 	};
 
 	// Validate the created poll
@@ -104,7 +178,8 @@ export async function handleCreatePollServerGeneratedNoRegistration(
 		id: room.id,
 		title: question.title,
 		options: question.options,
-		votes: initializePollVotes(question.options)
+		votes: initializePollVotes(question.options),
+		players: []
 	};
 
 	// Validate the created poll
@@ -265,7 +340,7 @@ export async function handlePlayerJoin(
 	}
 
 	// Create new player
-	const playerId = message.playerId || generatePollId();
+	const playerId = message.playerId || generatePlayerId();
 	const player: CharacterState = {
 		id: playerId,
 		name: message.playerName,

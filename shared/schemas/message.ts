@@ -11,7 +11,25 @@ import {
 // Vote message schema
 export const VoteMessageSchema = z.object({
 	type: z.literal('vote'),
-	option: z.string()
+	option: z.string(),
+	playerId: z.string().uuid()
+});
+
+// Player join poll message schema
+export const PlayerJoinPollMessageSchema = z.object({
+	type: z.literal('player-join-poll'),
+	playerName: z.string().min(1).optional(), // Optional - will generate if not provided
+	playerId: z.string().uuid().optional() // Optional - will generate if not provided
+});
+
+// Player joined poll message schema (broadcast to all)
+export const PlayerJoinedPollMessageSchema = z.object({
+	type: z.literal('player-joined-poll'),
+	player: z.object({
+		id: z.string().uuid(),
+		name: z.string(),
+		joinedAt: z.string()
+	})
 });
 
 // Poll update message schema
@@ -110,9 +128,11 @@ export const RoomListMessageSchema = z.object({
 
 // Union of all WebSocket message types
 export const MessageSchema = z.discriminatedUnion('type', [
-	// Legacy poll messages
+	// Poll messages
 	VoteMessageSchema,
 	PollUpdateMessageSchema,
+	PlayerJoinPollMessageSchema,
+	PlayerJoinedPollMessageSchema,
 	RoomListRequestMessageSchema,
 	RoomListMessageSchema,
 	// Game messages
@@ -133,6 +153,8 @@ export const MessageSchema = z.discriminatedUnion('type', [
 // Export TypeScript types inferred from schemas
 export type VoteMessage = z.infer<typeof VoteMessageSchema>;
 export type PollUpdateMessage = z.infer<typeof PollUpdateMessageSchema>;
+export type PlayerJoinPollMessage = z.infer<typeof PlayerJoinPollMessageSchema>;
+export type PlayerJoinedPollMessage = z.infer<typeof PlayerJoinedPollMessageSchema>;
 export type RoomMetadata = z.infer<typeof RoomMetadataSchema>;
 export type RoomListRequestMessage = z.infer<typeof RoomListRequestMessageSchema>;
 export type RoomListMessage = z.infer<typeof RoomListMessageSchema>;

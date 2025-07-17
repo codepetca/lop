@@ -2,31 +2,36 @@
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import type { PageData } from './$types';
-	import type { Poll, Message, VoteMessage } from '$lib/types';
+	import type { Poll, Message, VoteMessage, PlayerJoinPollMessage, PlayerJoinedPollMessage } from '$lib/types';
 	import { useWebSocket } from '$lib/hooks/useWebSocket.svelte';
 
 	let { data }: { data: PageData } = $props();
 
 	let poll = $state<Poll>(data.poll);
 	let hasVoted = $state(false);
+	let currentPlayer = $state<{ id: string; name: string } | null>(null);
 
 	// Initialize WebSocket hook
-	const ws = useWebSocket<Message, VoteMessage>('poll', data.pollId, {
-		onOpen: () => console.log('Connected to PartyKit'),
+	const ws = useWebSocket<Message, VoteMessage | PlayerJoinPollMessage>('poll', data.pollId, {
+		onOpen: () => {
+			console.log('Connected to PartyKit');
+			// Auto-join the poll when connected
+			joinPoll();
+		},
 		onClose: () => console.log('Disconnected from PartyKit')
 	});
 
-	// Calculate total votes
+	// Calculate total votes (now working with arrays of player IDs)
 	const totalVotes = $derived(
-		Object.values(poll.votes).reduce((sum: number, count: number) => sum + count, 0)
+		Object.values(poll.votes).reduce((sum: number, voterIds: string[]) => sum + voterIds.length, 0)
 	);
 
 	// Calculate percentages for each option
 	const optionStats = $derived(
 		poll.options.map((option: string) => ({
 			option,
-			votes: poll.votes[option] || 0,
-			percentage: totalVotes > 0 ? ((poll.votes[option] || 0) / totalVotes) * 100 : 0
+			votes: poll.votes[option]?.length || 0,
+			percentage: totalVotes > 0 ? ((poll.votes[option]?.length || 0) / totalVotes) * 100 : 0
 		}))
 	);
 
@@ -34,22 +39,60 @@
 	$effect(() => {
 		if (ws.lastMessage?.type === 'poll-update') {
 			poll = ws.lastMessage.poll;
+			// Check if current player has voted
+			if (currentPlayer) {
+				hasVoted = Object.values(poll.votes).some(voterIds => voterIds.includes(currentPlayer!.id));
+			}
+		} else if (ws.lastMessage?.type === 'player-joined-poll') {
+			// If this is our player joining, save the data
+			const joinedPlayer = ws.lastMessage.player;
+			if (!currentPlayer || currentPlayer.id === joinedPlayer.id) {
+				currentPlayer = { id: joinedPlayer.id, name: joinedPlayer.name };
+				savePlayerToCookies(currentPlayer);
+				console.log('Joined as player:', currentPlayer);
+			}
 		}
 	});
 
+	// Player management functions
+	function loadPlayerFromCookies(): { id: string; name: string } | null {
+		if (!browser) return null;
+		try {
+			const playerData = localStorage.getItem(`player_${data.pollId}`);
+			return playerData ? JSON.parse(playerData) : null;
+		} catch {
+			return null;
+		}
+	}
+
+	function savePlayerToCookies(player: { id: string; name: string }) {
+		if (browser) {
+			localStorage.setItem(`player_${data.pollId}`, JSON.stringify(player));
+		}
+	}
+
+	function joinPoll() {
+		if (!ws.isConnected) return;
+
+		// Try to load existing player data
+		const existingPlayer = loadPlayerFromCookies();
+		
+		ws.send({
+			type: 'player-join-poll',
+			playerId: existingPlayer?.id,
+			playerName: existingPlayer?.name
+		});
+	}
+
 	function vote(option: string) {
-		if (!ws.isConnected || hasVoted) return;
+		if (!ws.isConnected || hasVoted || !currentPlayer) return;
 
 		ws.send({
 			type: 'vote',
-			option
+			option,
+			playerId: currentPlayer.id
 		});
 		hasVoted = true;
-
-		// Store vote in localStorage to prevent multiple votes
-		if (browser) {
-			localStorage.setItem(`voted_${data.pollId}`, 'true');
-		}
 	}
 
 	function copyPollLink() {
@@ -60,12 +103,15 @@
 	}
 
 	onMount(() => {
-		ws.connect();
-
-		// Check if user has already voted
-		if (browser) {
-			hasVoted = localStorage.getItem(`voted_${data.pollId}`) === 'true';
+		// Load existing player data if available
+		const existingPlayer = loadPlayerFromCookies();
+		if (existingPlayer) {
+			currentPlayer = existingPlayer;
+			// Check if this player has already voted in the current poll
+			hasVoted = Object.values(poll.votes).some(voterIds => voterIds.includes(existingPlayer.id));
 		}
+
+		ws.connect();
 
 		return () => {
 			ws.cleanup();
@@ -90,10 +136,20 @@
 	{/if}
 
 	<div class="poll-stats">
-		<span class="vote-count">{totalVotes} vote{totalVotes !== 1 ? 's' : ''}</span>
-		{#if hasVoted}
-			<span class="voted-indicator">✓ You voted</span>
-		{/if}
+		<div class="stats-left">
+			<span class="vote-count">{totalVotes} vote{totalVotes !== 1 ? 's' : ''}</span>
+			{#if poll.players.length > 0}
+				<span class="player-count">{poll.players.length} player{poll.players.length !== 1 ? 's' : ''}</span>
+			{/if}
+		</div>
+		<div class="stats-right">
+			{#if currentPlayer}
+				<span class="player-name">👤 {currentPlayer.name}</span>
+			{/if}
+			{#if hasVoted}
+				<span class="voted-indicator">✓ Voted</span>
+			{/if}
+		</div>
 	</div>
 
 	<div class="options">
@@ -190,9 +246,27 @@
 		border-radius: 8px;
 	}
 
-	.vote-count {
+	.stats-left,
+	.stats-right {
+		display: flex;
+		gap: 1rem;
+		align-items: center;
+	}
+
+	.vote-count,
+	.player-count {
 		font-weight: 600;
 		color: #374151;
+	}
+
+	.player-count {
+		color: #6b7280;
+		font-size: 0.9rem;
+	}
+
+	.player-name {
+		color: #4f46e5;
+		font-weight: 500;
 	}
 
 	.voted-indicator {
@@ -324,6 +398,11 @@
 			flex-direction: column;
 			gap: 0.5rem;
 			text-align: center;
+		}
+
+		.stats-left,
+		.stats-right {
+			justify-content: center;
 		}
 
 		.option-btn {

@@ -117,9 +117,10 @@ export const mockEnv = (env: Record<string, string> = {}) => {
 };
 
 // Helper to create test polls with vote counts
-export const createPollWithVotes = (votes: Record<string, number>): Poll => ({
+export const createPollWithVotes = (votes: Record<string, string[]>): Poll => ({
 	id: 'test-poll-with-votes',
 	title: 'Test Poll',
 	options: Object.keys(votes),
-	votes
+	votes,
+	players: []
 });

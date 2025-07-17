@@ -2,11 +2,12 @@ import type * as Party from 'partykit/server';
 import {
 	Poll,
 	PollUpdateMessage,
+	PlayerJoinedPollMessage,
 	MessageSchema,
 	GetPollResponseSchema,
 	CreatePollResponseSchema
 } from '../shared/schemas/index.js';
-import { handleVote, handleCreatePollServerGeneratedNoRegistration } from './handlers';
+import { handleVote, handlePlayerJoinPoll, handleCreatePollServerGeneratedNoRegistration } from './handlers';
 import { PartyKitServer } from './lib/server';
 import { useMessageHandler, useBroadcast, useStorage } from './lib/hooks';
 
@@ -32,6 +33,19 @@ export default class PollServer extends PartyKitServer {
 			if (updatedPoll) {
 				this.poll = updatedPoll;
 				await this.storage.set('poll', updatedPoll);
+			}
+		});
+
+		this.messageHandler.handle('player-join-poll', async (message, sender) => {
+			if (!this.poll) return;
+
+			const result = await handlePlayerJoinPoll(this.room, this.poll, message);
+			if (result.updatedPoll) {
+				this.poll = result.updatedPoll;
+				await this.storage.set('poll', result.updatedPoll);
+			}
+			if (result.error) {
+				console.warn(`Player join failed: ${result.error}`);
 			}
 		});
 	}

@@ -18,7 +18,8 @@ export const createTestPoll = (overrides: Partial<Poll> = {}): Poll => ({
 	id: 'test-poll-123',
 	title: 'What is your favorite color?',
 	options: ['Red', 'Blue', 'Green', 'Yellow'],
-	votes: { Red: 0, Blue: 0, Green: 0, Yellow: 0 },
+	votes: { Red: [], Blue: [], Green: [], Yellow: [] },
+	players: [],
 	...overrides
 });
 
@@ -34,6 +35,7 @@ export const createTestRoomMetadata = (overrides: Partial<RoomMetadata> = {}): R
 export const createVoteMessage = (overrides: Partial<VoteMessage> = {}): VoteMessage => ({
 	type: 'vote',
 	option: 'Red',
+	playerId: 'test-player-uuid-123',
 	...overrides
 });
 
