@@ -389,6 +389,12 @@ export async function handleGameChoice(
 		[message.choiceId]: (game.votes[message.choiceId] || 0) + 1
 	};
 
+	// Initialize updated game with new votes
+	let updatedGame = {
+		...game,
+		votes: updatedVotes
+	};
+
 	// Check if voting is complete
 	let voteResult: VoteResult | undefined;
 	let sceneTransition: any;
@@ -396,11 +402,27 @@ export async function handleGameChoice(
 	let finalStats: Record<string, number> | undefined;
 
 	if (game.requiresVoting) {
-		// Check if enough votes (for now, just use simple majority)
 		const totalVotes = Object.values(updatedVotes).reduce((sum, count) => sum + count, 0);
-		if (totalVotes >= Math.min(game.players.length, 1)) {
-			// At least 1 vote for testing
-			// Find winning choice
+		const votingTimeLimit = game.settings.votingTimeLimit || 30; // Default 30 seconds
+		
+		console.log(`Vote processed: ${totalVotes}/${game.players.length} players voted`);
+		
+		// Start voting timer if this is the first vote and no timer is set
+		if (totalVotes === 1 && !game.votingEndsAt) {
+			const votingEndsAt = new Date(Date.now() + votingTimeLimit * 1000).toISOString();
+			updatedGame.votingEndsAt = votingEndsAt;
+			console.log('Started voting timer, ends at:', votingEndsAt);
+		}
+		
+		// Check if voting should end: all players voted OR time expired
+		const allPlayersVoted = totalVotes >= game.players.length;
+		const timeExpired = game.votingEndsAt && new Date() >= new Date(game.votingEndsAt);
+		
+		console.log('Voting check:', { allPlayersVoted, timeExpired, votingEndsAt: game.votingEndsAt });
+		
+		if (allPlayersVoted || timeExpired) {
+			console.log('Voting complete! Processing results...');
+			// Find winning choice (most votes, with tie-breaking)
 			const winningChoiceId = Object.entries(updatedVotes).reduce((a, b) =>
 				updatedVotes[a[0]] > updatedVotes[b[0]] ? a : b
 			)[0];
@@ -413,6 +435,9 @@ export async function handleGameChoice(
 					choiceVotes: updatedVotes,
 					nextScene: winningChoice.nextScene
 				};
+				
+				// Clear voting timer for next round
+				updatedGame.votingEndsAt = null;
 			}
 		}
 	} else {
@@ -425,11 +450,7 @@ export async function handleGameChoice(
 		};
 	}
 
-	// Process choice effects and scene transition
-	let updatedGame = {
-		...game,
-		votes: updatedVotes
-	};
+	// Process choice effects and scene transition (updatedGame already initialized above)
 
 	if (voteResult) {
 		// Apply choice effects to all players

@@ -41,6 +41,7 @@ export default class GameServer extends PartyKitServer {
 	private errorBroadcast = useBroadcast<GameErrorMessage>(this.room);
 	private messageHandler = useMessageHandler(MessageSchema, this.room);
 	private connectionPlayerMap = new Map<string, string>(); // connectionId -> playerId
+	private votingTimer: ReturnType<typeof setTimeout> | null = null;
 
 	async setup() {
 		// Load game from storage
@@ -65,6 +66,11 @@ export default class GameServer extends PartyKitServer {
 				this.game = result.updatedGame;
 				await this.storage.set('game', this.game);
 
+				// Start voting timer if one was set
+				if (this.game.votingEndsAt && !this.votingTimer) {
+					this.startVotingTimer();
+				}
+
 				// Broadcast game update
 				this.gameBroadcast.broadcast({
 					type: 'game-update',
@@ -73,6 +79,9 @@ export default class GameServer extends PartyKitServer {
 
 				// Handle voting results or scene transitions
 				if (result.voteResult) {
+					// Clear voting timer since voting completed
+					this.clearVotingTimer();
+					
 					this.votingBroadcast.broadcast({
 						type: 'voting-ended',
 						result: result.voteResult
@@ -140,6 +149,98 @@ export default class GameServer extends PartyKitServer {
 				});
 			}
 		});
+	}
+
+	private startVotingTimer() {
+		if (!this.game?.votingEndsAt) return;
+		
+		const timeRemaining = new Date(this.game.votingEndsAt).getTime() - Date.now();
+		if (timeRemaining <= 0) {
+			// Time already expired
+			this.processVotingTimeout();
+			return;
+		}
+
+		// Clear any existing timer
+		this.clearVotingTimer();
+		
+		// Set new timer
+		this.votingTimer = setTimeout(async () => {
+			await this.processVotingTimeout();
+		}, timeRemaining);
+
+		// Broadcast voting started message
+		this.votingBroadcast.broadcast({
+			type: 'voting-started',
+			choices: this.game!.votingOptions,
+			timeLimit: Math.ceil(timeRemaining / 1000),
+			endsAt: this.game!.votingEndsAt!
+		});
+	}
+
+	private clearVotingTimer() {
+		if (this.votingTimer) {
+			clearTimeout(this.votingTimer);
+			this.votingTimer = null;
+		}
+	}
+
+	private async processVotingTimeout() {
+		if (!this.game) return;
+
+		// Process timeout by triggering a choice with the current votes
+		const totalVotes = Object.values(this.game.votes).reduce((sum, count) => sum + count, 0);
+		if (totalVotes > 0) {
+			// Find the most voted choice
+			const winningChoiceId = Object.entries(this.game.votes).reduce((a, b) =>
+				this.game!.votes[a[0]] > this.game!.votes[b[0]] ? a : b
+			)[0];
+
+			// Force complete the voting by triggering the handler with time expired
+			const result = await handleGameChoice(
+				this.room,
+				this.game,
+				{ type: 'game-choice', choiceId: winningChoiceId, playerId: 'timeout' },
+				'timeout'
+			);
+
+			if (result.updatedGame) {
+				this.game = result.updatedGame;
+				await this.storage.set('game', this.game);
+
+				// Broadcast updates
+				this.gameBroadcast.broadcast({
+					type: 'game-update',
+					game: this.game
+				});
+
+				if (result.voteResult) {
+					this.votingBroadcast.broadcast({
+						type: 'voting-ended',
+						result: result.voteResult
+					});
+				}
+
+				if (result.sceneTransition) {
+					this.sceneBroadcast.broadcast({
+						type: 'scene-transition',
+						currentScene: result.sceneTransition.currentScene,
+						title: result.sceneTransition.title,
+						description: result.sceneTransition.description,
+						isEnding: result.sceneTransition.isEnding
+					});
+				}
+
+				if (result.gameCompleted) {
+					this.completeBroadcast.broadcast({
+						type: 'game-completed',
+						finalStats: result.finalStats || {}
+					});
+				}
+			}
+		}
+
+		this.clearVotingTimer();
 	}
 
 	async handleMessage(message: string, sender: Party.Connection) {

@@ -46,9 +46,12 @@
 	$effect(() => {
 		if (!ws.lastMessage) return;
 
+		console.log('Received message:', ws.lastMessage.type, ws.lastMessage);
+
 		switch (ws.lastMessage.type) {
 			case 'game-update':
 				game = ws.lastMessage.game;
+				console.log('Updated game state:', game);
 				break;
 			case 'player-joined':
 				if (ws.lastMessage.player.name === playerName) {
@@ -60,6 +63,7 @@
 				hasVoted = false;
 				votingTimeLeft = ws.lastMessage.timeLimit;
 				startVotingTimer();
+				console.log('Voting started, time limit:', votingTimeLeft);
 				break;
 			case 'voting-ended':
 				hasVoted = false;
@@ -94,6 +98,7 @@
 	function joinGame() {
 		if (!playerName.trim() || !ws.isConnected) return;
 
+		console.log('Joining game with name:', playerName.trim());
 		ws.send({
 			type: 'player-join',
 			playerName: playerName.trim()
@@ -101,6 +106,13 @@
 	}
 
 	function vote(choiceId: string) {
+		console.log('Vote attempt:', { 
+			connected: ws.isConnected, 
+			hasVoted, 
+			currentPlayer: currentPlayer?.name,
+			choiceId 
+		});
+		
 		if (!ws.isConnected || hasVoted || !currentPlayer) return;
 
 		ws.send({
@@ -130,6 +142,9 @@
 	}
 
 	onMount(() => {
+		console.log('Initial game state:', game);
+		console.log('Game voting options:', game.votingOptions);
+		
 		ws.connect();
 
 		// Check if user has already voted for current scene
@@ -231,7 +246,7 @@
 									class="choice-btn"
 									class:voted={hasVoted}
 									onclick={() => vote(choice.id)}
-									disabled={hasVoted || ws.status !== 'connected' || votingTimeLeft <= 0}
+									disabled={hasVoted || ws.status !== 'connected' || (votingTimeLeft <= 0 && votingTimeLeft !== 0)}
 								>
 									<div class="choice-content">
 										<span class="choice-text">{choice.text}</span>
