@@ -1,6 +1,11 @@
 import type * as Party from 'partykit/server';
 import { Poll, PollUpdateMessage, MessageSchema } from './types';
-import { handleVote, handleCreatePollServerGenerated, handleGetPoll } from './handlers';
+import {
+	handleVote,
+	handleCreatePollServerGenerated,
+	handleCreatePollServerGeneratedNoRegistration,
+	handleGetPoll
+} from './handlers';
 
 export default class PollServer implements Party.Server {
 	constructor(readonly room: Party.Room) {}
@@ -53,15 +58,22 @@ export default class PollServer implements Party.Server {
 		if (req.method === 'POST') {
 			try {
 				// Check if poll data is provided in the request body
-				const body = await req.text();
-				if (body) {
+				let body = '';
+				try {
+					body = await req.text();
+				} catch (e) {
+					// No body or body already consumed - that's fine
+					console.log('No request body or body already consumed');
+				}
+
+				if (body && body !== '{}' && body.trim() !== '') {
 					// Poll data provided by lobby
 					const pollData = JSON.parse(body) as Poll;
 					this.poll = pollData;
 					await this.room.storage.put('poll', this.poll);
 				} else {
-					// Create server-generated poll
-					const poll = await handleCreatePollServerGenerated(this.room);
+					// Create server-generated poll (without registration since lobby handles it)
+					const poll = await handleCreatePollServerGeneratedNoRegistration(this.room);
 					this.poll = poll;
 				}
 
@@ -75,11 +87,6 @@ export default class PollServer implements Party.Server {
 		}
 
 		if (req.method === 'GET') {
-			// Auto-create poll if it doesn't exist (for polls created by lobby)
-			if (!this.poll) {
-				const poll = await handleCreatePollServerGenerated(this.room);
-				this.poll = poll;
-			}
 			return handleGetPoll(this.poll);
 		}
 

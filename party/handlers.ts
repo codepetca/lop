@@ -63,6 +63,34 @@ export async function handleCreatePollServerGenerated(room: Party.Room): Promise
 }
 
 /**
+ * Handle server-generated poll creation without lobby registration
+ * Used when poll is created via lobby using context.parties
+ */
+export async function handleCreatePollServerGeneratedNoRegistration(
+	room: Party.Room
+): Promise<Poll> {
+	// Get a random question from the bank
+	const question = getRandomQuestion();
+
+	// Create new poll with server-generated content
+	const poll: Poll = {
+		id: room.id,
+		title: question.title,
+		options: question.options,
+		votes: initializePollVotes(question.options)
+	};
+
+	// Validate the created poll
+	const validatedPoll = PollSchema.parse(poll);
+
+	// Save to storage
+	await room.storage.put('poll', validatedPoll);
+
+	// No lobby registration - handled by lobby itself
+	return validatedPoll;
+}
+
+/**
  * Register room with lobby
  */
 export async function registerRoomWithLobby(poll: Poll): Promise<void> {

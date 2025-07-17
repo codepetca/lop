@@ -10,8 +10,8 @@ export const actions: Actions = {
 		console.log(`Creating server-generated poll via lobby`);
 		console.log(`PartyKit URL: ${PARTYKIT_URL}`);
 
-		// Create poll through the lobby server (lobby is main, not a party)
-		const response = await fetch(`${PARTYKIT_URL}/parties/main/create-poll`, {
+		// Create poll through the lobby server (same room as WebSocket connection)
+		const response = await fetch(`${PARTYKIT_URL}/parties/main/main/create-poll`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'

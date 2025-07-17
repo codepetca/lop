@@ -6,8 +6,6 @@ import {
 	MessageSchema,
 	Poll
 } from './types';
-import { getRandomQuestion } from './questions';
-import { initializePollVotes } from './utils';
 
 export default class LobbyServer implements Party.Server {
 	constructor(readonly room: Party.Room) {}
@@ -111,20 +109,24 @@ export default class LobbyServer implements Party.Server {
 				const pollId = Math.random().toString(36).substr(2, 9);
 				console.log(`Creating new poll with ID: ${pollId}`);
 
-				// Get a random question from the bank
-				const question = getRandomQuestion();
+				// Use context.parties to create poll in poll server
+				const pollParty = this.room.context.parties.poll;
+				const pollRoom = pollParty.get(pollId);
 
-				// Create the poll data
-				const poll: Poll = {
-					id: pollId,
-					title: question.title,
-					options: question.options,
-					votes: initializePollVotes(question.options)
-				};
+				// Create the poll by making a POST request to the poll server
+				const pollResponse = await pollRoom.fetch({
+					method: 'POST'
+				});
 
+				if (!pollResponse.ok) {
+					console.error('Failed to create poll:', await pollResponse.text());
+					return new Response('Failed to create poll', { status: 500 });
+				}
+
+				const poll = (await pollResponse.json()) as Poll;
 				console.log(`Poll created successfully: ${poll.title}`);
 
-				// Register the poll room
+				// Register the poll room with actual poll metadata
 				const roomMetadata: RoomMetadata = {
 					id: pollId,
 					title: poll.title,
@@ -137,8 +139,7 @@ export default class LobbyServer implements Party.Server {
 				this.roomRegistry.set(pollId, roomMetadata);
 				this.broadcastRoomList();
 
-				// Return the poll data
-				// The poll server will create its own poll when first accessed
+				// Return the poll data from the actual poll server
 				return new Response(JSON.stringify(poll), {
 					headers: { 'Content-Type': 'application/json' }
 				});
