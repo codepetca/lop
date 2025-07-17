@@ -609,14 +609,6 @@
 		flex: 1;
 	}
 
-	.form-group input[type='checkbox'] {
-		width: auto;
-		margin-right: 0.5rem;
-	}
-
-	.form-group label input[type='checkbox'] {
-		margin-right: 0.5rem;
-	}
 
 	.game-title {
 		font-size: 0.9rem;
