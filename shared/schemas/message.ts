@@ -1,16 +1,11 @@
 import { z } from 'zod';
 import { PollSchema } from './poll';
 import { PollPlayerSchema, GamePlayerSchema } from './player';
-import {
-	GameSessionSchema,
-	GameMetadataSchema,
-	StoryChoiceSchema,
-	VoteResultSchema
-} from './game';
+import { GameSessionSchema, GameMetadataSchema, StoryChoiceSchema, VoteResultSchema } from './game';
 
 /**
  * WebSocket Message Schema System
- * 
+ *
  * Defines all WebSocket message types used for real-time communication.
  * Messages are organized by domain: polls, games, and lobby management.
  */

@@ -2,8 +2,15 @@
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import type { PageData } from './$types';
-	import type { Poll, Message, VoteMessage, PlayerJoinPollMessage, PlayerJoinedPollMessage } from '$lib/types';
+	import type {
+		Poll,
+		Message,
+		VoteMessage,
+		PlayerJoinPollMessage,
+		PlayerJoinedPollMessage
+	} from '$lib/types';
 	import { useWebSocket } from '$lib/hooks/useWebSocket.svelte';
+	import { store } from '$lib/stores';
 
 	let { data }: { data: PageData } = $props();
 
@@ -41,7 +48,9 @@
 			poll = ws.lastMessage.poll;
 			// Check if current player has voted
 			if (currentPlayer) {
-				hasVoted = Object.values(poll.votes).some(voterIds => voterIds.includes(currentPlayer!.id));
+				hasVoted = Object.values(poll.votes).some((voterIds) =>
+					voterIds.includes(currentPlayer!.id)
+				);
 			}
 		} else if (ws.lastMessage?.type === 'player-joined-poll') {
 			// If this is our player joining, save the data
@@ -74,13 +83,24 @@
 	function joinPoll() {
 		if (!ws.isConnected) return;
 
-		// Try to load existing player data
-		const existingPlayer = loadPlayerFromCookies();
-		
+		// Try to use store player first, fallback to legacy localStorage
+		let playerId: string | undefined;
+		let playerName: string | undefined;
+
+		if (store.player) {
+			playerId = store.player.id;
+			playerName = store.player.name;
+		} else {
+			// Fallback to legacy localStorage for backward compatibility
+			const existingPlayer = loadPlayerFromCookies();
+			playerId = existingPlayer?.id;
+			playerName = existingPlayer?.name;
+		}
+
 		ws.send({
 			type: 'player-join-poll',
-			playerId: existingPlayer?.id,
-			playerName: existingPlayer?.name
+			playerId,
+			playerName
 		});
 	}
 
@@ -103,12 +123,21 @@
 	}
 
 	onMount(() => {
-		// Load existing player data if available
-		const existingPlayer = loadPlayerFromCookies();
-		if (existingPlayer) {
-			currentPlayer = existingPlayer;
+		// Initialize player from store or legacy localStorage
+		if (store.player) {
+			currentPlayer = { id: store.player.id, name: store.player.name };
 			// Check if this player has already voted in the current poll
-			hasVoted = Object.values(poll.votes).some(voterIds => voterIds.includes(existingPlayer.id));
+			hasVoted = Object.values(poll.votes).some((voterIds) => voterIds.includes(store.player!.id));
+		} else {
+			// Fallback to legacy localStorage for backward compatibility
+			const existingPlayer = loadPlayerFromCookies();
+			if (existingPlayer) {
+				currentPlayer = existingPlayer;
+				// Check if this player has already voted in the current poll
+				hasVoted = Object.values(poll.votes).some((voterIds) =>
+					voterIds.includes(existingPlayer.id)
+				);
+			}
 		}
 
 		ws.connect();
@@ -139,7 +168,9 @@
 		<div class="stats-left">
 			<span class="vote-count">{totalVotes} vote{totalVotes !== 1 ? 's' : ''}</span>
 			{#if poll.players.length > 0}
-				<span class="player-count">{poll.players.length} player{poll.players.length !== 1 ? 's' : ''}</span>
+				<span class="player-count"
+					>{poll.players.length} player{poll.players.length !== 1 ? 's' : ''}</span
+				>
 			{/if}
 		</div>
 		<div class="stats-right">

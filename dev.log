@@ -1,0 +1,18 @@
+
+> lop@0.0.1 dev:sveltekit
+> vite dev
+
+
+  VITE v7.0.4  ready in 456 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+9:19:43 p.m. [vite] (client) page reload .svelte-kit/generated/client/nodes/0.js
+9:19:43 p.m. [vite] (client) page reload .svelte-kit/generated/client/nodes/1.js
+9:19:43 p.m. [vite] (client) page reload .svelte-kit/generated/client/nodes/2.js
+9:19:43 p.m. [vite] (client) page reload .svelte-kit/generated/client/app.js
+9:19:43 p.m. [vite] (client) page reload .svelte-kit/generated/client/matchers.js
+9:19:43 p.m. [vite] (ssr) page reload .svelte-kit/generated/server/internal.js
+9:19:43 p.m. [vite] (client) page reload .svelte-kit/generated/root.js
+9:19:43 p.m. [vite] (ssr) page reload .svelte-kit/generated/root.js
+9:19:43 p.m. [vite] (ssr) page reload .svelte-kit/generated/root.svelte

@@ -1,0 +1,189 @@
+
+> lop@0.0.1 dev
+> npm run dev:party & npm run dev:sveltekit
+
+
+> lop@0.0.1 dev:sveltekit
+> vite dev
+
+
+> lop@0.0.1 dev:party
+> partykit dev
+
+🎈 PartyKit v0.0.115
+---------------------
+Loading environment variables from .env
+
+[2K[1A[2K[GBuild succeeded, starting server...
+
+
+  VITE v7.0.4  ready in 285 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+[2K[1A[2K[G[pk:inf] Ready on http://0.0.0.0:1999
+
+[2K[1A[2K[G[pk:inf] - http://127.0.0.1:1999
+
+[2K[1A[2K[G[pk:inf] - http://192.168.86.33:1999
+
+[2K[1A[2K[GBuild succeeded, starting server...
+
+[2K[1A[2K[G[pk:inf] Updated and ready on http://0.0.0.0:1999
+
+[2K[1A[2K[GLobby received GET request to: /parties/main/main/stories
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main/stories 200 OK (3ms)
+
+[2K[1A[2K[GLobby received GET request to: /parties/main/main/stories
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main/stories 200 OK (3ms)
+
+9:22:03 p.m. [vite] (client) page reload .svelte-kit/generated/client/nodes/0.js
+9:22:03 p.m. [vite] (client) page reload .svelte-kit/generated/client/nodes/1.js
+9:22:03 p.m. [vite] (client) page reload .svelte-kit/generated/client/nodes/2.js
+9:22:03 p.m. [vite] (client) page reload .svelte-kit/generated/client/app.js
+9:22:03 p.m. [vite] (client) page reload .svelte-kit/generated/client/matchers.js
+9:22:03 p.m. [vite] (ssr) page reload .svelte-kit/generated/server/internal.js
+9:22:03 p.m. [vite] (client) page reload .svelte-kit/generated/root.js
+9:22:03 p.m. [vite] (ssr) page reload .svelte-kit/generated/root.js
+9:22:03 p.m. [vite] (ssr) page reload .svelte-kit/generated/root.svelte
+[2K[1A[2K[G[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mfetch error Error: internal error[0m
+
+      at async Object.fetch (file:///Users/stew/Repos/vibe/lop/party/lobby.ts:16510:18)
+
+
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main/stories 500 Internal Server Error (2ms)
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main/stories 500 Internal Server Error (0ms)
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main/stories 500 Internal Server Error (1ms)
+
+
+Google Chrome is requesting /.well-known/appspecific/com.chrome.devtools.json to automatically configure devtools project settings. To learn why, and how to prevent this message, see https://svelte.dev/docs/cli/devtools-json
+
+9:22:37 p.m. [vite] (client) hmr update /src/routes/+page.svelte
+9:22:37 p.m. [vite] (ssr) page reload src/lib/stores/store.svelte.ts
+[2K[1A[2K[G[pk:inf] GET /parties/main/main/stories 500 Internal Server Error (2ms)
+
+[2K[1A[2K[G[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mfetch error Error: internal error[0m
+
+      at async Object.fetch (file:///Users/stew/Repos/vibe/lop/party/lobby.ts:16510:18)
+
+
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main/stories 500 Internal Server Error (2ms)
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main/stories 500 Internal Server Error (1ms)
+
+[2K[1A[2K[G[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mfetch error Error: internal error[0m
+
+      at async Object.fetch (file:///Users/stew/Repos/vibe/lop/party/lobby.ts:16510:18)
+
+
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main/stories 500 Internal Server Error (1ms)
+
+[2K[1A[2K[G[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mfetch error Error: internal error[0m
+
+      at async Object.fetch (file:///Users/stew/Repos/vibe/lop/party/lobby.ts:16464:18)
+
+
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 500 Internal Server Error (2ms)
+
+[2K[1A[2K[G[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mfetch error Error: internal error[0m
+
+      at async Object.fetch (file:///Users/stew/Repos/vibe/lop/party/lobby.ts:16464:18)
+
+
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 500 Internal Server Error (0ms)
+
+[2K[1A[2K[G[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mfetch error Error: internal error[0m
+
+      at async Object.fetch (file:///Users/stew/Repos/vibe/lop/party/lobby.ts:16464:18)
+
+
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 500 Internal Server Error (5ms)
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 500 Internal Server Error (4ms)
+
+[2K[1A[2K[G[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mfetch error Error: internal error[0m
+
+      at async Object.fetch (file:///Users/stew/Repos/vibe/lop/party/lobby.ts:16464:18)
+
+
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 500 Internal Server Error (1ms)
+
+[2K[1A[2K[G[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mfetch error Error: internal error[0m
+
+      at async Object.fetch (file:///Users/stew/Repos/vibe/lop/party/lobby.ts:16464:18)
+
+
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 500 Internal Server Error (1ms)
+
+[2K[1A[2K[G[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mfetch error Error: internal error[0m
+
+      at async Object.fetch (file:///Users/stew/Repos/vibe/lop/party/lobby.ts:16464:18)
+
+
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 500 Internal Server Error (2ms)
+
+[2K[1A[2K[G[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mfetch error Error: internal error[0m
+
+      at async Object.fetch (file:///Users/stew/Repos/vibe/lop/party/lobby.ts:16464:18)
+
+
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 500 Internal Server Error (1ms)
+
+9:22:50 p.m. [vite] (client) hmr update /src/routes/+page.svelte
+9:22:50 p.m. [vite] (ssr) page reload src/lib/stores/store.svelte.ts
+[2K[1A[2K[G[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mfetch error Error: internal error[0m
+
+      at async Object.fetch (file:///Users/stew/Repos/vibe/lop/party/lobby.ts:16464:18)
+
+
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 500 Internal Server Error (0ms)
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 500 Internal Server Error (1ms)
+
+[2K[1A[2K[G[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mfetch error Error: internal error[0m
+
+      at async Object.fetch (file:///Users/stew/Repos/vibe/lop/party/lobby.ts:16464:18)
+
+
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 500 Internal Server Error (2ms)
+
+[2K[1A[2K[G[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mfetch error Error: internal error[0m
+
+      at async Object.fetch (file:///Users/stew/Repos/vibe/lop/party/lobby.ts:16464:18)
+
+
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 500 Internal Server Error (1ms)
+
+[2K[1A[2K[G[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mfetch error Error: internal error[0m
+
+      at async Object.fetch (file:///Users/stew/Repos/vibe/lop/party/lobby.ts:16464:18)
+
+
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 500 Internal Server Error (2ms)
+
+[2K[1A[2K[G[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mfetch error Error: internal error[0m
+
+      at async Object.fetch (file:///Users/stew/Repos/vibe/lop/party/lobby.ts:16464:18)
+
+
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 500 Internal Server Error (1ms)
+

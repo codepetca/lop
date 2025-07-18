@@ -1,0 +1,201 @@
+
+> lop@0.0.1 dev
+> npm run dev:party & npm run dev:sveltekit
+
+
+> lop@0.0.1 dev:sveltekit
+> vite dev
+
+
+> lop@0.0.1 dev:party
+> partykit dev --port 1999
+
+🎈 PartyKit v0.0.115
+---------------------
+Loading environment variables from .env
+
+[2K[1A[2K[GBuild succeeded, starting server...
+
+
+  VITE v7.0.4  ready in 288 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+[2K[1A[2K[G[pk:inf] Ready on http://0.0.0.0:1999
+
+[2K[1A[2K[G[pk:inf] - http://127.0.0.1:1999
+
+[2K[1A[2K[G[pk:inf] - http://192.168.86.33:1999
+
+[2K[1A[2K[GBuild succeeded, starting server...
+
+[2K[1A[2K[G[pk:inf] Updated and ready on http://0.0.0.0:1999
+
+[2K[1A[2K[GLobby received POST request to: /parties/main/main/create-poll
+
+[2K[1A[2K[GCreating new poll with ID: d1f2eb74-0f5f-4624-83d5-f39eefef9463
+
+[2K[1A[2K[G[pk:inf] POST /parties/main/main/create-poll 200 OK (6ms)
+
+[2K[1A[2K[GLoaded 1 rooms from storage
+
+[2K[1A[2K[GLoaded 0 games from storage
+Lobby received GET request to: /parties/main/main/stories
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main/stories 200 OK (1ms)
+
+[2K[1A[2K[GNew connection to lobby: 0527d19a-4f4a-4293-8ffb-ac4138fe92ad
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 101 Switching Protocols (1ms)
+
+[2K[1A[2K[GLobby received GET request to: /parties/main/main/stories
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main/stories 200 OK (1ms)
+
+[2K[1A[2K[GNew connection to lobby: 5ad95dc9-f947-4fcf-ae18-d42184a0c57b
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 101 Switching Protocols (0ms)
+
+Creating server-generated poll via lobby
+PartyKit URL: http://127.0.0.1:1999
+[2K[1A[2K[GLobby received POST request to: /parties/main/main/create-poll
+Creating new poll with ID: 37c70f3f-72c3-41b8-bdd9-13384213b40c
+
+Response status: 200
+[2K[1A[2K[G[pk:inf] POST /parties/main/main/create-poll 200 OK (11ms)
+
+Poll created with ID: 37c70f3f-72c3-41b8-bdd9-13384213b40c
+[2K[1A[2K[GLobby received GET request to: /parties/main/main/stories
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main/stories 200 OK (1ms)
+
+Creating game with story: fantasy-adventure
+PartyKit URL: http://127.0.0.1:1999
+[2K[1A[2K[GLobby received POST request to: /parties/main/main/create-game
+
+[2K[1A[2K[GCreating new game with ID: d26dd0f5-7693-4ad9-9748-5d95e9e77b45
+
+Response status: 200
+[2K[1A[2K[G[pk:inf] POST /parties/main/main/create-game 200 OK (12ms)
+
+Game created with ID: d26dd0f5-7693-4ad9-9748-5d95e9e77b45
+[2K[1A[2K[G[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mFailed to register game d26dd0f5-7693-4ad9-9748-5d95e9e77b45 with lobby: 404[0m
+
+
+
+[2K[1A[2K[G[pk:inf] POST /register-game 404 Not Found (1ms)
+
+[2K[1A[2K[GLobby received GET request to: /parties/main/main/stories
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main/stories 200 OK (1ms)
+
+[2K[1A[2K[G[pk:inf] GET /parties/game/d26dd0f5-7693-4ad9-9748-5d95e9e77b45 200 OK (1ms)
+
+[2K[1A[2K[G[pk:inf] GET /parties/game/d26dd0f5-7693-4ad9-9748-5d95e9e77b45 101 Switching Protocols (2ms)
+
+[2K[1A[2K[G[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mMessage validation failed: [[0m
+
+    {
+      expected: 'string',
+      code: 'invalid_type',
+      path: [ 'joinedAt' ],
+      message: 'Invalid input: expected string, received undefined'
+    }
+  ]
+
+
+
+[2K[1A[2K[G[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mMessage validation failed: [[0m
+
+    {
+      expected: 'string',
+      code: 'invalid_type',
+      path: [ 'joinedAt' ],
+      message: 'Invalid input: expected string, received undefined'
+    }
+  ]
+
+
+
+[2K[1A[2K[G[pk:inf] GET /parties/game/d26dd0f5-7693-4ad9-9748-5d95e9e77b45 200 OK (2ms)
+
+[2K[1A[2K[G[pk:inf] GET /parties/game/d26dd0f5-7693-4ad9-9748-5d95e9e77b45 101 Switching Protocols (1ms)
+
+[2K[1A[2K[G[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mMessage validation failed: [[0m
+
+    {
+      expected: 'string',
+      code: 'invalid_type',
+      path: [ 'joinedAt' ],
+      message: 'Invalid input: expected string, received undefined'
+    }
+  ]
+
+
+
+[2K[1A[2K[G[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mMessage validation failed: [[0m
+
+    {
+      expected: 'string',
+      code: 'invalid_type',
+      path: [ 'joinedAt' ],
+      message: 'Invalid input: expected string, received undefined'
+    }
+  ]
+
+
+
+[2K[1A[2K[G[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mMessage validation failed: [[0m
+
+    {
+      expected: 'string',
+      code: 'invalid_type',
+      path: [ 'joinedAt' ],
+      message: 'Invalid input: expected string, received undefined'
+    }
+  ]
+
+
+
+[2K[1A[2K[G[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mMessage validation failed: [[0m
+
+    {
+      expected: 'string',
+      code: 'invalid_type',
+      path: [ 'joinedAt' ],
+      message: 'Invalid input: expected string, received undefined'
+    }
+  ]
+
+
+
+9:33:12 p.m. [vite] (client) page reload .svelte-kit/generated/client/nodes/0.js
+9:33:12 p.m. [vite] (client) page reload .svelte-kit/generated/client/nodes/1.js
+9:33:12 p.m. [vite] (client) page reload .svelte-kit/generated/client/nodes/2.js
+9:33:12 p.m. [vite] (client) page reload .svelte-kit/generated/client/nodes/3.js
+9:33:12 p.m. [vite] (client) page reload .svelte-kit/generated/client/app.js
+9:33:12 p.m. [vite] (client) page reload .svelte-kit/generated/client/matchers.js
+9:33:12 p.m. [vite] (ssr) page reload .svelte-kit/generated/server/internal.js
+9:33:12 p.m. [vite] (client) page reload .svelte-kit/generated/root.js
+9:33:12 p.m. [vite] (ssr) page reload .svelte-kit/generated/root.js
+9:33:12 p.m. [vite] (ssr) page reload .svelte-kit/generated/root.svelte
+[2K[1A[2K[G[pk:inf] GET /parties/game/d26dd0f5-7693-4ad9-9748-5d95e9e77b45 200 OK (0ms)
+
+[2K[1A[2K[G[pk:inf] GET /parties/game/d26dd0f5-7693-4ad9-9748-5d95e9e77b45 200 OK (2ms)
+
+[2K[1A[2K[G[pk:inf] GET /parties/game/d26dd0f5-7693-4ad9-9748-5d95e9e77b45 101 Switching Protocols (0ms)
+
+[2K[1A[2K[G[pk:inf] GET /parties/game/d26dd0f5-7693-4ad9-9748-5d95e9e77b45 101 Switching Protocols (1ms)
+
+[2K[1A[2K[G[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mMessage validation failed: [[0m
+
+    {
+      expected: 'string',
+      code: 'invalid_type',
+      path: [ 'joinedAt' ],
+      message: 'Invalid input: expected string, received undefined'
+    }
+  ]
+
+
+

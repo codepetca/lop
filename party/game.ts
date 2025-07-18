@@ -81,7 +81,7 @@ export default class GameServer extends PartyKitServer {
 				if (result.voteResult) {
 					// Clear voting timer since voting completed
 					this.clearVotingTimer();
-					
+
 					this.votingBroadcast.broadcast({
 						type: 'voting-ended',
 						result: result.voteResult
@@ -153,7 +153,7 @@ export default class GameServer extends PartyKitServer {
 
 	private startVotingTimer() {
 		if (!this.game?.votingEndsAt) return;
-		
+
 		const timeRemaining = new Date(this.game.votingEndsAt).getTime() - Date.now();
 		if (timeRemaining <= 0) {
 			// Time already expired
@@ -163,7 +163,7 @@ export default class GameServer extends PartyKitServer {
 
 		// Clear any existing timer
 		this.clearVotingTimer();
-		
+
 		// Set new timer
 		this.votingTimer = setTimeout(async () => {
 			await this.processVotingTimeout();

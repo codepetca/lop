@@ -3,7 +3,7 @@ import { PollPlayerSchema } from './player';
 
 /**
  * Poll Schema System
- * 
+ *
  * Defines schemas for polling functionality with UUID-based player tracking.
  * Each poll tracks individual votes by player UUID rather than just vote counts.
  */

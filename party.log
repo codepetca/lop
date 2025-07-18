@@ -1,0 +1,20 @@
+
+> lop@0.0.1 dev:party
+> partykit dev
+
+🎈 PartyKit v0.0.115
+---------------------
+Loading environment variables from .env
+
+[2K[1A[2K[GBuild succeeded, starting server...
+
+[2K[1A[2K[G[pk:inf] Ready on http://0.0.0.0:1999
+
+[2K[1A[2K[G[pk:inf] - http://127.0.0.1:1999
+
+[2K[1A[2K[G[pk:inf] - http://192.168.86.33:1999
+
+[2K[1A[2K[GLobby received GET request to: /parties/main/main/stories
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main/stories 200 OK (3ms)
+

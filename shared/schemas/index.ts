@@ -1,6 +1,6 @@
 /**
  * Centralized Schema Exports
- * 
+ *
  * This file re-exports all schemas and types organized by domain:
  * - Player: Base player types and domain-specific extensions
  * - Poll: Polling functionality with individual vote tracking

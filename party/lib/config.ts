@@ -15,10 +15,13 @@ export interface PartyKitConfig {
 /**
  * Get PartyKit configuration with consistent fallback values
  * Uses environment variables with sensible defaults for development
+ * In development, PartyKit may use a random port, so we detect it
  */
 export function getPartyKitConfig(): PartyKitConfig {
-	const defaultHost = 'http://127.0.0.1:1999';
-	const defaultWsHost = '127.0.0.1:1999';
+	// Check if we're in development and PartyKit has set a port
+	const actualPort = process.env.PARTYKIT_PORT || process.env.PORT;
+	const defaultHost = actualPort ? `http://127.0.0.1:${actualPort}` : 'http://127.0.0.1:1999';
+	const defaultWsHost = actualPort ? `127.0.0.1:${actualPort}` : '127.0.0.1:1999';
 
 	return {
 		host: process.env.PARTYKIT_HOST || defaultHost,

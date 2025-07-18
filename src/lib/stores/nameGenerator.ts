@@ -1,6 +1,7 @@
 /**
  * Simple name generator for player names
  * Creates fun, single-word combinations using adjective + noun
+ * Ported from party/name-generator.ts
  */
 
 const adjectives = [

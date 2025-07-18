@@ -1,0 +1,83 @@
+
+> lop@0.0.1 dev
+> npm run dev:party & npm run dev:sveltekit
+
+
+> lop@0.0.1 dev:sveltekit
+> vite dev
+
+
+> lop@0.0.1 dev:party
+> partykit dev --port 1999
+
+🎈 PartyKit v0.0.115
+---------------------
+Loading environment variables from .env
+
+[2K[1A[2K[GBuild succeeded, starting server...
+
+
+  VITE v7.0.4  ready in 287 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+[2K[1A[2K[G[pk:inf] Ready on http://0.0.0.0:1999
+
+[2K[1A[2K[G[pk:inf] - http://127.0.0.1:1999
+
+[2K[1A[2K[G[pk:inf] - http://192.168.86.33:1999
+
+[2K[1A[2K[GBuild succeeded, starting server...
+
+[2K[1A[2K[G[pk:inf] Updated and ready on http://0.0.0.0:1999
+
+[2K[1A[2K[G[pk:inf] GET /parties/game/d26dd0f5-7693-4ad9-9748-5d95e9e77b45 200 OK (6ms)
+
+[2K[1A[2K[G[pk:inf] GET /parties/game/d26dd0f5-7693-4ad9-9748-5d95e9e77b45 200 OK (1ms)
+
+[2K[1A[2K[G[pk:inf] GET /parties/game/d26dd0f5-7693-4ad9-9748-5d95e9e77b45 101 Switching Protocols (6ms)
+
+[2K[1A[2K[G[pk:inf] GET /parties/game/d26dd0f5-7693-4ad9-9748-5d95e9e77b45 101 Switching Protocols (2ms)
+
+[2K[1A[2K[GLoaded 2 rooms from storage
+
+[2K[1A[2K[GLoaded 1 games from storage
+Lobby received POST request to: /parties/main/main/create-poll
+
+[2K[1A[2K[GCreating new poll with ID: f67f5b18-49f9-4814-bdf7-38cf293c2d8a
+
+[2K[1A[2K[G[pk:inf] POST /parties/main/main/create-poll 200 OK (9ms)
+
+9:36:33 p.m. [vite] (client) page reload .svelte-kit/generated/client/nodes/0.js
+9:36:33 p.m. [vite] (client) page reload .svelte-kit/generated/client/nodes/1.js
+9:36:33 p.m. [vite] (client) page reload .svelte-kit/generated/client/nodes/3.js
+9:36:33 p.m. [vite] (client) page reload .svelte-kit/generated/client/app.js
+9:36:33 p.m. [vite] (client) page reload .svelte-kit/generated/client/matchers.js
+9:36:33 p.m. [vite] (ssr) page reload .svelte-kit/generated/server/internal.js
+9:36:33 p.m. [vite] (client) page reload .svelte-kit/generated/root.js
+9:36:33 p.m. [vite] (ssr) page reload .svelte-kit/generated/root.js
+9:36:33 p.m. [vite] (ssr) page reload .svelte-kit/generated/root.svelte
+[2K[1A[2K[G[pk:inf] GET /parties/game/d26dd0f5-7693-4ad9-9748-5d95e9e77b45 200 OK (1ms)
+
+[2K[1A[2K[G[pk:inf] GET /parties/game/d26dd0f5-7693-4ad9-9748-5d95e9e77b45 200 OK (1ms)
+
+[2K[1A[2K[G[pk:inf] GET /parties/game/d26dd0f5-7693-4ad9-9748-5d95e9e77b45 101 Switching Protocols (0ms)
+
+[2K[1A[2K[G[pk:inf] GET /parties/game/d26dd0f5-7693-4ad9-9748-5d95e9e77b45 101 Switching Protocols (0ms)
+
+[2K[1A[2K[GBuild succeeded, starting server...
+
+[2K[1A[2K[G[pk:inf] Updated and ready on http://0.0.0.0:1999
+
+[2K[1A[2K[G[pk:inf] GET /parties/game/d26dd0f5-7693-4ad9-9748-5d95e9e77b45 101 Switching Protocols (8ms)
+
+[2K[1A[2K[G[pk:inf] GET /parties/game/d26dd0f5-7693-4ad9-9748-5d95e9e77b45 101 Switching Protocols (1ms)
+
+[2K[1A[2K[GBuild succeeded, starting server...
+
+[2K[1A[2K[G[pk:inf] Updated and ready on http://0.0.0.0:1999
+
+[2K[1A[2K[G[pk:inf] GET /parties/game/d26dd0f5-7693-4ad9-9748-5d95e9e77b45 101 Switching Protocols (3ms)
+
+[2K[1A[2K[G[pk:inf] GET /parties/game/d26dd0f5-7693-4ad9-9748-5d95e9e77b45 101 Switching Protocols (1ms)
+

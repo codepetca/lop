@@ -1,7 +1,11 @@
 import { fail } from '@sveltejs/kit';
 import type { Actions } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
-import { CreatePollResponseSchema, CreateGameResponseSchema, GetStoriesResponseSchema } from '$shared/schemas/index';
+import {
+	CreatePollResponseSchema,
+	CreateGameResponseSchema,
+	GetStoriesResponseSchema
+} from '$shared/schemas/index';
 
 // Get PartyKit URL from environment or use default for development
 function getPartyKitUrl(): string {
@@ -11,7 +15,7 @@ function getPartyKitUrl(): string {
 // Load available stories for game creation
 export async function load() {
 	const partyKitUrl = getPartyKitUrl();
-	
+
 	try {
 		const response = await fetch(`${partyKitUrl}/parties/main/main/stories`);
 		if (response.ok) {
@@ -24,7 +28,7 @@ export async function load() {
 	} catch (error) {
 		console.error('Error loading stories:', error);
 	}
-	
+
 	return {
 		stories: []
 	};

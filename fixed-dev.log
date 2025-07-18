@@ -1,0 +1,154 @@
+
+> lop@0.0.1 dev
+> npm run dev:party & npm run dev:sveltekit
+
+
+> lop@0.0.1 dev:sveltekit
+> vite dev
+
+
+> lop@0.0.1 dev:party
+> partykit dev
+
+🎈 PartyKit v0.0.115
+---------------------
+Loading environment variables from .env
+
+[2K[1A[2K[GBuild succeeded, starting server...
+
+
+  VITE v7.0.4  ready in 288 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+[2K[1A[2K[G[pk:inf] Ready on http://0.0.0.0:1999
+
+[2K[1A[2K[G[pk:inf] - http://127.0.0.1:1999
+
+[2K[1A[2K[G[pk:inf] - http://192.168.86.33:1999
+
+[2K[1A[2K[GBuild succeeded, starting server...
+
+[2K[1A[2K[G[pk:inf] Updated and ready on http://0.0.0.0:1999
+
+[2K[1A[2K[GLobby received GET request to: /parties/main/main/stories
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main/stories 200 OK (3ms)
+
+[2K[1A[2K[GNew connection to lobby: 089b43e4-7033-41b4-af1c-95d9681a71e9
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 101 Switching Protocols (1ms)
+
+[2K[1A[2K[GNew connection to lobby: 10445673-6fac-4b5c-bc8b-377719110de3
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 101 Switching Protocols (2ms)
+
+[2K[1A[2K[GNew connection to lobby: 17ce83d8-2d3c-4311-a878-36681c118093
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 101 Switching Protocols (2ms)
+
+[2K[1A[2K[GNew connection to lobby: a92f794f-f37b-4526-b8bd-aca37a0a7515
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 101 Switching Protocols (1ms)
+
+[2K[1A[2K[GNew connection to lobby: db459865-52a4-4381-b8c5-b13e6fac532c
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 101 Switching Protocols (2ms)
+
+[2K[1A[2K[GLobby received POST request to: /parties/main/main/create-poll
+
+[2K[1A[2K[GCreating new poll with ID: 076899ff-337b-489d-8152-5d86ceb11fda
+
+[2K[1A[2K[G[pk:inf] POST /parties/main/main/create-poll 200 OK (3ms)
+
+[2K[1A[2K[GLobby received POST request to: /parties/main/main/create-game
+
+[2K[1A[2K[GCreating new game with ID: d3223bf7-8908-495f-b265-042d58366d87
+
+[2K[1A[2K[G[pk:inf] POST /parties/main/main/create-game 200 OK (3ms)
+
+[2K[1A[2K[G[pk:inf] POST /register-game 404 Not Found (0ms)
+
+[2K[1A[2K[G[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mFailed to register game d3223bf7-8908-495f-b265-042d58366d87 with lobby: 404[0m
+
+
+
+9:27:28 p.m. [vite] (client) page reload .svelte-kit/generated/client/nodes/0.js
+9:27:28 p.m. [vite] (client) page reload .svelte-kit/generated/client/nodes/1.js
+9:27:28 p.m. [vite] (client) page reload .svelte-kit/generated/client/nodes/2.js
+9:27:28 p.m. [vite] (client) page reload .svelte-kit/generated/client/app.js
+9:27:28 p.m. [vite] (client) page reload .svelte-kit/generated/client/matchers.js
+9:27:28 p.m. [vite] (ssr) page reload .svelte-kit/generated/server/internal.js
+9:27:28 p.m. [vite] (client) page reload .svelte-kit/generated/root.js
+9:27:28 p.m. [vite] (ssr) page reload .svelte-kit/generated/root.js
+9:27:28 p.m. [vite] (ssr) page reload .svelte-kit/generated/root.svelte
+[2K[1A[2K[GLobby received GET request to: /parties/main/main/stories
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main/stories 200 OK (1ms)
+
+[2K[1A[2K[GNew connection to lobby: 1fc6ab64-7cca-4179-8317-9fcb305e8697
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 101 Switching Protocols (1ms)
+
+[2K[1A[2K[GLobby received GET request to: /parties/main/main/stories
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main/stories 200 OK (2ms)
+
+[2K[1A[2K[GNew connection to lobby: 6ec60275-3ffc-45f2-94f3-fab6c88b6ce7
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 101 Switching Protocols (1ms)
+
+[2K[1A[2K[GLobby received GET request to: /parties/main/main/stories
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main/stories 200 OK (2ms)
+
+[2K[1A[2K[GNew connection to lobby: 30d7dad2-e4db-4863-8e46-f6f1729726ab
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 101 Switching Protocols (1ms)
+
+[2K[1A[2K[GLobby received POST request to: /parties/main/main/create-poll
+Creating new poll with ID: af4550c5-a180-4f0c-a42b-b8ec299a884c
+
+[2K[1A[2K[G[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mError creating poll: Error: internal error[0m
+
+      at async LobbyServer.handlePollCreation (file:///Users/stew/Repos/vibe/lop/party/lobby.ts:13078:28)
+      at async LobbyServer.onRequest (file:///Users/stew/Repos/vibe/lop/party/lobby.ts:12855:14)
+      at async PartyDurable.fetch (file:///Users/stew/Repos/vibe/lop/party/lobby.ts:16210:18)
+
+
+
+[2K[1A[2K[G[pk:inf] POST /parties/main/main/create-poll 500 Internal Server Error (7ms)
+
+[2K[1A[2K[GLobby received GET request to: /parties/main/main/stories
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main/stories 200 OK (1ms)
+
+[2K[1A[2K[GNew connection to lobby: a904eb05-0de7-45bb-aee8-90666a243957
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 101 Switching Protocols (1ms)
+
+[2K[1A[2K[GLobby received POST request to: /parties/main/main/create-poll
+Creating new poll with ID: a56a7805-1395-46ec-a4e3-7f7211452ab7
+
+[2K[1A[2K[G[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mError creating poll: Error: internal error[0m
+
+      at async LobbyServer.handlePollCreation (file:///Users/stew/Repos/vibe/lop/party/lobby.ts:13078:28)
+      at async LobbyServer.onRequest (file:///Users/stew/Repos/vibe/lop/party/lobby.ts:12855:14)
+      at async PartyDurable.fetch (file:///Users/stew/Repos/vibe/lop/party/lobby.ts:16210:18)
+
+
+
+[2K[1A[2K[G[pk:inf] POST /parties/main/main/create-poll 500 Internal Server Error (3ms)
+
+[2K[1A[2K[GBuild succeeded, starting server...
+
+[2K[1A[2K[G[pk:inf] Updated and ready on http://0.0.0.0:1999
+
+[2K[1A[2K[GNew connection to lobby: e49f419a-3317-4c4e-9052-d74064c6b733
+
+[2K[1A[2K[GNew connection to lobby: 83111afc-1ffc-4a0c-b522-4175a57b81e2
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 101 Switching Protocols (16ms)
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 101 Switching Protocols (17ms)
+

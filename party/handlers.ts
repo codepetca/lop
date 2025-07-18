@@ -44,14 +44,16 @@ export async function handleVote(
 	}
 
 	// Check if player exists in the poll
-	const player = poll.players.find(p => p.id === message.playerId);
+	const player = poll.players.find((p) => p.id === message.playerId);
 	if (!player) {
 		console.warn(`Player not found: ${message.playerId}`);
 		return null;
 	}
 
 	// Check if player has already voted for any option
-	const hasVoted = Object.values(poll.votes).some(voterIds => voterIds.includes(message.playerId));
+	const hasVoted = Object.values(poll.votes).some((voterIds) =>
+		voterIds.includes(message.playerId)
+	);
 	if (hasVoted) {
 		console.warn(`Player ${message.playerId} has already voted`);
 		return null;
@@ -93,12 +95,12 @@ export async function handlePlayerJoinPoll(
 	const playerName = message.playerName || generatePlayerName();
 
 	// Check if player name is already taken
-	if (poll.players.some(p => p.name === playerName)) {
+	if (poll.players.some((p) => p.name === playerName)) {
 		return { error: 'Player name is already taken' };
 	}
 
 	// Check if player ID already exists
-	if (poll.players.some(p => p.id === playerId)) {
+	if (poll.players.some((p) => p.id === playerId)) {
 		return { error: 'Player ID already exists' };
 	}
 
@@ -479,22 +481,22 @@ export async function handleGameChoice(
 	if (game.requiresVoting) {
 		const totalVotes = Object.values(updatedVotes).reduce((sum, count) => sum + count, 0);
 		const votingTimeLimit = game.settings.votingTimeLimit || 30; // Default 30 seconds
-		
+
 		console.log(`Vote processed: ${totalVotes}/${game.players.length} players voted`);
-		
+
 		// Start voting timer if this is the first vote and no timer is set
 		if (totalVotes === 1 && !game.votingEndsAt) {
 			const votingEndsAt = new Date(Date.now() + votingTimeLimit * 1000).toISOString();
 			updatedGame.votingEndsAt = votingEndsAt;
 			console.log('Started voting timer, ends at:', votingEndsAt);
 		}
-		
+
 		// Check if voting should end: all players voted OR time expired
 		const allPlayersVoted = totalVotes >= game.players.length;
 		const timeExpired = game.votingEndsAt && new Date() >= new Date(game.votingEndsAt);
-		
+
 		console.log('Voting check:', { allPlayersVoted, timeExpired, votingEndsAt: game.votingEndsAt });
-		
+
 		if (allPlayersVoted || timeExpired) {
 			console.log('Voting complete! Processing results...');
 			// Find winning choice (most votes, with tie-breaking)
@@ -510,7 +512,7 @@ export async function handleGameChoice(
 					choiceVotes: updatedVotes,
 					nextScene: winningChoice.nextScene
 				};
-				
+
 				// Clear voting timer for next round
 				updatedGame.votingEndsAt = null;
 			}

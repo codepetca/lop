@@ -1,0 +1,113 @@
+
+> lop@0.0.1 dev
+> npm run dev:party & npm run dev:sveltekit
+
+
+> lop@0.0.1 dev:party
+> partykit dev --port 1999
+
+
+> lop@0.0.1 dev:sveltekit
+> vite dev
+
+🎈 PartyKit v0.0.115
+---------------------
+Loading environment variables from .env
+
+[2K[1A[2K[GBuild succeeded, starting server...
+
+
+  VITE v7.0.4  ready in 285 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+[2K[1A[2K[G[pk:inf] Ready on http://0.0.0.0:1999
+
+[2K[1A[2K[G[pk:inf] - http://127.0.0.1:1999
+
+[2K[1A[2K[G[pk:inf] - http://192.168.86.33:1999
+
+[2K[1A[2K[GBuild succeeded, starting server...
+
+[2K[1A[2K[G[pk:inf] Updated and ready on http://0.0.0.0:1999
+
+[2K[1A[2K[GLobby received GET request to: /parties/main/main/stories
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main/stories 200 OK (2ms)
+
+[2K[1A[2K[GNew connection to lobby: 34936f47-f7eb-4034-9d6c-2ebb87705d0a
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 101 Switching Protocols (0ms)
+
+[2K[1A[2K[GNew connection to lobby: 7907b2f4-23db-4aaf-a47b-7c5e2bd11d58
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 101 Switching Protocols (2ms)
+
+[2K[1A[2K[GLobby received POST request to: /parties/main/main/create-poll
+Creating new poll with ID: 7efe6f88-b554-47a8-af57-3f55b2a2676b
+
+[2K[1A[2K[G[pk:inf] POST /parties/main/main/create-poll 200 OK (3ms)
+
+9:29:18 p.m. [vite] (client) page reload .svelte-kit/generated/client/nodes/0.js
+9:29:18 p.m. [vite] (client) page reload .svelte-kit/generated/client/nodes/1.js
+9:29:18 p.m. [vite] (client) page reload .svelte-kit/generated/client/nodes/2.js
+9:29:18 p.m. [vite] (client) page reload .svelte-kit/generated/client/app.js
+9:29:18 p.m. [vite] (client) page reload .svelte-kit/generated/client/matchers.js
+9:29:18 p.m. [vite] (ssr) page reload .svelte-kit/generated/server/internal.js
+9:29:18 p.m. [vite] (client) page reload .svelte-kit/generated/root.js
+9:29:18 p.m. [vite] (ssr) page reload .svelte-kit/generated/root.js
+9:29:18 p.m. [vite] (ssr) page reload .svelte-kit/generated/root.svelte
+[2K[1A[2K[GLobby received GET request to: /parties/main/main/stories
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main/stories 200 OK (1ms)
+
+[2K[1A[2K[GNew connection to lobby: bfccfb06-e508-438b-b07f-1e3074ce6feb
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 101 Switching Protocols (1ms)
+
+[2K[1A[2K[GLobby received GET request to: /parties/main/main/stories
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main/stories 200 OK (2ms)
+
+[2K[1A[2K[GNew connection to lobby: 56d67e68-3e95-45c6-b7ff-79a764082ce4
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 101 Switching Protocols (1ms)
+
+[2K[1A[2K[GLobby received GET request to: /parties/main/main/stories
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main/stories 200 OK (1ms)
+
+[2K[1A[2K[GNew connection to lobby: 6e99b240-3295-44a7-920d-d4fef61dbc18
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 101 Switching Protocols (1ms)
+
+[2K[1A[2K[GLobby received GET request to: /parties/main/main/stories
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main/stories 200 OK (2ms)
+
+[2K[1A[2K[GNew connection to lobby: b74cbb6d-4391-4f04-8079-9d47447ee60a
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 101 Switching Protocols (1ms)
+
+[2K[1A[2K[GLobby received GET request to: /parties/main/main/stories
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main/stories 200 OK (1ms)
+
+[2K[1A[2K[GNew connection to lobby: dfa85f95-5410-4ae6-b809-28b8c9db30f2
+
+[2K[1A[2K[G[pk:inf] GET /parties/main/main 101 Switching Protocols (2ms)
+
+[2K[1A[2K[GLobby received POST request to: /parties/main/main/create-poll
+Creating new poll with ID: 686aa2a7-af15-4bd0-b47e-17129c93f93a
+
+[2K[1A[2K[G[pk:inf] POST /parties/main/main/create-poll 500 Internal Server Error (12ms)
+
+9:30:02 p.m. [vite] (client) page reload .svelte-kit/generated/client/nodes/0.js
+9:30:02 p.m. [vite] (client) page reload .svelte-kit/generated/client/nodes/1.js
+9:30:02 p.m. [vite] (client) page reload .svelte-kit/generated/client/nodes/2.js
+9:30:02 p.m. [vite] (client) page reload .svelte-kit/generated/client/app.js
+9:30:02 p.m. [vite] (client) page reload .svelte-kit/generated/client/matchers.js
+9:30:02 p.m. [vite] (ssr) page reload .svelte-kit/generated/server/internal.js
+9:30:02 p.m. [vite] (client) page reload .svelte-kit/generated/root.js
+9:30:02 p.m. [vite] (ssr) page reload .svelte-kit/generated/root.js
+9:30:02 p.m. [vite] (ssr) page reload .svelte-kit/generated/root.svelte

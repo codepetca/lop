@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 /**
  * Player Schema System
- * 
+ *
  * This file defines the hierarchy of player schemas used across the application:
  * - BasePlayerSchema: Core player properties shared by all player types
  * - PollPlayerSchema: Poll-specific player extension

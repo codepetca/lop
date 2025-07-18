@@ -1,0 +1,42 @@
+
+> lop@0.0.1 dev
+> npm run kill-ports && npm run dev:party & npm run dev:sveltekit
+
+
+> lop@0.0.1 dev:sveltekit
+> vite dev
+
+
+> lop@0.0.1 kill-ports
+> lsof -ti:1999 | xargs kill -9 2>/dev/null || true; lsof -ti:5173 | xargs kill -9 2>/dev/null || true; lsof -ti:5174 | xargs kill -9 2>/dev/null || true
+
+
+> lop@0.0.1 dev:party
+> partykit dev --port 1999
+
+
+  VITE v7.0.4  ready in 299 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+🎈 PartyKit v0.0.115
+---------------------
+Loading environment variables from .env
+
+[2K[1A[2K[GBuild succeeded, starting server...
+
+[2K[1A[2K[G[pk:inf] Ready on http://0.0.0.0:1999
+
+[2K[1A[2K[G[pk:inf] - http://127.0.0.1:1999
+
+[2K[1A[2K[G[pk:inf] - http://192.168.86.33:1999
+
+[2K[1A[2K[G[pk:inf] GET /parties/game/d26dd0f5-7693-4ad9-9748-5d95e9e77b45 200 OK (2ms)
+
+[2K[1A[2K[G[pk:inf] GET /parties/game/d26dd0f5-7693-4ad9-9748-5d95e9e77b45 200 OK (1ms)
+
+[2K[1A[2K[G[pk:inf] GET /parties/game/d26dd0f5-7693-4ad9-9748-5d95e9e77b45 101 Switching Protocols (2ms)
+
+[2K[1A[2K[G[pk:inf] GET /parties/game/d26dd0f5-7693-4ad9-9748-5d95e9e77b45 101 Switching Protocols (0ms)
+
+sh: line 1: 50453 Killed: 9               npm run dev:sveltekit

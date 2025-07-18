@@ -17,3 +17,6 @@ export type {
 
 // Re-export WebSocket hook for easy access
 export { useWebSocket } from './hooks/useWebSocket.svelte';
+
+// Re-export store for app-wide state management
+export { store } from './stores';

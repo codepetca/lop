@@ -3,7 +3,7 @@ import { GamePlayerSchema } from './player';
 
 /**
  * Game Schema System
- * 
+ *
  * Defines schemas for story-based multiplayer games with voting mechanics.
  * Players progress through scenes by making collective choices.
  */

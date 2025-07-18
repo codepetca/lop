@@ -7,7 +7,11 @@ import {
 	GetPollResponseSchema,
 	CreatePollResponseSchema
 } from '../shared/schemas/index.js';
-import { handleVote, handlePlayerJoinPoll, handleCreatePollServerGeneratedNoRegistration } from './handlers';
+import {
+	handleVote,
+	handlePlayerJoinPoll,
+	handleCreatePollServerGeneratedNoRegistration
+} from './handlers';
 import { PartyKitServer } from './lib/server';
 import { useMessageHandler, useBroadcast, useStorage } from './lib/hooks';
 

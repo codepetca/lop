@@ -11,6 +11,7 @@
 		StoryChoice
 	} from '$lib/types';
 	import { useWebSocket } from '$lib/hooks/useWebSocket.svelte';
+	import { store } from '$lib/stores';
 
 	let { data }: { data: PageData } = $props();
 
@@ -106,13 +107,13 @@
 	}
 
 	function vote(choiceId: string) {
-		console.log('Vote attempt:', { 
-			connected: ws.isConnected, 
-			hasVoted, 
+		console.log('Vote attempt:', {
+			connected: ws.isConnected,
+			hasVoted,
 			currentPlayer: currentPlayer?.name,
-			choiceId 
+			choiceId
 		});
-		
+
 		if (!ws.isConnected || hasVoted || !currentPlayer) return;
 
 		ws.send({
@@ -144,7 +145,12 @@
 	onMount(() => {
 		console.log('Initial game state:', game);
 		console.log('Game voting options:', game.votingOptions);
-		
+
+		// Pre-fill name from store if available
+		if (store.player && !playerName) {
+			playerName = store.player.name;
+		}
+
 		ws.connect();
 
 		// Check if user has already voted for current scene
@@ -172,7 +178,12 @@
 					<strong>{game.title}</strong><br />
 					{game.players.length}/{game.maxPlayers} players
 				</p>
-				<form onsubmit={(e) => { e.preventDefault(); joinGame(); }}>
+				<form
+					onsubmit={(e) => {
+						e.preventDefault();
+						joinGame();
+					}}
+				>
 					<input
 						type="text"
 						placeholder="Enter your name"
@@ -246,7 +257,9 @@
 									class="choice-btn"
 									class:voted={hasVoted}
 									onclick={() => vote(choice.id)}
-									disabled={hasVoted || ws.status !== 'connected' || (votingTimeLeft <= 0 && votingTimeLeft !== 0)}
+									disabled={hasVoted ||
+										ws.status !== 'connected' ||
+										(votingTimeLeft <= 0 && votingTimeLeft !== 0)}
 								>
 									<div class="choice-content">
 										<span class="choice-text">{choice.text}</span>
@@ -256,7 +269,9 @@
 									{#if choice.effects && choice.effects.length > 0}
 										<div class="choice-effects">
 											{#each choice.effects as effect}
-												<span class="effect">{effect.stat}: {effect.change > 0 ? '+' : ''}{effect.change}</span>
+												<span class="effect"
+													>{effect.stat}: {effect.change > 0 ? '+' : ''}{effect.change}</span
+												>
 											{/each}
 										</div>
 									{/if}
