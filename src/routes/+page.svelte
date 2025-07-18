@@ -12,7 +12,7 @@
 	} from '$lib/types';
 	import { useWebSocket } from '$lib/hooks/useWebSocket.svelte';
 	import { store } from '$lib/stores';
-	import PlayerAvatar from '$lib/components/PlayerAvatar.svelte';
+	import TitleHeader from '$lib/components/TitleHeader.svelte';
 	import PlayerProfileModal from '$lib/components/PlayerProfileModal.svelte';
 
 	let { form, data }: { form: ActionData; data: PageData } = $props();
@@ -24,7 +24,6 @@
 	let activeGames = $state<GameMetadata[]>([]);
 	let selectedStoryId = $state('');
 	let maxPlayers = $state(6);
-	let currentTab = $state<'polls' | 'games'>('games');
 	let showProfileModal = $state(false);
 
 	// Initialize WebSocket hook for lobby (lobby is main server now)
@@ -91,48 +90,12 @@
 </svelte:head>
 
 <main class="container">
-	<h1>Lop</h1>
-
-	<!-- Player Info Section -->
-	<div class="player-section">
-		{#if store.player}
-			<div class="player-info">
-				<PlayerAvatar
-					avatar={store.player.avatar}
-					size={64}
-					clickable={true}
-					onclick={openProfileModal}
-				/>
-				<div class="player-details">
-					<span class="player-label">Playing as:</span>
-					<span class="player-name" class:generated={store.player.isGenerated}>
-						{store.player.name}
-					</span>
-				</div>
-			</div>
-		{/if}
-	</div>
+	<!-- Title Header with Player Info -->
+	<TitleHeader player={store.player} onPlayerClick={openProfileModal} />
 
 	<!-- Player Profile Modal -->
 	<PlayerProfileModal bind:isOpen={showProfileModal} />
 
-	<!-- Tab Navigation -->
-	<div class="tabs">
-		<button
-			class="tab-button {currentTab === 'games' ? 'active' : ''}"
-			onclick={() => (currentTab = 'games')}
-		>
-			🎮 Adventure Games
-		</button>
-		<button
-			class="tab-button {currentTab === 'polls' ? 'active' : ''}"
-			onclick={() => (currentTab = 'polls')}
-		>
-			🗳️ Quick Polls
-		</button>
-	</div>
-
-	{#if currentTab === 'games'}
 		<!-- Create New Game Section -->
 		<div class="section">
 			<h2>Create Adventure Game</h2>
@@ -199,121 +162,58 @@
 				</div>
 			{/if}
 		</div>
-	{:else}
-		<!-- Create New Poll Section -->
-		<div class="section">
-			<h2>Create New Poll</h2>
-			<form
-				method="POST"
-				action="?/createPoll"
-				use:enhance={() => {
-					loading = true;
-					return async ({ update }) => {
-						loading = false;
-						await update();
-					};
-				}}
-			>
-				<button type="submit" class="create-btn" disabled={loading}>
-					{loading ? 'Creating Poll...' : '🎲 Create Random Poll'}
-				</button>
-			</form>
-
-			{#if form?.pollId}
-				<div class="poll-created">
-					<h3>Poll Created! 🎉</h3>
-					<div class="room-info">
-						<p>Room ID: <strong>{form.pollId}</strong></p>
-						<button class="copy-btn" onclick={() => copyToClipboard(form.pollId)}>
-							📋 Copy ID
-						</button>
-						<a href="/poll/{form.pollId}" class="join-btn"> Join Poll → </a>
-					</div>
-					<p class="share-text">Share this room ID with others so they can join and vote!</p>
-				</div>
-			{/if}
-
-			{#if form?.error}
-				<div class="error">
-					{form.error}
-				</div>
-			{/if}
-		</div>
-	{/if}
 
 	<!-- Join Existing Section -->
 	<div class="section">
-		<h2>Join Existing {currentTab === 'games' ? 'Game' : 'Poll'}</h2>
+		<h2>Join Existing Game</h2>
 		<div class="join-form">
 			<input
 				type="text"
-				placeholder="Enter {currentTab === 'games' ? 'game' : 'room'} ID"
+				placeholder="Enter game ID"
 				bind:value={joinRoomId}
 				onkeydown={(e) => e.key === 'Enter' && joinRoom()}
 			/>
 			<button class="join-btn" onclick={joinRoom} disabled={!joinRoomId.trim()}>
-				Join {currentTab === 'games' ? 'Game' : 'Poll'}
+				Join Game
 			</button>
 		</div>
 	</div>
 
 	<!-- Active Items Section -->
 	<div class="section">
-		<h2>Browse Active {currentTab === 'games' ? 'Games' : 'Polls'}</h2>
+		<h2>Browse Active Games</h2>
 
 		{#if ws.status === 'connecting'}
-			<p class="loading">Connecting to {currentTab === 'games' ? 'game' : 'room'} list...</p>
+			<p class="loading">Connecting to game list...</p>
 		{:else if ws.status === 'error'}
 			<p class="loading error">Connection error - retrying...</p>
-		{:else if currentTab === 'games'}
-			{#if activeGames.length === 0}
-				<p class="no-rooms">No active games found. Create one above!</p>
-			{:else}
-				<div class="rooms-list">
-					{#each activeGames as game}
-						<button class="room-card game-card" onclick={() => joinActiveGame(game.id)}>
-							<div class="room-header">
-								<h3 class="room-title">{game.title}</h3>
-								<span class="room-id">{game.id}</span>
-							</div>
-							<div class="game-info">
-								<span class="story-title">{game.storyTitle}</span>
-								<span class="genre-badge {game.genre}">{game.genre}</span>
-								<span class="difficulty-badge {game.difficulty}">{game.difficulty}</span>
-							</div>
-							<div class="room-stats">
-								<span class="stat">👥 {game.playerCount}/{game.maxPlayers} players</span>
-								<span class="stat">⏱️ {game.estimatedTime}min</span>
-								<span class="stat">🎯 {game.currentScene}</span>
-							</div>
-							<div class="room-time">
-								Created {new Date(game.createdAt).toLocaleTimeString()}
-								{#if game.isCompleted}
-									<span class="completed-badge">✅ Completed</span>
-								{:else if !game.isActive}
-									<span class="inactive-badge">⏸️ Inactive</span>
-								{/if}
-							</div>
-						</button>
-					{/each}
-				</div>
-			{/if}
-		{:else if activeRooms.length === 0}
-			<p class="no-rooms">No active polls found. Create one above!</p>
+		{:else if activeGames.length === 0}
+			<p class="no-rooms">No active games found. Create one above!</p>
 		{:else}
 			<div class="rooms-list">
-				{#each activeRooms as room}
-					<button class="room-card" onclick={() => joinActiveRoom(room.id)}>
+				{#each activeGames as game}
+					<button class="room-card game-card" onclick={() => joinActiveGame(game.id)}>
 						<div class="room-header">
-							<h3 class="room-title">{room.title}</h3>
-							<span class="room-id">{room.id}</span>
+							<h3 class="room-title">{game.title}</h3>
+							<span class="room-id">{game.id}</span>
+						</div>
+						<div class="game-info">
+							<span class="story-title">{game.storyTitle}</span>
+							<span class="genre-badge {game.genre}">{game.genre}</span>
+							<span class="difficulty-badge {game.difficulty}">{game.difficulty}</span>
 						</div>
 						<div class="room-stats">
-							<span class="stat">👥 {room.activeConnections} active</span>
-							<span class="stat">🗳️ {room.totalVotes} votes</span>
+							<span class="stat">👥 {game.playerCount}/{game.maxPlayers} players</span>
+							<span class="stat">⏱️ {game.estimatedTime}min</span>
+							<span class="stat">🎯 {game.currentScene}</span>
 						</div>
 						<div class="room-time">
-							Created {new Date(room.createdAt).toLocaleTimeString()}
+							Created {new Date(game.createdAt).toLocaleTimeString()}
+							{#if game.isCompleted}
+								<span class="completed-badge">✅ Completed</span>
+							{:else if !game.isActive}
+								<span class="inactive-badge">⏸️ Inactive</span>
+							{/if}
 						</div>
 					</button>
 				{/each}
@@ -330,72 +230,6 @@
 		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 	}
 
-	h1 {
-		color: #333;
-		margin-bottom: 0.5rem;
-		text-align: center;
-		font-size: 2.5rem;
-	}
-
-	.subtitle {
-		text-align: center;
-		color: #666;
-		margin-bottom: 3rem;
-		font-size: 1.1rem;
-	}
-
-	/* Player Section Styles */
-	.player-section {
-		background: #f0f7ff;
-		border: 2px solid #3b82f6;
-		border-radius: 12px;
-		padding: 1rem;
-		margin-bottom: 2rem;
-		text-align: center;
-	}
-
-	.player-info {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 1rem;
-	}
-
-	.player-details {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		gap: 0.25rem;
-	}
-
-	.player-label {
-		color: #4b5563;
-		font-weight: 500;
-		font-size: 0.9rem;
-	}
-
-	.player-name {
-		font-weight: 600;
-		color: #1f2937;
-		font-size: 1.1rem;
-	}
-
-	.player-name.generated {
-		font-style: italic;
-		color: #6366f1;
-	}
-
-	@media (max-width: 600px) {
-		.player-info {
-			flex-direction: column;
-			gap: 0.75rem;
-		}
-
-		.player-details {
-			align-items: center;
-			text-align: center;
-		}
-	}
 
 	.section {
 		background: #f8fafc;
@@ -625,38 +459,6 @@
 		font-size: 0.8rem;
 	}
 
-	/* Tab navigation styles */
-	.tabs {
-		display: flex;
-		gap: 0.5rem;
-		margin-bottom: 2rem;
-		background: #f1f5f9;
-		border-radius: 12px;
-		padding: 0.5rem;
-	}
-
-	.tab-button {
-		flex: 1;
-		padding: 0.75rem 1rem;
-		background: transparent;
-		border: none;
-		border-radius: 8px;
-		cursor: pointer;
-		font-size: 1rem;
-		font-weight: 500;
-		transition: all 0.2s ease;
-		color: #64748b;
-	}
-
-	.tab-button.active {
-		background: white;
-		color: #1f2937;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-	}
-
-	.tab-button:hover:not(.active) {
-		background: #e2e8f0;
-	}
 
 	/* Form styles */
 	.form-group {
