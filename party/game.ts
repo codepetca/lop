@@ -25,6 +25,7 @@ import {
 } from './handlers';
 import { PartyKitServer } from './lib/server';
 import { useMessageHandler, useBroadcast, useStorage } from './lib/hooks';
+import { getLobbyUrl } from './lib/config';
 
 type GameStorage = {
 	game: GameSession;
@@ -357,7 +358,11 @@ export default class GameServer extends PartyKitServer {
 		const playerId = this.connectionPlayerMap.get(conn.id);
 		if (playerId && this.game) {
 			const result = await handlePlayerLeave(this.room, this.game, playerId);
-			if (result.updatedGame) {
+			
+			if (result.shouldDeleteGame) {
+				// Game is completed and no players remain - delete it
+				await this.deleteGame();
+			} else if (result.updatedGame) {
 				this.game = result.updatedGame;
 				await this.storage.set('game', this.game);
 
@@ -376,6 +381,33 @@ export default class GameServer extends PartyKitServer {
 
 			// Remove from connection mapping
 			this.connectionPlayerMap.delete(conn.id);
+		}
+	}
+
+	private async deleteGame() {
+		if (!this.game) return;
+
+		const gameId = this.room.id;
+		
+		// Clear all game storage
+		await this.storage.remove('game');
+		this.game = null;
+
+		// Clear voting timer if running
+		this.clearVotingTimer();
+
+		// Notify lobby to unregister the game
+		try {
+			const lobbyUrl = getLobbyUrl(`/parties/main/main/unregister-game/${gameId}`);
+			const lobbyResponse = await fetch(lobbyUrl, { method: 'DELETE' });
+			
+			if (!lobbyResponse.ok) {
+				console.warn(`Failed to unregister game ${gameId} from lobby:`, lobbyResponse.status);
+			} else {
+				console.log(`Successfully deleted completed game ${gameId}`);
+			}
+		} catch (error) {
+			console.error(`Error notifying lobby of game deletion:`, error);
 		}
 	}
 }

@@ -231,7 +231,7 @@
 			<div class="game-completed">
 				<h2>🎉 Adventure Complete!</h2>
 				<p>Thanks for playing! The story has reached its conclusion.</p>
-				<a href="/" class="create-new-btn">Create New Game</a>
+				<a href="/" class="create-new-btn">Back to Lobby</a>
 			</div>
 		{:else}
 			{#if votingTimeLeft > 0}
@@ -291,9 +291,6 @@
 			{/if}
 		{/if}
 
-		<div class="game-footer">
-			<a href="/" class="create-new-btn">Create New Game</a>
-		</div>
 	{/if}
 </main>
 

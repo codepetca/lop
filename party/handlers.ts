@@ -381,6 +381,7 @@ export async function handlePlayerLeave(
 	playerId: string
 ): Promise<{
 	updatedGame?: GameSession;
+	shouldDeleteGame?: boolean;
 	error?: { code: string; message: string };
 }> {
 	// Find player
@@ -397,12 +398,18 @@ export async function handlePlayerLeave(
 		players: game.players.filter((p) => p.id !== playerId)
 	};
 
-	// Use hooks for consistent storage
-	const storage = useStorage<{ game: GameSession }>(room);
-	await storage.set('game', updatedGame);
+	// Check if this is a completed game with no remaining players
+	const shouldDeleteGame = updatedGame.isCompleted && updatedGame.players.length === 0;
+
+	if (!shouldDeleteGame) {
+		// Use hooks for consistent storage
+		const storage = useStorage<{ game: GameSession }>(room);
+		await storage.set('game', updatedGame);
+	}
 
 	return {
-		updatedGame
+		updatedGame,
+		shouldDeleteGame
 	};
 }
 
