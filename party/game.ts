@@ -63,6 +63,12 @@ export default class GameServer extends PartyKitServer {
 			}
 
 			const result = await handleGameChoice(this.room, this.game, message, playerId);
+			console.log('=== GAME SERVER RECEIVED RESULT ===');
+			console.log('result.updatedGame exists:', !!result.updatedGame);
+			console.log('result.voteResult exists:', !!result.voteResult);
+			console.log('result.sceneTransition exists:', !!result.sceneTransition);
+			console.log('result.gameCompleted:', result.gameCompleted);
+
 			if (result.updatedGame) {
 				this.game = result.updatedGame;
 				await this.storage.set('game', this.game);
@@ -73,6 +79,7 @@ export default class GameServer extends PartyKitServer {
 				}
 
 				// Broadcast game update
+				console.log('Broadcasting game-update message...');
 				this.gameBroadcast.broadcast({
 					type: 'game-update',
 					game: this.game
@@ -83,6 +90,7 @@ export default class GameServer extends PartyKitServer {
 					// Clear voting timer since voting completed
 					this.clearVotingTimer();
 
+					console.log('Broadcasting voting-ended message...');
 					this.votingBroadcast.broadcast({
 						type: 'voting-ended',
 						result: result.voteResult
@@ -90,6 +98,7 @@ export default class GameServer extends PartyKitServer {
 				}
 
 				if (result.sceneTransition) {
+					console.log('Broadcasting scene-transition message:', result.sceneTransition);
 					this.sceneBroadcast.broadcast({
 						type: 'scene-transition',
 						currentScene: result.sceneTransition.currentScene,
@@ -97,14 +106,19 @@ export default class GameServer extends PartyKitServer {
 						description: result.sceneTransition.description,
 						isEnding: result.sceneTransition.isEnding
 					});
+				} else {
+					console.log('No scene transition to broadcast');
 				}
 
 				if (result.gameCompleted) {
+					console.log('Broadcasting game-completed message...');
 					this.completeBroadcast.broadcast({
 						type: 'game-completed',
 						finalStats: result.finalStats || {}
 					});
 				}
+			} else {
+				console.log('No updated game to process');
 			}
 
 			if (result.error) {

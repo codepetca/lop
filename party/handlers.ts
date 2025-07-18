@@ -275,6 +275,7 @@ export async function handleCreateGame(
 		players: [],
 		votingOptions: startingScene.choices,
 		votes: {},
+		playerVotes: {},
 		votingEndsAt: null,
 		maxPlayers: request.maxPlayers || 6,
 		requiresVoting: true,
@@ -461,6 +462,13 @@ export async function handleGameChoice(
 		};
 	}
 
+	// Check if player has already voted in this round
+	if (game.playerVotes[playerId]) {
+		return {
+			error: { code: 'already_voted', message: 'Player has already voted in this round' }
+		};
+	}
+
 	// Check choice requirements
 	if (choice.requirements) {
 		for (const [stat, required] of Object.entries(choice.requirements)) {
@@ -478,10 +486,17 @@ export async function handleGameChoice(
 		[message.choiceId]: (game.votes[message.choiceId] || 0) + 1
 	};
 
+	// Update player votes tracking
+	const updatedPlayerVotes = {
+		...game.playerVotes,
+		[playerId]: message.choiceId
+	};
+
 	// Initialize updated game with new votes
 	let updatedGame = {
 		...game,
-		votes: updatedVotes
+		votes: updatedVotes,
+		playerVotes: updatedPlayerVotes
 	};
 
 	// Check if voting is complete
@@ -511,12 +526,18 @@ export async function handleGameChoice(
 
 		if (allPlayersVoted || timeExpired) {
 			console.log('Voting complete! Processing results...');
+			console.log('Vote tallies:', updatedVotes);
+
 			// Find winning choice (most votes, with tie-breaking)
 			const winningChoiceId = Object.entries(updatedVotes).reduce((a, b) =>
 				updatedVotes[a[0]] > updatedVotes[b[0]] ? a : b
 			)[0];
 
+			console.log('Winning choice ID:', winningChoiceId);
+
 			const winningChoice = game.votingOptions.find((c) => c.id === winningChoiceId);
+			console.log('Winning choice object:', winningChoice);
+
 			if (winningChoice) {
 				voteResult = {
 					winningChoice,
@@ -525,8 +546,12 @@ export async function handleGameChoice(
 					nextScene: winningChoice.nextScene
 				};
 
+				console.log('Vote result created:', voteResult);
+
 				// Clear voting timer for next round
 				updatedGame.votingEndsAt = null;
+			} else {
+				console.error('ERROR: Could not find winning choice with ID:', winningChoiceId);
 			}
 		}
 	} else {
@@ -562,25 +587,38 @@ export async function handleGameChoice(
 		}));
 
 		// Handle scene transition
+		console.log('Processing scene transition...');
+		console.log('voteResult.nextScene:', voteResult.nextScene);
+
 		if (voteResult.nextScene) {
+			console.log('Getting story template for:', game.storyId);
 			const storyTemplate = getStoryTemplate(game.storyId);
+			console.log('Story template found:', !!storyTemplate);
+
 			const nextScene = storyTemplate ? getStoryScene(storyTemplate, voteResult.nextScene) : null;
+			console.log('Next scene found:', !!nextScene);
+			console.log('Next scene data:', nextScene);
 
 			if (nextScene) {
+				console.log('Creating scene transition object...');
 				sceneTransition = {
 					currentScene: voteResult.nextScene,
 					title: nextScene.title,
 					description: nextScene.description,
 					isEnding: nextScene.isEnding
 				};
+				console.log('Scene transition created:', sceneTransition);
 
+				console.log('Updating game state for new scene...');
 				updatedGame = {
 					...updatedGame,
 					currentScene: voteResult.nextScene,
 					votingOptions: nextScene.choices,
 					votes: {},
+					playerVotes: {}, // Reset player votes for new scene
 					players: updatedPlayers.map((p) => ({ ...p, currentScene: voteResult!.nextScene! }))
 				};
+				console.log('Game state updated with new scene:', voteResult.nextScene);
 
 				// Check if game is completed
 				if (nextScene.isEnding) {
@@ -601,9 +639,16 @@ export async function handleGameChoice(
 						isCompleted: true
 					};
 				}
+			} else {
+				console.error('ERROR: Next scene not found:', voteResult.nextScene);
+				console.error(
+					'Available scenes in story:',
+					storyTemplate?.scenes.map((s) => s.id)
+				);
 			}
 		} else {
 			// No next scene - game ends
+			console.log('No next scene specified - game ending');
 			gameCompleted = true;
 			finalStats = updatedPlayers.reduce(
 				(acc, p) => {
@@ -628,6 +673,14 @@ export async function handleGameChoice(
 	const storage = useStorage<{ game: GameSession }>(room);
 	await storage.set('game', updatedGame);
 
+	console.log('=== HANDLER RETURN VALUES ===');
+	console.log('updatedGame exists:', !!updatedGame);
+	console.log('voteResult exists:', !!voteResult);
+	console.log('sceneTransition exists:', !!sceneTransition);
+	console.log('gameCompleted:', gameCompleted);
+	console.log('finalStats exists:', !!finalStats);
+	console.log('sceneTransition data:', sceneTransition);
+
 	return {
 		updatedGame,
 		voteResult,
@@ -650,7 +703,8 @@ export async function registerGameWithLobby(
 			title: game.title,
 			storyTitle: storyTemplate.title,
 			genre: storyTemplate.genre,
-			difficulty: storyTemplate.difficulty
+			difficulty: storyTemplate.difficulty,
+			creator: game.creator
 		});
 
 		// Get lobby URL using centralized config

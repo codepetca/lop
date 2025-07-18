@@ -13,15 +13,10 @@
 
 <header class="title-header">
 	<h1 class="app-title">Lop</h1>
-	
+
 	{#if player}
 		<div class="player-info">
-			<PlayerAvatar
-				avatar={player.avatar}
-				size={64}
-				clickable={true}
-				onclick={onPlayerClick}
-			/>
+			<PlayerAvatar avatar={player.avatar} size={64} clickable={true} onclick={onPlayerClick} />
 		</div>
 	{/if}
 </header>

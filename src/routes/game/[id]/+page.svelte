@@ -12,14 +12,19 @@
 	} from '$lib/types';
 	import { useWebSocket } from '$lib/hooks/useWebSocket.svelte';
 	import { store } from '$lib/stores';
+	import GameAvatar from '$lib/components/GameAvatar.svelte';
 
 	let { data }: { data: PageData } = $props();
 
 	let game = $state<GameSession>(data.game);
 	let currentPlayer = $state<CharacterState | null>(null);
-	let hasVoted = $state(false);
 	let votingTimeLeft = $state(0);
 	let votingTimer: ReturnType<typeof setInterval> | null = null;
+
+	// Check if current player has voted using backend data
+	const hasVoted = $derived(
+		currentPlayer && game.playerVotes && game.playerVotes[currentPlayer.id] ? true : false
+	);
 
 	// Initialize WebSocket hook
 	const ws = useWebSocket<Message, GameChoiceMessage | PlayerJoinMessage>('game', data.gameId, {
@@ -59,17 +64,14 @@
 				}
 				break;
 			case 'voting-started':
-				hasVoted = false;
 				votingTimeLeft = ws.lastMessage.timeLimit;
 				startVotingTimer();
 				console.log('Voting started, time limit:', votingTimeLeft);
 				break;
 			case 'voting-ended':
-				hasVoted = false;
 				stopVotingTimer();
 				break;
 			case 'scene-transition':
-				hasVoted = false;
 				break;
 			case 'game-completed':
 				stopVotingTimer();
@@ -120,12 +122,6 @@
 			choiceId,
 			playerId: currentPlayer.id
 		});
-		hasVoted = true;
-
-		// Store vote in localStorage to prevent duplicate votes
-		if (browser) {
-			localStorage.setItem(`voted_${data.gameId}_${game.currentScene}`, 'true');
-		}
 	}
 
 	function copyGameLink() {
@@ -160,10 +156,7 @@
 			});
 		});
 
-		// Check if user has already voted for current scene
-		if (browser) {
-			hasVoted = localStorage.getItem(`voted_${data.gameId}_${game.currentScene}`) === 'true';
-		}
+		// Note: Voting status is now managed by backend playerVotes data
 
 		return () => {
 			unsubscribe();
@@ -210,20 +203,22 @@
 			<div class="status error">Connection error - retrying...</div>
 		{/if}
 
-		<div class="game-info-bar">
-			<div class="player-info">
-				<span class="player-name">👤 {currentPlayer?.name}</span>
-				{#if currentPlayer?.stats}
-					<div class="player-stats">
-						{#each Object.entries(currentPlayer.stats) as [stat, value]}
-							<span class="stat">{stat}: {value}</span>
-						{/each}
-					</div>
-				{/if}
+		<div class="players-section">
+			<div class="players-avatars">
+				{#each game.players as player (player.id)}
+					<GameAvatar
+						{player}
+						isCurrentPlayer={currentPlayer?.id === player.id}
+						hasVoted={game.playerVotes && game.playerVotes[player.id] ? true : false}
+						onclick={(clickedPlayer) => {
+							console.log('Clicked player:', clickedPlayer.name);
+							// TODO: Show player details modal
+						}}
+					/>
+				{/each}
 			</div>
 			<div class="game-stats">
 				<span class="players-count">👥 {game.players.length} players</span>
-				<span class="votes-count">🗳️ {totalVotes} votes</span>
 			</div>
 		</div>
 
@@ -231,7 +226,7 @@
 			<div class="game-completed">
 				<h2>🎉 Adventure Complete!</h2>
 			</div>
-			
+
 			<div class="completion-actions">
 				<a href="/" class="back-to-lobby-btn">🏠 Back to Lobby</a>
 			</div>
@@ -374,8 +369,8 @@
 		background: #059669;
 	}
 
-	/* Game Info Bar */
-	.game-info-bar {
+	/* Players Section */
+	.players-section {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
@@ -388,30 +383,32 @@
 		gap: 1rem;
 	}
 
-	.player-info {
+	.players-avatars {
 		display: flex;
+		gap: 0.75rem;
 		align-items: center;
-		gap: 1rem;
 		flex-wrap: wrap;
+		overflow-x: auto;
+		max-width: 100%;
+		padding: 0.25rem 0;
 	}
 
-	.player-name {
-		font-weight: 600;
-		color: #1f2937;
+	.players-avatars::-webkit-scrollbar {
+		height: 4px;
 	}
 
-	.player-stats {
-		display: flex;
-		gap: 0.5rem;
+	.players-avatars::-webkit-scrollbar-track {
+		background: #f1f5f9;
+		border-radius: 2px;
 	}
 
-	.stat {
-		background: #e0e7ff;
-		color: #3730a3;
-		padding: 0.25rem 0.5rem;
-		border-radius: 6px;
-		font-size: 0.8rem;
-		font-weight: 500;
+	.players-avatars::-webkit-scrollbar-thumb {
+		background: #cbd5e1;
+		border-radius: 2px;
+	}
+
+	.players-avatars::-webkit-scrollbar-thumb:hover {
+		background: #94a3b8;
 	}
 
 	.game-stats {
@@ -624,12 +621,16 @@
 			align-items: stretch;
 		}
 
-		.game-info-bar {
+		.players-section {
 			flex-direction: column;
 			gap: 1rem;
 		}
 
-		.player-info,
+		.players-avatars {
+			justify-content: center;
+			max-width: none;
+		}
+
 		.game-stats {
 			justify-content: center;
 		}

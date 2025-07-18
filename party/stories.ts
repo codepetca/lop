@@ -523,6 +523,90 @@ const horrorMansionStory: StoryTemplate = {
 			requirements: {}
 		},
 		{
+			id: 'servant-entrance',
+			title: "The Servant's Entrance",
+			description:
+				"You find a small door hidden behind overgrown ivy. The servant's entrance creaks open, revealing a narrow hallway that leads into the mansion's depths. The air is stale and carries the scent of decay.",
+			choices: [
+				{
+					id: 'enter-kitchen',
+					text: 'Enter through the old kitchen',
+					nextScene: 'grand-foyer',
+					requirements: {},
+					effects: { courage: 5 },
+					addItems: [],
+					removeItems: []
+				},
+				{
+					id: 'explore-basement',
+					text: 'Investigate the basement stairs',
+					nextScene: 'basement-discovery',
+					requirements: { courage: 10 },
+					effects: { sanity: -5 },
+					addItems: [],
+					removeItems: []
+				}
+			],
+			isEnding: false,
+			requirements: {}
+		},
+		{
+			id: 'basement-discovery',
+			title: 'The Hidden Basement',
+			description:
+				'The basement reveals old servant quarters and storage rooms. In the corner, you discover a hidden passage behind a bookshelf. Strange symbols are carved into the stone walls.',
+			choices: [
+				{
+					id: 'enter-passage',
+					text: 'Enter the hidden passage',
+					nextScene: 'secret-chamber',
+					requirements: { courage: 15 },
+					effects: { sanity: -10 },
+					addItems: ['mysterious-key'],
+					removeItems: []
+				},
+				{
+					id: 'return-upstairs',
+					text: 'Return upstairs to the main house',
+					nextScene: 'grand-foyer',
+					requirements: {},
+					effects: {},
+					addItems: [],
+					removeItems: []
+				}
+			],
+			isEnding: false,
+			requirements: {}
+		},
+		{
+			id: 'secret-chamber',
+			title: 'The Secret Chamber',
+			description:
+				"You discover a hidden chamber filled with occult artifacts and ancient books. This appears to be where the mansion's dark rituals took place. A pentagram is carved into the floor.",
+			choices: [
+				{
+					id: 'study-artifacts',
+					text: 'Study the occult artifacts',
+					nextScene: 'curse-breaking',
+					requirements: { sanity: 40 },
+					effects: { sanity: -15 },
+					addItems: ['ritual-dagger'],
+					removeItems: []
+				},
+				{
+					id: 'flee-chamber',
+					text: 'Flee from this evil place',
+					nextScene: 'escape-attempt',
+					requirements: {},
+					effects: { courage: -10 },
+					addItems: [],
+					removeItems: []
+				}
+			],
+			isEnding: false,
+			requirements: {}
+		},
+		{
 			id: 'grand-foyer',
 			title: 'The Grand Foyer',
 			description:
@@ -543,6 +627,174 @@ const horrorMansionStory: StoryTemplate = {
 					nextScene: 'dining-room',
 					requirements: {},
 					effects: {},
+					addItems: [],
+					removeItems: []
+				}
+			],
+			isEnding: false,
+			requirements: {}
+		},
+		{
+			id: 'dining-room',
+			title: 'The Dining Room',
+			description:
+				'The dining room table is set for a dinner that was never served. Candles have melted into twisted shapes, and the chandelier sways gently despite the absence of any breeze. A portrait above the fireplace seems to follow your movements.',
+			choices: [
+				{
+					id: 'examine-portrait',
+					text: 'Examine the portrait more closely',
+					nextScene: 'hidden-passage',
+					requirements: {},
+					effects: { sanity: -5 },
+					addItems: ['family-photo'],
+					removeItems: []
+				},
+				{
+					id: 'check-kitchen',
+					text: 'Check the kitchen for clues',
+					nextScene: 'kitchen-discovery',
+					requirements: {},
+					effects: {},
+					addItems: [],
+					removeItems: []
+				}
+			],
+			isEnding: false,
+			requirements: {}
+		},
+		{
+			id: 'kitchen-discovery',
+			title: 'The Abandoned Kitchen',
+			description:
+				'The kitchen shows signs of a hasty departure. Pots still sit on the stove, and a meal appears half-prepared. You find a diary hidden in a drawer, revealing the dark history of the mansion.',
+			choices: [
+				{
+					id: 'read-diary',
+					text: 'Read the diary carefully',
+					nextScene: 'upstairs-corridor',
+					requirements: {},
+					effects: { courage: 10 },
+					addItems: ['servants-diary'],
+					removeItems: []
+				},
+				{
+					id: 'investigate-cellar',
+					text: 'Investigate the cellar door',
+					nextScene: 'basement-discovery',
+					requirements: { courage: 5 },
+					effects: {},
+					addItems: [],
+					removeItems: []
+				}
+			],
+			isEnding: false,
+			requirements: {}
+		},
+		{
+			id: 'hidden-passage',
+			title: 'The Hidden Passage',
+			description:
+				"Behind the portrait, you discover a hidden passage that leads to the mansion's secret areas. The walls are lined with strange symbols and the air grows colder as you proceed.",
+			choices: [
+				{
+					id: 'follow-passage',
+					text: 'Follow the passage to its end',
+					nextScene: 'secret-chamber',
+					requirements: { courage: 15 },
+					effects: { sanity: -10 },
+					addItems: [],
+					removeItems: []
+				},
+				{
+					id: 'return-dining',
+					text: 'Return to the dining room',
+					nextScene: 'upstairs-corridor',
+					requirements: {},
+					effects: {},
+					addItems: [],
+					removeItems: []
+				}
+			],
+			isEnding: false,
+			requirements: {}
+		},
+		{
+			id: 'childrens-room',
+			title: "The Children's Room",
+			description:
+				'The nursery is filled with old toys and a rocking horse that moves on its own. Childish laughter echoes from nowhere, and you see small handprints on the dusty windows. The innocence of childhood has been twisted into something unsettling.',
+			choices: [
+				{
+					id: 'play-music-box',
+					text: 'Wind up the old music box',
+					nextScene: 'ghost-children',
+					requirements: { sanity: 50 },
+					effects: { sanity: -20 },
+					addItems: [],
+					removeItems: []
+				},
+				{
+					id: 'leave-room',
+					text: 'Leave the room immediately',
+					nextScene: 'master-bedroom',
+					requirements: {},
+					effects: { courage: -5 },
+					addItems: [],
+					removeItems: []
+				}
+			],
+			isEnding: false,
+			requirements: {}
+		},
+		{
+			id: 'ghost-children',
+			title: 'The Ghost Children',
+			description:
+				'The spirits of children who died in the mansion appear before you. They are not malevolent, but trapped and seeking help to find peace. They offer to guide you to break the curse that binds them.',
+			choices: [
+				{
+					id: 'help-children',
+					text: 'Agree to help the ghost children',
+					nextScene: 'curse-breaking',
+					requirements: { sanity: 30 },
+					effects: { courage: 15 },
+					addItems: ['blessed-toy'],
+					removeItems: []
+				},
+				{
+					id: 'ignore-children',
+					text: 'Ignore the children and flee',
+					nextScene: 'escape-attempt',
+					requirements: {},
+					effects: { sanity: -15 },
+					addItems: [],
+					removeItems: []
+				}
+			],
+			isEnding: false,
+			requirements: {}
+		},
+		{
+			id: 'escape-attempt',
+			title: 'Desperate Escape',
+			description:
+				'You run through the mansion, trying to find a way out, but the doors have vanished and the windows are now bricked up. The mansion has trapped you, and you realize the only way out is to face the supernatural forces within.',
+			choices: [
+				{
+					id: 'face-your-fears',
+					text: 'Turn around and face the supernatural forces',
+					nextScene: 'ghost-encounter',
+					requirements: { courage: 25 },
+					effects: { sanity: -10, courage: 10 },
+					addItems: [],
+					removeItems: []
+				},
+				{
+					id: 'break-window',
+					text: 'Try to break through a window',
+					nextScene: 'trapped-ending',
+					requirements: {},
+					effects: { health: -20 },
 					addItems: [],
 					removeItems: []
 				}

@@ -357,7 +357,10 @@ export default class LobbyServer extends PartyKitServer {
 			console.error('Error creating game:', error);
 			if (error instanceof z.ZodError) {
 				console.error('Validation errors:', JSON.stringify(error.errors, null, 2));
-				return this.http.error(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, 400);
+				return this.http.error(
+					`Validation failed: ${error.errors.map((e) => e.message).join(', ')}`,
+					400
+				);
 			}
 			return this.http.error('Failed to create game', 500);
 		}

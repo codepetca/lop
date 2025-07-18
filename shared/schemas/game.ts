@@ -56,6 +56,7 @@ export const GameSessionSchema = z.object({
 	players: z.array(GamePlayerSchema).default([]),
 	votingOptions: z.array(StoryChoiceSchema).default([]), // current choices being voted on
 	votes: z.record(z.string(), z.number()).default({}), // choiceId -> vote count
+	playerVotes: z.record(z.string(), z.string()).default({}), // playerId -> choiceId
 	votingEndsAt: z.string().nullable(), // ISO timestamp
 	maxPlayers: z.number().min(1).max(50).default(20),
 	requiresVoting: z.boolean().default(true), // false for single-player

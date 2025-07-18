@@ -121,12 +121,16 @@
 						</div>
 
 						<!-- Hidden field for creator data -->
-						<input type="hidden" name="creator" value={JSON.stringify({
-							id: store.player?.id,
-							name: store.player?.name,
-							joinedAt: new Date().toISOString(),
-							avatar: store.player?.avatar
-						})} />
+						<input
+							type="hidden"
+							name="creator"
+							value={JSON.stringify({
+								id: store.player?.id,
+								name: store.player?.name,
+								joinedAt: new Date().toISOString(),
+								avatar: store.player?.avatar
+							})}
+						/>
 
 						<button type="submit" class="create-btn" disabled={gameLoading || !selectedStoryId}>
 							{gameLoading ? 'Creating Game...' : '🎮 Create Custom Game'}
@@ -146,7 +150,9 @@
 									<a href="/game/{form.gameId}" class="join-btn"> Join Game → </a>
 								</div>
 							</div>
-							<p class="share-text">Share this game ID with others so they can join the adventure!</p>
+							<p class="share-text">
+								Share this game ID with others so they can join the adventure!
+							</p>
 						</div>
 					{/if}
 

@@ -61,11 +61,11 @@
 		if (!store.player) {
 			store.initializePlayer();
 		}
-		
+
 		// Create a random game with default settings
 		const randomStoryIndex = Math.floor(Math.random() * data.stories.length);
 		const randomStory = data.stories[randomStoryIndex];
-		
+
 		// Transform player data to match BasePlayerSchema
 		const creatorData = {
 			id: store.player.id,
@@ -73,24 +73,27 @@
 			joinedAt: new Date().toISOString(),
 			avatar: store.player.avatar
 		};
-		
+
 		// Create form data and submit
 		const formData = new FormData();
 		formData.append('storyId', randomStory.id);
 		formData.append('maxPlayers', '6');
 		formData.append('creator', JSON.stringify(creatorData));
-		
+
 		loading = true;
 		fetch('?/createGame', {
 			method: 'POST',
 			body: formData
-		}).then(response => response.text()).then(() => {
-			loading = false;
-			// Refresh the page to show the result
-			window.location.reload();
-		}).catch(() => {
-			loading = false;
-		});
+		})
+			.then((response) => response.text())
+			.then(() => {
+				loading = false;
+				// Refresh the page to show the result
+				window.location.reload();
+			})
+			.catch(() => {
+				loading = false;
+			});
 	}
 
 	onMount(() => {
@@ -122,42 +125,44 @@
 	<!-- Active Items Section -->
 	{#if ws.status === 'connecting' || ws.status === 'error' || activeGames.length > 0}
 		<div class="section">
-
-		{#if ws.status === 'connecting'}
-			<p class="loading">Connecting to game list...</p>
-		{:else if ws.status === 'error'}
-			<p class="loading error">Connection error - retrying...</p>
-		{:else if activeGames.length === 0}
-			<p class="no-rooms">No active games found. Create one above!</p>
-		{:else}
-			<div class="rooms-list">
-				{#each activeGames as game}
-					<button class="room-card game-card" onclick={() => joinActiveGame(game.id)}>
-						<div class="game-card-content">
-							<div class="creator-avatar">
-								<img 
-									src="https://api.dicebear.com/9.x/{game.creator.avatar.style}/svg?seed={game.creator.avatar.seed}{game.creator.avatar.backgroundColor ? `&backgroundColor=${game.creator.avatar.backgroundColor}` : ''}" 
-									alt="{game.creator.name}'s avatar"
-									title="Created by {game.creator.name}"
-								/>
-							</div>
-							<div class="game-main">
-								<h3 class="game-title">{game.title}</h3>
-								<p class="game-story">{game.storyTitle}</p>
-								<div class="game-meta">
-									<span class="players-count">{game.playerCount}/{game.maxPlayers} players</span>
-									<span class="game-status">{game.currentScene}</span>
+			{#if ws.status === 'connecting'}
+				<p class="loading">Connecting to game list...</p>
+			{:else if ws.status === 'error'}
+				<p class="loading error">Connection error - retrying...</p>
+			{:else if activeGames.length === 0}
+				<p class="no-rooms">No active games found. Create one above!</p>
+			{:else}
+				<div class="rooms-list">
+					{#each activeGames as game}
+						<button class="room-card game-card" onclick={() => joinActiveGame(game.id)}>
+							<div class="game-card-content">
+								<div class="creator-avatar">
+									<img
+										src="https://api.dicebear.com/9.x/{game.creator.avatar.style}/svg?seed={game
+											.creator.avatar.seed}{game.creator.avatar.backgroundColor
+											? `&backgroundColor=${game.creator.avatar.backgroundColor}`
+											: ''}"
+										alt="{game.creator.name}'s avatar"
+										title="Created by {game.creator.name}"
+									/>
+								</div>
+								<div class="game-main">
+									<h3 class="game-title">{game.title}</h3>
+									<p class="game-story">{game.storyTitle}</p>
+									<div class="game-meta">
+										<span class="players-count">{game.playerCount}/{game.maxPlayers} players</span>
+										<span class="game-status">{game.currentScene}</span>
+									</div>
+								</div>
+								<div class="game-badges">
+									<span class="genre-badge {game.genre}">{game.genre}</span>
+									<span class="difficulty-badge {game.difficulty}">{game.difficulty}</span>
 								</div>
 							</div>
-							<div class="game-badges">
-								<span class="genre-badge {game.genre}">{game.genre}</span>
-								<span class="difficulty-badge {game.difficulty}">{game.difficulty}</span>
-							</div>
-						</div>
-					</button>
-				{/each}
-			</div>
-		{/if}
+						</button>
+					{/each}
+				</div>
+			{/if}
 		</div>
 	{/if}
 
@@ -166,9 +171,7 @@
 		<button class="quick-create-btn" onclick={createQuickGame} disabled={loading}>
 			{loading ? 'Creating Game...' : '🎮 Host Game'}
 		</button>
-		<button class="advanced-btn" onclick={openAdvancedModal}>
-			⚙️ Advanced
-		</button>
+		<button class="advanced-btn" onclick={openAdvancedModal}> ⚙️ Advanced </button>
 	</div>
 </main>
 
@@ -241,7 +244,6 @@
 		}
 	}
 
-
 	.section {
 		background: #f8fafc;
 		border-radius: 12px;
@@ -255,7 +257,6 @@
 		margin-bottom: 1.5rem;
 		font-size: 1.5rem;
 	}
-
 
 	/* Room Browser Styles */
 	.loading,
@@ -293,16 +294,16 @@
 		font-family: inherit;
 		font-size: inherit;
 	}
-	
+
 	.room-card:last-child {
 		border-bottom: none;
 	}
-	
+
 	.room-card:first-child {
 		border-top-left-radius: 12px;
 		border-top-right-radius: 12px;
 	}
-	
+
 	.room-card:last-child {
 		border-bottom-left-radius: 12px;
 		border-bottom-right-radius: 12px;
@@ -383,8 +384,6 @@
 		gap: 0.5rem;
 		align-items: flex-end;
 	}
-
-
 
 	/* Game card styles */
 	.game-card {
