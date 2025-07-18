@@ -176,8 +176,7 @@
 			<div class="loading-modal">
 				<h2>Joining Adventure...</h2>
 				<p class="game-info">
-					<strong>{game.title}</strong><br />
-					{game.players.length}/{game.maxPlayers} players
+					<strong>{game.title}</strong>
 				</p>
 				{#if ws.status === 'connecting'}
 					<p class="status">Connecting...</p>
@@ -218,7 +217,6 @@
 				{/each}
 			</div>
 			<div class="game-stats">
-				<span class="players-count">👥 {game.players.length} players</span>
 			</div>
 		</div>
 
