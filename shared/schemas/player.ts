@@ -9,6 +9,18 @@ import { z } from 'zod';
  * - GamePlayerSchema: Game-specific player extension (for story games)
  */
 
+// Avatar configuration schema for DiceBear avatars
+export const AvatarConfigSchema = z.object({
+	/** DiceBear style name */
+	style: z.string(),
+	/** Seed for avatar generation */
+	seed: z.string(),
+	/** Background color (hex without #) */
+	backgroundColor: z.string().optional(),
+	/** Background type */
+	backgroundType: z.string().optional()
+});
+
 // Base player schema - core properties shared by all player types
 export const BasePlayerSchema = z.object({
 	/** Unique UUID identifier for the player */
@@ -16,7 +28,9 @@ export const BasePlayerSchema = z.object({
 	/** Display name chosen by or generated for the player */
 	name: z.string().min(1).max(50),
 	/** ISO timestamp when the player joined */
-	joinedAt: z.string()
+	joinedAt: z.string(),
+	/** Avatar configuration for DiceBear */
+	avatar: AvatarConfigSchema
 });
 
 /**
@@ -41,6 +55,7 @@ export const GamePlayerSchema = BasePlayerSchema.extend({
 });
 
 // Export TypeScript types inferred from schemas
+export type AvatarConfig = z.infer<typeof AvatarConfigSchema>;
 export type BasePlayer = z.infer<typeof BasePlayerSchema>;
 export type PollPlayer = z.infer<typeof PollPlayerSchema>;
 export type GamePlayer = z.infer<typeof GamePlayerSchema>;

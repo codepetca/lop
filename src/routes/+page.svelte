@@ -12,6 +12,8 @@
 	} from '$lib/types';
 	import { useWebSocket } from '$lib/hooks/useWebSocket.svelte';
 	import { store } from '$lib/stores';
+	import PlayerAvatar from '$lib/components/PlayerAvatar.svelte';
+	import PlayerProfileModal from '$lib/components/PlayerProfileModal.svelte';
 
 	let { form, data }: { form: ActionData; data: PageData } = $props();
 
@@ -23,8 +25,7 @@
 	let selectedStoryId = $state('');
 	let maxPlayers = $state(6);
 	let currentTab = $state<'polls' | 'games'>('games');
-	let editingName = $state(false);
-	let tempName = $state('');
+	let showProfileModal = $state(false);
 
 	// Initialize WebSocket hook for lobby (lobby is main server now)
 	const ws = useWebSocket<Message, RoomListRequestMessage | GameListRequestMessage>(
@@ -69,26 +70,8 @@
 		window.location.href = `/game/${gameId}`;
 	}
 
-	function startEditingName() {
-		tempName = store.player?.name || '';
-		editingName = true;
-	}
-
-	function saveName() {
-		if (tempName.trim()) {
-			store.updatePlayerName(tempName.trim());
-			editingName = false;
-		}
-	}
-
-	function cancelEdit() {
-		editingName = false;
-		tempName = '';
-	}
-
-	function generateNewName() {
-		store.generateNewName();
-		editingName = false;
+	function openProfileModal() {
+		showProfileModal = true;
 	}
 
 	onMount(() => {
@@ -114,34 +97,24 @@
 	<div class="player-section">
 		{#if store.player}
 			<div class="player-info">
-				<span class="player-label">Playing as:</span>
-				{#if editingName}
-					<div class="name-edit">
-						<input
-							type="text"
-							bind:value={tempName}
-							onkeydown={(e) => {
-								if (e.key === 'Enter') saveName();
-								if (e.key === 'Escape') cancelEdit();
-							}}
-							placeholder="Enter name"
-							maxlength="20"
-						/>
-						<button class="save-btn" onclick={saveName}>✓</button>
-						<button class="cancel-btn" onclick={cancelEdit}>✕</button>
-					</div>
-				{:else}
+				<PlayerAvatar
+					avatar={store.player.avatar}
+					size={64}
+					clickable={true}
+					onclick={openProfileModal}
+				/>
+				<div class="player-details">
+					<span class="player-label">Playing as:</span>
 					<span class="player-name" class:generated={store.player.isGenerated}>
 						{store.player.name}
 					</span>
-					<button class="edit-btn" onclick={startEditingName}>✏️</button>
-				{/if}
-				<button class="generate-btn" onclick={generateNewName} title="Generate new random name">
-					🎲 New Name
-				</button>
+				</div>
 			</div>
 		{/if}
 	</div>
+
+	<!-- Player Profile Modal -->
+	<PlayerProfileModal bind:isOpen={showProfileModal} />
 
 	<!-- Tab Navigation -->
 	<div class="tabs">
@@ -185,7 +158,6 @@
 						{/each}
 					</select>
 				</div>
-
 
 				<div class="form-row">
 					<div class="form-group">
@@ -386,23 +358,26 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: 0.75rem;
-		flex-wrap: wrap;
+		gap: 1rem;
+	}
+
+	.player-details {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.25rem;
 	}
 
 	.player-label {
 		color: #4b5563;
 		font-weight: 500;
+		font-size: 0.9rem;
 	}
 
 	.player-name {
 		font-weight: 600;
 		color: #1f2937;
 		font-size: 1.1rem;
-		padding: 0.25rem 0.5rem;
-		background: white;
-		border-radius: 6px;
-		border: 1px solid #e5e7eb;
 	}
 
 	.player-name.generated {
@@ -410,70 +385,16 @@
 		color: #6366f1;
 	}
 
-	.name-edit {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.5rem;
-	}
+	@media (max-width: 600px) {
+		.player-info {
+			flex-direction: column;
+			gap: 0.75rem;
+		}
 
-	.name-edit input {
-		padding: 0.5rem;
-		border: 2px solid #3b82f6;
-		border-radius: 6px;
-		font-size: 1rem;
-		width: 200px;
-	}
-
-	.edit-btn,
-	.generate-btn,
-	.save-btn,
-	.cancel-btn {
-		padding: 0.5rem 0.75rem;
-		border: none;
-		border-radius: 6px;
-		cursor: pointer;
-		font-size: 0.9rem;
-		transition: all 0.2s;
-	}
-
-	.edit-btn {
-		background: #e0e7ff;
-		color: #4c1d95;
-	}
-
-	.edit-btn:hover {
-		background: #c7d2fe;
-	}
-
-	.generate-btn {
-		background: #fbbf24;
-		color: #78350f;
-		font-weight: 500;
-	}
-
-	.generate-btn:hover {
-		background: #f59e0b;
-		transform: translateY(-1px);
-	}
-
-	.save-btn {
-		background: #10b981;
-		color: white;
-		font-weight: 600;
-	}
-
-	.save-btn:hover {
-		background: #059669;
-	}
-
-	.cancel-btn {
-		background: #ef4444;
-		color: white;
-		font-weight: 600;
-	}
-
-	.cancel-btn:hover {
-		background: #dc2626;
+		.player-details {
+			align-items: center;
+			text-align: center;
+		}
 	}
 
 	.section {

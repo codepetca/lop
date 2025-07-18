@@ -358,7 +358,7 @@ export default class GameServer extends PartyKitServer {
 		const playerId = this.connectionPlayerMap.get(conn.id);
 		if (playerId && this.game) {
 			const result = await handlePlayerLeave(this.room, this.game, playerId);
-			
+
 			if (result.shouldDeleteGame) {
 				// Game is completed and no players remain - delete it
 				await this.deleteGame();
@@ -388,7 +388,7 @@ export default class GameServer extends PartyKitServer {
 		if (!this.game) return;
 
 		const gameId = this.room.id;
-		
+
 		// Clear all game storage
 		await this.storage.remove('game');
 		this.game = null;
@@ -400,7 +400,7 @@ export default class GameServer extends PartyKitServer {
 		try {
 			const lobbyUrl = getLobbyUrl(`/parties/main/main/unregister-game/${gameId}`);
 			const lobbyResponse = await fetch(lobbyUrl, { method: 'DELETE' });
-			
+
 			if (!lobbyResponse.ok) {
 				console.warn(`Failed to unregister game ${gameId} from lobby:`, lobbyResponse.status);
 			} else {

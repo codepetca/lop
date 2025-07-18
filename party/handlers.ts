@@ -28,6 +28,7 @@ import { generatePlayerName } from './name-generator';
 import { getLobbyUrl } from './lib/config';
 import { useStorage, useBroadcast, useHttpResponse } from './lib/hooks';
 import { getStoryTemplate, getStoryScene } from './stories';
+import { generateAvatarFromPlayerId } from './avatar';
 
 /**
  * Handle vote messages from WebSocket clients with UUID tracking
@@ -108,7 +109,8 @@ export async function handlePlayerJoinPoll(
 	const player: PollPlayer = {
 		id: playerId,
 		name: playerName,
-		joinedAt: new Date().toISOString()
+		joinedAt: new Date().toISOString(),
+		avatar: generateAvatarFromPlayerId(playerId)
 	};
 
 	// Add player to poll
@@ -347,6 +349,7 @@ export async function handlePlayerJoin(
 		id: playerId,
 		name: message.playerName,
 		joinedAt: new Date().toISOString(),
+		avatar: generateAvatarFromPlayerId(playerId),
 		stats: { ...storyTemplate.initialStats },
 		inventory: [...storyTemplate.initialInventory],
 		choices: [],

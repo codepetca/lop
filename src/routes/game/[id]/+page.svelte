@@ -290,7 +290,6 @@
 				<p class="instruction">Choose your path in the adventure!</p>
 			{/if}
 		{/if}
-
 	{/if}
 </main>
 

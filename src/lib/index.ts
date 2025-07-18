@@ -20,3 +20,11 @@ export { useWebSocket } from './hooks/useWebSocket.svelte';
 
 // Re-export store for app-wide state management
 export { store } from './stores';
+
+// Re-export avatar utilities
+export * from './avatar/utils';
+
+// Re-export components
+export { default as PlayerAvatar } from './components/PlayerAvatar.svelte';
+export { default as PlayerProfileModal } from './components/PlayerProfileModal.svelte';
+export { default as AvatarSelector } from './components/AvatarSelector.svelte';

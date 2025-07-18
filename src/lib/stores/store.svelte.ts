@@ -1,11 +1,17 @@
 import { browser } from '$app/environment';
 import { generatePlayerName, isGeneratedName } from './nameGenerator';
+import {
+	generateAvatarFromPlayerId,
+	generateNewRandomAvatar,
+	type AvatarConfig
+} from '$lib/avatar/utils';
 
 interface Player {
 	id: string;
 	name: string;
 	isGenerated: boolean;
 	createdAt: number;
+	avatar: AvatarConfig;
 }
 
 interface AppState {
@@ -72,12 +78,21 @@ function createStore() {
 		// Initialize or get existing player
 		initializePlayer() {
 			if (!state.player) {
+				const id = generateId();
 				const name = generateUniqueName();
 				state.player = {
-					id: generateId(),
+					id,
 					name,
 					isGenerated: true,
-					createdAt: Date.now()
+					createdAt: Date.now(),
+					avatar: generateAvatarFromPlayerId(id)
+				};
+				syncToStorage();
+			} else if (!state.player.avatar) {
+				// Migration: Add avatar to existing players
+				state.player = {
+					...state.player,
+					avatar: generateAvatarFromPlayerId(state.player.id)
 				};
 				syncToStorage();
 			}
@@ -109,6 +124,34 @@ function createStore() {
 					...state.player,
 					name,
 					isGenerated: true
+				};
+				syncToStorage();
+			}
+		},
+
+		// Update player avatar
+		updatePlayerAvatar(avatar: AvatarConfig) {
+			if (!state.player) {
+				this.initializePlayer();
+			}
+			if (state.player) {
+				state.player = {
+					...state.player,
+					avatar
+				};
+				syncToStorage();
+			}
+		},
+
+		// Generate a new random avatar
+		generateNewAvatar() {
+			if (!state.player) {
+				this.initializePlayer();
+			} else {
+				const avatar = generateNewRandomAvatar();
+				state.player = {
+					...state.player,
+					avatar
 				};
 				syncToStorage();
 			}
