@@ -271,6 +271,7 @@ export async function handleCreateGame(
 		currentScene: storyTemplate.startingScene,
 		isActive: true,
 		isCompleted: false,
+		creator: request.creator,
 		players: [],
 		votingOptions: startingScene.choices,
 		votes: {},

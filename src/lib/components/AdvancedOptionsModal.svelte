@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { ActionData, PageData } from '../../routes/$types';
+	import { store } from '$lib/stores';
 
 	let {
 		isOpen = $bindable(),
@@ -118,6 +119,14 @@
 								bind:value={maxPlayers}
 							/>
 						</div>
+
+						<!-- Hidden field for creator data -->
+						<input type="hidden" name="creator" value={JSON.stringify({
+							id: store.player?.id,
+							name: store.player?.name,
+							joinedAt: new Date().toISOString(),
+							avatar: store.player?.avatar
+						})} />
 
 						<button type="submit" class="create-btn" disabled={gameLoading || !selectedStoryId}>
 							{gameLoading ? 'Creating Game...' : '🎮 Create Custom Game'}

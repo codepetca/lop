@@ -90,10 +90,26 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const storyId = formData.get('storyId') as string;
 		const maxPlayers = parseInt(formData.get('maxPlayers') as string) || 6;
+		const creatorData = formData.get('creator') as string;
 
 		if (!storyId) {
 			return fail(400, {
 				error: 'Please select a story template.'
+			});
+		}
+
+		if (!creatorData) {
+			return fail(400, {
+				error: 'Creator information is required.'
+			});
+		}
+
+		let creator;
+		try {
+			creator = JSON.parse(creatorData);
+		} catch (error) {
+			return fail(400, {
+				error: 'Invalid creator information.'
 			});
 		}
 
@@ -108,7 +124,8 @@ export const actions: Actions = {
 			},
 			body: JSON.stringify({
 				storyId,
-				maxPlayers
+				maxPlayers,
+				creator
 			})
 		});
 

@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { PollSchema } from './poll';
 import { GameSessionSchema, GameMetadataSchema } from './game';
 import { StoryFilterSchema } from './story';
+import { BasePlayerSchema } from './player';
 
 // Create poll request schema
 export const CreatePollRequestSchema = z.object({
@@ -45,6 +46,7 @@ export const CreateGameRequestSchema = z.object({
 	storyId: z.string(), // which story template to use
 	maxPlayers: z.number().min(1).max(50).default(6),
 	requiresVoting: z.boolean().default(true),
+	creator: BasePlayerSchema, // creator player information
 	settings: z
 		.object({
 			votingTimeLimit: z.number().min(10).max(300).default(60),
@@ -104,7 +106,8 @@ export const RegisterGameRequestSchema = z.object({
 	title: z.string(),
 	storyTitle: z.string(),
 	genre: z.string(),
-	difficulty: z.enum(['easy', 'medium', 'hard'])
+	difficulty: z.enum(['easy', 'medium', 'hard']),
+	creator: BasePlayerSchema
 });
 
 export const RegisterGameResponseSchema = z.object({

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { GamePlayerSchema } from './player';
+import { GamePlayerSchema, BasePlayerSchema } from './player';
 
 /**
  * Game Schema System
@@ -52,6 +52,7 @@ export const GameSessionSchema = z.object({
 	currentScene: z.string(),
 	isActive: z.boolean().default(true),
 	isCompleted: z.boolean().default(false),
+	creator: BasePlayerSchema, // Add creator information
 	players: z.array(GamePlayerSchema).default([]),
 	votingOptions: z.array(StoryChoiceSchema).default([]), // current choices being voted on
 	votes: z.record(z.string(), z.number()).default({}), // choiceId -> vote count
@@ -85,7 +86,8 @@ export const GameMetadataSchema = z.object({
 	playerCount: z.number().min(0),
 	maxPlayers: z.number().min(1),
 	estimatedTime: z.number(), // minutes
-	requiresVoting: z.boolean()
+	requiresVoting: z.boolean(),
+	creator: BasePlayerSchema // Add creator information
 });
 
 // Vote result schema - outcome of a voting round

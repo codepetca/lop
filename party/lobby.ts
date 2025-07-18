@@ -1,4 +1,5 @@
 import type * as Party from 'partykit/server';
+import { z } from 'zod';
 import {
 	RoomMetadata,
 	RoomListRequestMessage,
@@ -285,6 +286,7 @@ export default class LobbyServer extends PartyKitServer {
 	private async handleGameCreation(req: Party.Request): Promise<Response> {
 		try {
 			const requestData = await req.json();
+			console.log('Game creation request data:', JSON.stringify(requestData, null, 2));
 			const gameRequest = CreateGameRequestSchema.parse(requestData);
 
 			// Generate a random game ID
@@ -333,7 +335,8 @@ export default class LobbyServer extends PartyKitServer {
 				playerCount: game.players.length,
 				maxPlayers: game.maxPlayers,
 				estimatedTime: 30, // Will be updated when story is loaded
-				requiresVoting: game.requiresVoting
+				requiresVoting: game.requiresVoting,
+				creator: game.creator
 			};
 
 			// Add to game registry
@@ -352,6 +355,10 @@ export default class LobbyServer extends PartyKitServer {
 			return this.http.success(response);
 		} catch (error) {
 			console.error('Error creating game:', error);
+			if (error instanceof z.ZodError) {
+				console.error('Validation errors:', JSON.stringify(error.errors, null, 2));
+				return this.http.error(`Validation failed: ${error.errors.map(e => e.message).join(', ')}`, 400);
+			}
 			return this.http.error('Failed to create game', 500);
 		}
 	}
@@ -375,7 +382,8 @@ export default class LobbyServer extends PartyKitServer {
 				playerCount: 0,
 				maxPlayers: 20,
 				estimatedTime: 30,
-				requiresVoting: true
+				requiresVoting: true,
+				creator: gameData.creator
 			};
 
 			// Add game to registry

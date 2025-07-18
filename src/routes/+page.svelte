@@ -57,14 +57,28 @@
 	}
 
 	function createQuickGame() {
+		// Ensure player is initialized
+		if (!store.player) {
+			store.initializePlayer();
+		}
+		
 		// Create a random game with default settings
 		const randomStoryIndex = Math.floor(Math.random() * data.stories.length);
 		const randomStory = data.stories[randomStoryIndex];
+		
+		// Transform player data to match BasePlayerSchema
+		const creatorData = {
+			id: store.player.id,
+			name: store.player.name,
+			joinedAt: new Date().toISOString(),
+			avatar: store.player.avatar
+		};
 		
 		// Create form data and submit
 		const formData = new FormData();
 		formData.append('storyId', randomStory.id);
 		formData.append('maxPlayers', '6');
+		formData.append('creator', JSON.stringify(creatorData));
 		
 		loading = true;
 		fetch('?/createGame', {
@@ -119,27 +133,26 @@
 			<div class="rooms-list">
 				{#each activeGames as game}
 					<button class="room-card game-card" onclick={() => joinActiveGame(game.id)}>
-						<div class="room-header">
-							<h3 class="room-title">{game.title}</h3>
-							<span class="room-id">{game.id}</span>
-						</div>
-						<div class="game-info">
-							<span class="story-title">{game.storyTitle}</span>
-							<span class="genre-badge {game.genre}">{game.genre}</span>
-							<span class="difficulty-badge {game.difficulty}">{game.difficulty}</span>
-						</div>
-						<div class="room-stats">
-							<span class="stat">👥 {game.playerCount}/{game.maxPlayers} players</span>
-							<span class="stat">⏱️ {game.estimatedTime}min</span>
-							<span class="stat">🎯 {game.currentScene}</span>
-						</div>
-						<div class="room-time">
-							Created {new Date(game.createdAt).toLocaleTimeString()}
-							{#if game.isCompleted}
-								<span class="completed-badge">✅ Completed</span>
-							{:else if !game.isActive}
-								<span class="inactive-badge">⏸️ Inactive</span>
-							{/if}
+						<div class="game-card-content">
+							<div class="creator-avatar">
+								<img 
+									src="https://api.dicebear.com/9.x/{game.creator.avatar.style}/svg?seed={game.creator.avatar.seed}{game.creator.avatar.backgroundColor ? `&backgroundColor=${game.creator.avatar.backgroundColor}` : ''}" 
+									alt="{game.creator.name}'s avatar"
+									title="Created by {game.creator.name}"
+								/>
+							</div>
+							<div class="game-main">
+								<h3 class="game-title">{game.title}</h3>
+								<p class="game-story">{game.storyTitle}</p>
+								<div class="game-meta">
+									<span class="players-count">{game.playerCount}/{game.maxPlayers} players</span>
+									<span class="game-status">{game.currentScene}</span>
+								</div>
+							</div>
+							<div class="game-badges">
+								<span class="genre-badge {game.genre}">{game.genre}</span>
+								<span class="difficulty-badge {game.difficulty}">{game.difficulty}</span>
+							</div>
 						</div>
 					</button>
 				{/each}
@@ -298,56 +311,77 @@
 	.room-card:hover,
 	.room-card:focus {
 		background: #f0f9ff;
-		border-color: #3b82f6;
-		box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
-		transform: translateY(-1px);
+		box-shadow: none;
+		transform: none;
 		outline: none;
 	}
 
-	.room-header {
+	.game-card-content {
 		display: flex;
 		justify-content: space-between;
-		align-items: start;
-		margin-bottom: 0.75rem;
+		align-items: center;
 		gap: 1rem;
 	}
 
-	.room-title {
+	.creator-avatar {
+		flex-shrink: 0;
+		width: 48px;
+		height: 48px;
+	}
+
+	.creator-avatar img {
+		width: 100%;
+		height: 100%;
+		border-radius: 50%;
+		border: 2px solid #e5e7eb;
+		background: white;
+	}
+
+	.game-main {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.game-title {
 		color: #1f2937;
-		margin: 0;
+		margin: 0 0 0.25rem 0;
 		font-size: 1.1rem;
 		font-weight: 600;
-		flex: 1;
 		line-height: 1.3;
 	}
 
-	.room-id {
-		background: #f3f4f6;
+	.game-story {
 		color: #6b7280;
-		padding: 0.25rem 0.5rem;
-		border-radius: 6px;
-		font-size: 0.8rem;
-		font-family: monospace;
-		white-space: nowrap;
+		margin: 0 0 0.5rem 0;
+		font-size: 0.9rem;
+		line-height: 1.3;
 	}
 
-	.room-stats {
+	.game-meta {
 		display: flex;
 		gap: 1rem;
-		margin-bottom: 0.5rem;
+		align-items: center;
+		font-size: 0.85rem;
+		color: #9ca3af;
 	}
 
-	.stat {
-		color: #6b7280;
-		font-size: 0.9rem;
+	.players-count {
 		display: flex;
 		align-items: center;
 		gap: 0.25rem;
 	}
 
-	.room-time {
-		color: #9ca3af;
-		font-size: 0.8rem;
+	.game-status {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+	}
+
+	.game-badges {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		align-items: flex-end;
 	}
 
 
@@ -362,27 +396,14 @@
 		background: #f0f9ff;
 	}
 
-	.game-info {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		margin-bottom: 0.75rem;
-		flex-wrap: wrap;
-	}
-
-	.story-title {
-		font-size: 0.9rem;
-		color: #4b5563;
-		font-weight: 500;
-	}
-
 	.genre-badge,
 	.difficulty-badge {
-		padding: 0.25rem 0.5rem;
-		border-radius: 6px;
-		font-size: 0.75rem;
-		font-weight: 600;
-		text-transform: uppercase;
+		padding: 0.15rem 0.4rem;
+		border-radius: 4px;
+		font-size: 0.7rem;
+		font-weight: 500;
+		text-transform: capitalize;
+		white-space: nowrap;
 	}
 
 	.genre-badge.fantasy {
@@ -419,22 +440,26 @@
 		color: #991b1b;
 	}
 
-	.completed-badge,
-	.inactive-badge {
-		margin-left: 0.5rem;
-		padding: 0.25rem 0.5rem;
-		border-radius: 6px;
-		font-size: 0.75rem;
-		font-weight: 600;
-	}
+	@media (max-width: 480px) {
+		.game-card-content {
+			flex-direction: row;
+			align-items: center;
+		}
 
-	.completed-badge {
-		background: #dcfce7;
-		color: #166534;
-	}
+		.creator-avatar {
+			width: 40px;
+			height: 40px;
+		}
 
-	.inactive-badge {
-		background: #f3f4f6;
-		color: #6b7280;
+		.game-badges {
+			flex-direction: column;
+			align-self: center;
+		}
+
+		.game-meta {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 0.25rem;
+		}
 	}
 </style>
