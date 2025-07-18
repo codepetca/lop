@@ -232,7 +232,7 @@
 	.section {
 		background: #f8fafc;
 		border-radius: 12px;
-		padding: 2rem;
+		padding: 0;
 		margin-bottom: 2rem;
 		border: 1px solid #e2e8f0;
 	}
@@ -250,7 +250,9 @@
 		text-align: center;
 		color: #6b7280;
 		font-style: italic;
-		padding: 2rem;
+		padding: 1.5rem;
+		background: transparent;
+		margin: 0;
 	}
 
 	.loading.error {
@@ -259,29 +261,45 @@
 
 	.rooms-list {
 		display: grid;
-		gap: 1rem;
-		margin-top: 1rem;
+		gap: 0;
+		margin-top: 0;
 	}
 
 	.room-card {
 		background: white;
-		border: 2px solid #e5e7eb;
-		border-radius: 12px;
-		padding: 1.5rem;
+		border: none;
+		border-bottom: 1px solid #e5e7eb;
+		border-radius: 0;
+		padding: 1rem 1.25rem;
 		cursor: pointer;
 		transition: all 0.2s ease;
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+		box-shadow: none;
 		appearance: none;
 		width: 100%;
 		text-align: left;
 		font-family: inherit;
 		font-size: inherit;
 	}
+	
+	.room-card:last-child {
+		border-bottom: none;
+	}
+	
+	.room-card:first-child {
+		border-top-left-radius: 12px;
+		border-top-right-radius: 12px;
+	}
+	
+	.room-card:last-child {
+		border-bottom-left-radius: 12px;
+		border-bottom-right-radius: 12px;
+	}
 
 	.room-card:hover,
 	.room-card:focus {
+		background: #f0f9ff;
 		border-color: #3b82f6;
-		box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+		box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
 		transform: translateY(-1px);
 		outline: none;
 	}
@@ -336,14 +354,12 @@
 
 	/* Game card styles */
 	.game-card {
-		background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-		border: 2px solid #e2e8f0;
+		background: white;
 	}
 
 	.game-card:hover,
 	.game-card:focus {
-		border-color: #6366f1;
-		box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+		background: #f0f9ff;
 	}
 
 	.game-info {
