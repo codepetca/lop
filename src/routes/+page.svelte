@@ -14,17 +14,14 @@
 	import { store } from '$lib/stores';
 	import TitleHeader from '$lib/components/TitleHeader.svelte';
 	import PlayerProfileModal from '$lib/components/PlayerProfileModal.svelte';
+	import AdvancedOptionsModal from '$lib/components/AdvancedOptionsModal.svelte';
 
 	let { form, data }: { form: ActionData; data: PageData } = $props();
 
 	let loading = $state(false);
-	let gameLoading = $state(false);
-	let joinRoomId = $state('');
-	let activeRooms = $state<RoomMetadata[]>([]);
 	let activeGames = $state<GameMetadata[]>([]);
-	let selectedStoryId = $state('');
-	let maxPlayers = $state(6);
 	let showProfileModal = $state(false);
+	let showAdvancedModal = $state(false);
 
 	// Initialize WebSocket hook for lobby (lobby is main server now)
 	const ws = useWebSocket<Message, RoomListRequestMessage | GameListRequestMessage>(
@@ -33,8 +30,7 @@
 		{
 			onOpen: () => {
 				console.log('Connected to lobby');
-				// Request current room and game lists when connected
-				ws.send({ type: 'room-list-request' });
+				// Request current game list when connected
 				ws.send({ type: 'game-list-request' });
 			},
 			onClose: () => console.log('Disconnected from lobby')
@@ -43,27 +39,10 @@
 
 	// Handle incoming messages
 	$effect(() => {
-		if (ws.lastMessage?.type === 'room-list') {
-			activeRooms = ws.lastMessage.rooms;
-		} else if (ws.lastMessage?.type === 'game-list') {
+		if (ws.lastMessage?.type === 'game-list') {
 			activeGames = ws.lastMessage.games;
 		}
 	});
-
-	function copyToClipboard(text: string) {
-		navigator.clipboard.writeText(text);
-	}
-
-	function joinRoom() {
-		if (joinRoomId.trim()) {
-			// Check if it's a game ID or poll ID (we'll assume polls for backward compatibility)
-			window.location.href = `/poll/${joinRoomId.trim()}`;
-		}
-	}
-
-	function joinActiveRoom(roomId: string) {
-		window.location.href = `/poll/${roomId}`;
-	}
 
 	function joinActiveGame(gameId: string) {
 		window.location.href = `/game/${gameId}`;
@@ -71,6 +50,33 @@
 
 	function openProfileModal() {
 		showProfileModal = true;
+	}
+
+	function openAdvancedModal() {
+		showAdvancedModal = true;
+	}
+
+	function createQuickGame() {
+		// Create a random game with default settings
+		const randomStoryIndex = Math.floor(Math.random() * data.stories.length);
+		const randomStory = data.stories[randomStoryIndex];
+		
+		// Create form data and submit
+		const formData = new FormData();
+		formData.append('storyId', randomStory.id);
+		formData.append('maxPlayers', '6');
+		
+		loading = true;
+		fetch('?/createGame', {
+			method: 'POST',
+			body: formData
+		}).then(response => response.text()).then(() => {
+			loading = false;
+			// Refresh the page to show the result
+			window.location.reload();
+		}).catch(() => {
+			loading = false;
+		});
 	}
 
 	onMount(() => {
@@ -96,87 +102,17 @@
 	<!-- Player Profile Modal -->
 	<PlayerProfileModal bind:isOpen={showProfileModal} />
 
-		<!-- Create New Game Section -->
-		<div class="section">
-			<h2>Create Adventure Game</h2>
-			<form
-				method="POST"
-				action="?/createGame"
-				use:enhance={() => {
-					gameLoading = true;
-					return async ({ update }) => {
-						gameLoading = false;
-						await update();
-					};
-				}}
-			>
-				<div class="form-group">
-					<label for="storyId">Choose Story:</label>
-					<select id="storyId" name="storyId" bind:value={selectedStoryId} required>
-						<option value="">Select a story...</option>
-						{#each data.stories as story}
-							<option value={story.id}
-								>{story.title} ({story.genre}) - {story.estimatedTime}min</option
-							>
-						{/each}
-					</select>
-				</div>
+	<!-- Advanced Options Modal -->
+	<AdvancedOptionsModal bind:isOpen={showAdvancedModal} {data} {form} />
 
-				<div class="form-row">
-					<div class="form-group">
-						<label for="maxPlayers">Max Players:</label>
-						<input
-							id="maxPlayers"
-							name="maxPlayers"
-							type="number"
-							min="1"
-							max="50"
-							bind:value={maxPlayers}
-						/>
-					</div>
-				</div>
-
-				<button type="submit" class="create-btn" disabled={gameLoading || !selectedStoryId}>
-					{gameLoading ? 'Creating Game...' : '🎮 Create Adventure Game'}
-				</button>
-			</form>
-
-			{#if form?.gameId}
-				<div class="poll-created">
-					<h3>Game Created! 🎉</h3>
-					<div class="room-info">
-						<p>Game ID: <strong>{form.gameId}</strong></p>
-						<p class="game-title">{form.gameTitle}</p>
-						<button class="copy-btn" onclick={() => copyToClipboard(form.gameId)}>
-							📋 Copy ID
-						</button>
-						<a href="/game/{form.gameId}" class="join-btn"> Join Game → </a>
-					</div>
-					<p class="share-text">Share this game ID with others so they can join the adventure!</p>
-				</div>
-			{/if}
-
-			{#if form?.error}
-				<div class="error">
-					{form.error}
-				</div>
-			{/if}
-		</div>
-
-	<!-- Join Existing Section -->
-	<div class="section">
-		<h2>Join Existing Game</h2>
-		<div class="join-form">
-			<input
-				type="text"
-				placeholder="Enter game ID"
-				bind:value={joinRoomId}
-				onkeydown={(e) => e.key === 'Enter' && joinRoom()}
-			/>
-			<button class="join-btn" onclick={joinRoom} disabled={!joinRoomId.trim()}>
-				Join Game
-			</button>
-		</div>
+	<!-- Quick Actions -->
+	<div class="quick-actions">
+		<button class="quick-create-btn" onclick={createQuickGame} disabled={loading}>
+			{loading ? 'Creating Game...' : '🎮 Create Quick Game'}
+		</button>
+		<button class="advanced-btn" onclick={openAdvancedModal}>
+			⚙️ Advanced Options
+		</button>
 	</div>
 
 	<!-- Active Items Section -->
@@ -230,6 +166,67 @@
 		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 	}
 
+	.quick-actions {
+		display: flex;
+		gap: 1rem;
+		margin-bottom: 2rem;
+	}
+
+	.quick-create-btn {
+		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		color: white;
+		border: none;
+		border-radius: 12px;
+		padding: 1rem 2rem;
+		font-size: 1.1rem;
+		font-weight: 600;
+		cursor: pointer;
+		flex: 1;
+		transition: all 0.3s ease;
+		box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+	}
+
+	.quick-create-btn:hover:not(:disabled) {
+		transform: translateY(-2px);
+		box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+	}
+
+	.quick-create-btn:disabled {
+		background: #9ca3af;
+		cursor: not-allowed;
+		transform: none;
+		box-shadow: none;
+	}
+
+	.advanced-btn {
+		background: #f8fafc;
+		color: #374151;
+		border: 2px solid #e5e7eb;
+		border-radius: 12px;
+		padding: 1rem 1.5rem;
+		font-size: 1rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		white-space: nowrap;
+	}
+
+	.advanced-btn:hover {
+		border-color: #3b82f6;
+		color: #3b82f6;
+		background: #eff6ff;
+	}
+
+	@media (max-width: 600px) {
+		.quick-actions {
+			flex-direction: column;
+		}
+
+		.advanced-btn {
+			white-space: normal;
+		}
+	}
+
 
 	.section {
 		background: #f8fafc;
@@ -245,131 +242,6 @@
 		font-size: 1.5rem;
 	}
 
-	.create-btn {
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-		color: white;
-		border: none;
-		border-radius: 12px;
-		padding: 1.25rem 2rem;
-		font-size: 1.2rem;
-		font-weight: 600;
-		cursor: pointer;
-		width: 100%;
-		transition: all 0.3s ease;
-		box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-	}
-
-	.create-btn:hover:not(:disabled) {
-		transform: translateY(-2px);
-		box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-	}
-
-	.create-btn:disabled {
-		background: #9ca3af;
-		cursor: not-allowed;
-		transform: none;
-		box-shadow: none;
-	}
-
-	.poll-created {
-		margin-top: 1.5rem;
-		padding: 1.5rem;
-		background: #f0fdf4;
-		border: 2px solid #16a34a;
-		border-radius: 12px;
-		text-align: center;
-	}
-
-	.poll-created h3 {
-		color: #16a34a;
-		margin-bottom: 1rem;
-	}
-
-	.room-info {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 1rem;
-		margin-bottom: 1rem;
-		flex-wrap: wrap;
-	}
-
-	.room-info p {
-		margin: 0;
-		font-size: 1.1rem;
-	}
-
-	.copy-btn {
-		background: #3b82f6;
-		color: white;
-		border: none;
-		border-radius: 8px;
-		padding: 0.5rem 1rem;
-		cursor: pointer;
-		font-size: 0.9rem;
-		transition: background-color 0.2s;
-	}
-
-	.copy-btn:hover {
-		background: #2563eb;
-	}
-
-	.join-btn {
-		background: #16a34a;
-		color: white;
-		border: none;
-		border-radius: 8px;
-		padding: 0.5rem 1rem;
-		cursor: pointer;
-		font-size: 0.9rem;
-		text-decoration: none;
-		transition: background-color 0.2s;
-		display: inline-block;
-	}
-
-	.join-btn:hover:not(:disabled) {
-		background: #15803d;
-	}
-
-	.join-btn:disabled {
-		background: #9ca3af;
-		cursor: not-allowed;
-	}
-
-	.share-text {
-		color: #16a34a;
-		font-size: 0.9rem;
-		margin: 0;
-	}
-
-	.join-form {
-		display: flex;
-		gap: 1rem;
-		align-items: center;
-	}
-
-	.join-form input {
-		flex: 1;
-		padding: 0.75rem;
-		border: 2px solid #e1e5e9;
-		border-radius: 8px;
-		font-size: 1rem;
-		transition: border-color 0.2s;
-	}
-
-	.join-form input:focus {
-		outline: none;
-		border-color: #4f46e5;
-	}
-
-	.error {
-		background: #fef2f2;
-		color: #dc2626;
-		padding: 1rem;
-		border-radius: 8px;
-		border: 1px solid #fecaca;
-		margin-top: 1rem;
-	}
 
 	/* Room Browser Styles */
 	.loading,
@@ -460,49 +332,6 @@
 	}
 
 
-	/* Form styles */
-	.form-group {
-		margin-bottom: 1.5rem;
-	}
-
-	.form-group label {
-		display: block;
-		margin-bottom: 0.5rem;
-		font-weight: 600;
-		color: #374151;
-	}
-
-	.form-group input,
-	.form-group select {
-		width: 100%;
-		padding: 0.75rem;
-		border: 2px solid #e5e7eb;
-		border-radius: 8px;
-		font-size: 1rem;
-		transition: border-color 0.2s;
-	}
-
-	.form-group input:focus,
-	.form-group select:focus {
-		outline: none;
-		border-color: #4f46e5;
-	}
-
-	.form-row {
-		display: flex;
-		gap: 1rem;
-		align-items: end;
-	}
-
-	.form-row .form-group {
-		flex: 1;
-	}
-
-	.game-title {
-		font-size: 0.9rem;
-		color: #6b7280;
-		margin: 0;
-	}
 
 	/* Game card styles */
 	.game-card {
