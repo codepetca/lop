@@ -16,10 +16,8 @@
 	let { data }: { data: PageData } = $props();
 
 	let game = $state<GameSession>(data.game);
-	let playerName = $state('');
 	let currentPlayer = $state<CharacterState | null>(null);
 	let hasVoted = $state(false);
-	let joinPrompt = $state(true);
 	let votingTimeLeft = $state(0);
 	let votingTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -55,9 +53,9 @@
 				console.log('Updated game state:', game);
 				break;
 			case 'player-joined':
-				if (ws.lastMessage.player.name === playerName) {
+				// Check if this is our player by matching the name from store
+				if (store.player && ws.lastMessage.player.name === store.player.name) {
 					currentPlayer = ws.lastMessage.player;
-					joinPrompt = false;
 				}
 				break;
 			case 'voting-started':
@@ -97,12 +95,13 @@
 	}
 
 	function joinGame() {
-		if (!playerName.trim() || !ws.isConnected) return;
+		if (!ws.isConnected || !store.player) return;
 
-		console.log('Joining game with name:', playerName.trim());
+		console.log('Joining game with name:', store.player.name);
 		ws.send({
 			type: 'player-join',
-			playerName: playerName.trim()
+			playerName: store.player.name,
+			playerId: store.player.id
 		});
 	}
 
@@ -146,12 +145,20 @@
 		console.log('Initial game state:', game);
 		console.log('Game voting options:', game.votingOptions);
 
-		// Pre-fill name from store if available
-		if (store.player && !playerName) {
-			playerName = store.player.name;
-		}
+		// Initialize player if not exists, then connect and auto-join
+		store.initializePlayer();
 
+		// Connect to WebSocket
 		ws.connect();
+
+		// Auto-join game once connected
+		const unsubscribe = $effect.root(() => {
+			$effect(() => {
+				if (ws.isConnected && store.player && !currentPlayer) {
+					joinGame();
+				}
+			});
+		});
 
 		// Check if user has already voted for current scene
 		if (browser) {
@@ -159,6 +166,7 @@
 		}
 
 		return () => {
+			unsubscribe();
 			ws.cleanup();
 			stopVotingTimer();
 		};
@@ -170,35 +178,20 @@
 </svelte:head>
 
 <main class="container">
-	{#if joinPrompt}
-		<div class="join-overlay">
-			<div class="join-modal">
-				<h2>Join the Adventure</h2>
+	{#if !currentPlayer}
+		<div class="loading-overlay">
+			<div class="loading-modal">
+				<h2>Joining Adventure...</h2>
 				<p class="game-info">
 					<strong>{game.title}</strong><br />
 					{game.players.length}/{game.maxPlayers} players
 				</p>
-				<form
-					onsubmit={(e) => {
-						e.preventDefault();
-						joinGame();
-					}}
-				>
-					<input
-						type="text"
-						placeholder="Enter your name"
-						bind:value={playerName}
-						maxlength="20"
-						required
-					/>
-					<button type="submit" disabled={!playerName.trim() || ws.status !== 'connected'}>
-						Join Game
-					</button>
-				</form>
 				{#if ws.status === 'connecting'}
 					<p class="status">Connecting...</p>
 				{:else if ws.status === 'error'}
 					<p class="status error">Connection error</p>
+				{:else if ws.status === 'connected'}
+					<p class="status">Joining game...</p>
 				{/if}
 			</div>
 		</div>
@@ -312,8 +305,8 @@
 		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 	}
 
-	/* Join Modal Styles */
-	.join-overlay {
+	/* Loading Modal Styles */
+	.loading-overlay {
 		position: fixed;
 		top: 0;
 		left: 0;
@@ -326,7 +319,7 @@
 		z-index: 1000;
 	}
 
-	.join-modal {
+	.loading-modal {
 		background: white;
 		padding: 2rem;
 		border-radius: 16px;
@@ -336,7 +329,7 @@
 		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 	}
 
-	.join-modal h2 {
+	.loading-modal h2 {
 		margin-bottom: 1rem;
 		color: #1f2937;
 	}
@@ -344,33 +337,6 @@
 	.game-info {
 		margin-bottom: 1.5rem;
 		color: #6b7280;
-	}
-
-	.join-modal input {
-		width: 100%;
-		padding: 0.75rem;
-		border: 2px solid #e5e7eb;
-		border-radius: 8px;
-		font-size: 1rem;
-		margin-bottom: 1rem;
-		box-sizing: border-box;
-	}
-
-	.join-modal button {
-		width: 100%;
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-		color: white;
-		border: none;
-		border-radius: 8px;
-		padding: 0.75rem;
-		font-size: 1rem;
-		cursor: pointer;
-		transition: opacity 0.2s;
-	}
-
-	.join-modal button:disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
 	}
 
 	/* Game Header */
