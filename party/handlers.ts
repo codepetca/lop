@@ -346,6 +346,7 @@ export async function handlePlayerJoin(
 	const player: CharacterState = {
 		id: playerId,
 		name: message.playerName,
+		joinedAt: new Date().toISOString(),
 		stats: { ...storyTemplate.initialStats },
 		inventory: [...storyTemplate.initialInventory],
 		choices: [],
@@ -642,7 +643,7 @@ export async function registerGameWithLobby(
 		});
 
 		// Get lobby URL using centralized config
-		const lobbyUrl = getLobbyUrl('/register-game');
+		const lobbyUrl = getLobbyUrl('/parties/main/main/register-game');
 
 		const response = await fetch(lobbyUrl, {
 			method: 'POST',

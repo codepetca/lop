@@ -40,3 +40,19 @@ Loading environment variables from .env
 [2K[1A[2K[G[pk:inf] GET /parties/game/d26dd0f5-7693-4ad9-9748-5d95e9e77b45 101 Switching Protocols (0ms)
 
 sh: line 1: 50453 Killed: 9               npm run dev:sveltekit
+[2K[1A[2K[GBuild succeeded, starting server...
+
+[2K[1A[2K[G[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mAddress already in use (0.0.0.0:1999). Please check that you are not already running a server on this address or specify a different port with --port.[0m
+
+
+
+[2K[1A[2K[GError reloading local server: MiniflareCoreError [ERR_RUNTIME_FAILURE]: The Workers runtime failed to start. There is likely additional logging output above.
+    at #assembleAndUpdateConfig (/Users/stew/Repos/vibe/lop/node_modules/miniflare/dist/src/index.js:9178:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async #setOptions (/Users/stew/Repos/vibe/lop/node_modules/miniflare/dist/src/index.js:9301:5)
+    at async Mutex.runWith (/Users/stew/Repos/vibe/lop/node_modules/miniflare/dist/src/index.js:3521:16)
+    at async MiniflareServer.onBundleUpdate (file:///Users/stew/Repos/vibe/lop/node_modules/partykit/dist/bin.mjs:93984:9) {
+  code: 'ERR_RUNTIME_FAILURE',
+  cause: undefined
+}
+
