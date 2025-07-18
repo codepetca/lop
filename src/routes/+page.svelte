@@ -105,19 +105,9 @@
 	<!-- Advanced Options Modal -->
 	<AdvancedOptionsModal bind:isOpen={showAdvancedModal} {data} {form} />
 
-	<!-- Quick Actions -->
-	<div class="quick-actions">
-		<button class="quick-create-btn" onclick={createQuickGame} disabled={loading}>
-			{loading ? 'Creating Game...' : '🎮 Create Quick Game'}
-		</button>
-		<button class="advanced-btn" onclick={openAdvancedModal}>
-			⚙️ Advanced Options
-		</button>
-	</div>
-
 	<!-- Active Items Section -->
-	<div class="section">
-		<h2>Browse Active Games</h2>
+	{#if ws.status === 'connecting' || ws.status === 'error' || activeGames.length > 0}
+		<div class="section">
 
 		{#if ws.status === 'connecting'}
 			<p class="loading">Connecting to game list...</p>
@@ -155,6 +145,17 @@
 				{/each}
 			</div>
 		{/if}
+		</div>
+	{/if}
+
+	<!-- Quick Actions -->
+	<div class="quick-actions">
+		<button class="quick-create-btn" onclick={createQuickGame} disabled={loading}>
+			{loading ? 'Creating Game...' : '🎮 Host Game'}
+		</button>
+		<button class="advanced-btn" onclick={openAdvancedModal}>
+			⚙️ Advanced
+		</button>
 	</div>
 </main>
 

@@ -230,8 +230,10 @@
 		{#if game.isCompleted}
 			<div class="game-completed">
 				<h2>🎉 Adventure Complete!</h2>
-				<p>Thanks for playing! The story has reached its conclusion.</p>
-				<a href="/" class="create-new-btn">Back to Lobby</a>
+			</div>
+			
+			<div class="completion-actions">
+				<a href="/" class="back-to-lobby-btn">🏠 Back to Lobby</a>
 			</div>
 		{:else}
 			{#if votingTimeLeft > 0}
@@ -577,28 +579,39 @@
 
 	.game-completed h2 {
 		color: #16a34a;
-		margin-bottom: 1rem;
+		margin-bottom: 0;
+	}
+
+	.completion-actions {
+		display: flex;
+		justify-content: center;
+		margin-bottom: 2rem;
+	}
+
+	.back-to-lobby-btn {
+		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		color: white;
+		border: none;
+		border-radius: 12px;
+		padding: 1rem 2rem;
+		font-size: 1.1rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.3s ease;
+		box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+		text-decoration: none;
+		display: inline-block;
+	}
+
+	.back-to-lobby-btn:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 	}
 
 	.game-footer {
 		text-align: center;
 		padding-top: 2rem;
 		border-top: 1px solid #e5e7eb;
-	}
-
-	.create-new-btn {
-		background: #f3f4f6;
-		color: #374151;
-		text-decoration: none;
-		padding: 0.75rem 1.5rem;
-		border-radius: 8px;
-		font-weight: 500;
-		transition: background-color 0.2s;
-		display: inline-block;
-	}
-
-	.create-new-btn:hover {
-		background: #e5e7eb;
 	}
 
 	@media (max-width: 640px) {
