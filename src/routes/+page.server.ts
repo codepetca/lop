@@ -89,7 +89,6 @@ export const actions: Actions = {
 		const partyKitUrl = getPartyKitUrl();
 		const formData = await request.formData();
 		const storyId = formData.get('storyId') as string;
-		const title = formData.get('title') as string;
 		const maxPlayers = parseInt(formData.get('maxPlayers') as string) || 6;
 
 		if (!storyId) {
@@ -109,7 +108,6 @@ export const actions: Actions = {
 			},
 			body: JSON.stringify({
 				storyId,
-				title: title || undefined,
 				maxPlayers
 			})
 		});

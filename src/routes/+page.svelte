@@ -21,7 +21,6 @@
 	let activeRooms = $state<RoomMetadata[]>([]);
 	let activeGames = $state<GameMetadata[]>([]);
 	let selectedStoryId = $state('');
-	let gameTitle = $state('');
 	let maxPlayers = $state(6);
 	let currentTab = $state<'polls' | 'games'>('games');
 	let editingName = $state(false);
@@ -187,16 +186,6 @@
 					</select>
 				</div>
 
-				<div class="form-group">
-					<label for="title">Game Title (optional):</label>
-					<input
-						id="title"
-						name="title"
-						type="text"
-						placeholder="Custom game title"
-						bind:value={gameTitle}
-					/>
-				</div>
 
 				<div class="form-row">
 					<div class="form-group">
