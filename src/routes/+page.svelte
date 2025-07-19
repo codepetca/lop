@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
+	import { fade, slide } from 'svelte/transition';
 	import type { ActionData, PageData } from './$types';
 	import type {
 		RoomMetadata,
@@ -10,7 +11,14 @@
 		RoomListRequestMessage,
 		GameListRequestMessage
 	} from '$lib/types';
-	import { useWebSocket, store, PlayerProfileModal, TitleHeader, AdvancedOptionsModal } from '$lib';
+	import {
+		useWebSocket,
+		store,
+		PlayerProfileModal,
+		TitleHeader,
+		AdvancedOptionsModal,
+		GameCardSkeleton
+	} from '$lib';
 
 	let { form, data }: { form: ActionData; data: PageData } = $props();
 
@@ -18,6 +26,13 @@
 	let activeGames = $state<GameMetadata[]>([]);
 	let showProfileModal = $state(false);
 	let showAdvancedModal = $state(false);
+
+	// Check for reduced motion preference
+	let prefersReducedMotion = $state(false);
+
+	onMount(() => {
+		prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	});
 
 	// Initialize WebSocket hook for lobby (lobby is main server now)
 	const ws = useWebSocket<Message, RoomListRequestMessage | GameListRequestMessage>(
@@ -134,42 +149,63 @@
 
 	<!-- Active Items Section -->
 	{#if ws.status === 'connecting' || ws.status === 'error' || activeGames.length > 0}
-		<div class="section">
+		<div
+			class="section"
+			in:fade={{ duration: prefersReducedMotion ? 0 : 300 }}
+			out:fade={{ duration: prefersReducedMotion ? 0 : 200 }}
+		>
 			{#if ws.status === 'connecting'}
-				<p class="loading">Connecting to game list...</p>
+				<div class="rooms-list">
+					{#each [1, 2, 3] as skeletonId (skeletonId)}
+						<GameCardSkeleton />
+					{/each}
+				</div>
 			{:else if ws.status === 'error'}
-				<p class="loading error">Connection error - retrying...</p>
+				<p class="loading error" in:fade={{ duration: prefersReducedMotion ? 0 : 200 }}>
+					Connection error - retrying...
+				</p>
 			{:else if activeGames.length === 0}
-				<p class="no-rooms">No active games found. Create one below!</p>
+				<p class="no-rooms" in:fade={{ duration: prefersReducedMotion ? 0 : 200 }}>
+					No active games found. Create one below!
+				</p>
 			{:else}
 				<div class="rooms-list">
-					{#each activeGames as game}
-						<button class="room-card game-card" onclick={() => joinActiveGame(game.id)}>
-							<div class="game-card-content">
-								<div class="creator-avatar">
-									<img
-										src="https://api.dicebear.com/9.x/{game.creator.avatar.style}/svg?seed={game
-											.creator.avatar.seed}{game.creator.avatar.backgroundColor
-											? `&backgroundColor=${game.creator.avatar.backgroundColor}`
-											: ''}"
-										alt="{game.creator.name}'s avatar"
-										title="Created by {game.creator.name}"
-									/>
-								</div>
-								<div class="game-main">
-									<h3 class="game-title">{game.title}</h3>
-									<p class="game-story">{game.storyTitle}</p>
-									<div class="game-meta">
-										<span class="players-count">{game.playerCount}/{game.maxPlayers} players</span>
-										<span class="game-status">{game.currentScene}</span>
+					{#each activeGames as game (game.id)}
+						<div
+							in:slide={{
+								duration: prefersReducedMotion ? 0 : 300,
+								delay: prefersReducedMotion ? 0 : activeGames.indexOf(game) * 50
+							}}
+							out:slide={{ duration: prefersReducedMotion ? 0 : 200 }}
+						>
+							<button class="room-card game-card" onclick={() => joinActiveGame(game.id)}>
+								<div class="game-card-content">
+									<div class="creator-avatar">
+										<img
+											src="https://api.dicebear.com/9.x/{game.creator.avatar.style}/svg?seed={game
+												.creator.avatar.seed}{game.creator.avatar.backgroundColor
+												? `&backgroundColor=${game.creator.avatar.backgroundColor}`
+												: ''}"
+											alt="{game.creator.name}'s avatar"
+											title="Created by {game.creator.name}"
+										/>
+									</div>
+									<div class="game-main">
+										<h3 class="game-title">{game.title}</h3>
+										<p class="game-story">{game.storyTitle}</p>
+										<div class="game-meta">
+											<span class="players-count">{game.playerCount}/{game.maxPlayers} players</span
+											>
+											<span class="game-status">{game.currentScene}</span>
+										</div>
+									</div>
+									<div class="game-badges">
+										<span class="genre-badge {game.genre}">{game.genre}</span>
+										<span class="difficulty-badge {game.difficulty}">{game.difficulty}</span>
 									</div>
 								</div>
-								<div class="game-badges">
-									<span class="genre-badge {game.genre}">{game.genre}</span>
-									<span class="difficulty-badge {game.difficulty}">{game.difficulty}</span>
-								</div>
-							</div>
-						</button>
+							</button>
+						</div>
 					{/each}
 				</div>
 			{/if}

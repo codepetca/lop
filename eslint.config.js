@@ -70,12 +70,6 @@ export default [
 		}
 	},
 	{
-		ignores: [
-			'build/',
-			'.svelte-kit/',
-			'dist/',
-			'node_modules/',
-			'**/*.d.ts'
-		]
+		ignores: ['build/', '.svelte-kit/', 'dist/', 'node_modules/', '**/*.d.ts']
 	}
 ];

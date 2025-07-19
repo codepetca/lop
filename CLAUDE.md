@@ -77,13 +77,14 @@ tests/
 **Prioritize hierarchical, composed components for reusability and maintainability:**
 
 - `ErrorPage` - Centralized error handling
-- `AvatarSelector` - Avatar customization interface  
+- `AvatarSelector` - Avatar customization interface
 - `GameAvatar`/`PlayerAvatar` - Avatar display components
 - `PlayerProfileModal` - Player profile management
 - `AdvancedOptionsModal` - Game configuration
 - `TitleHeader` - Consistent header component
 
 **Composition Guidelines:**
+
 - Build larger components from smaller, focused ones
 - Use Svelte 5 runes for reactive state (`$state`, `$derived`, `$effect`)
 - Export components from `$lib` for centralized access
@@ -262,6 +263,7 @@ return this.http.error('Hard-coded message', 500);
 ### Linting and Quality Checks
 
 **Available Scripts:**
+
 ```bash
 npm run quality:check      # Run all quality checks (lint, type-check, svelte-check)
 npm run quality:complexity # Analyze code complexity with threshold warnings
@@ -271,6 +273,7 @@ npm run type-check         # TypeScript validation without emit
 ```
 
 **ESLint Configuration:**
+
 - TypeScript and Svelte support with strict rules
 - Enforces consistent type imports (`import type` for types)
 - Prevents file extensions in imports
@@ -279,6 +282,7 @@ npm run type-check         # TypeScript validation without emit
 ### Component Composition Patterns
 
 **Hierarchical Component Structure:**
+
 ```typescript
 // ✅ Correct - Compose larger components from smaller ones
 export { AvatarSelector, PlayerAvatar, GameAvatar } from './avatar';
@@ -290,15 +294,16 @@ import { AvatarSelector, TitleHeader } from '$lib/components';
 ```
 
 **Svelte 5 Runes Best Practices:**
+
 ```typescript
 // ✅ Correct - Reactive state management
 let player = $state<Player>({ id: '', name: '', avatar: null });
 let isConnected = $derived(websocket?.readyState === WebSocket.OPEN);
 
 $effect(() => {
-    if (player.id) {
-        localStorage.setItem('playerId', player.id);
-    }
+	if (player.id) {
+		localStorage.setItem('playerId', player.id);
+	}
 });
 
 // ❌ Incorrect - Legacy Svelte 4 patterns
@@ -311,6 +316,7 @@ $: isConnected = websocket?.readyState === WebSocket.OPEN; // Use $derived
 **Common Issues and Solutions:**
 
 1. **File Extension Errors:**
+
 ```typescript
 // ❌ Error: Cannot find module '../schemas/index.js'
 import { Schema } from '../schemas/index.js';
@@ -320,6 +326,7 @@ import { Schema } from '../schemas/index';
 ```
 
 2. **Alias Resolution Issues:**
+
 ```typescript
 // ❌ Error: Cannot resolve '$shared/schemas'
 // Check vite.config.ts and svelte.config.js for alias configuration
@@ -330,6 +337,7 @@ import { Schema } from '../schemas/index';
 ```
 
 3. **Test Import Issues:**
+
 ```typescript
 // ❌ Incorrect - Relative imports in tests
 import { Schema } from '../../shared/schemas/poll';
@@ -341,28 +349,30 @@ import { Schema } from '$shared/schemas/poll';
 ### Error Handling Patterns
 
 **WebSocket Error Handling:**
+
 ```typescript
 // ✅ Correct - Comprehensive error handling
 const websocket = $state<WebSocket | null>(null);
 const connectionError = $state<string | null>(null);
 
 $effect(() => {
-    try {
-        const ws = new WebSocket(url);
-        ws.onerror = () => connectionError = 'Failed to connect to server';
-        ws.onclose = () => connectionError = 'Connection lost';
-        websocket = ws;
-    } catch (error) {
-        connectionError = error instanceof Error ? error.message : 'Unknown error';
-    }
+	try {
+		const ws = new WebSocket(url);
+		ws.onerror = () => (connectionError = 'Failed to connect to server');
+		ws.onclose = () => (connectionError = 'Connection lost');
+		websocket = ws;
+	} catch (error) {
+		connectionError = error instanceof Error ? error.message : 'Unknown error';
+	}
 });
 ```
 
 **Component Error Boundaries:**
+
 ```typescript
 // ✅ Correct - Error page component usage
 {#if error}
-    <ErrorPage 
+    <ErrorPage
         title="Connection Failed"
         message={error}
         showRetry={true}
@@ -376,11 +386,13 @@ $effect(() => {
 ## Performance Optimization
 
 ### Bundle Size Optimization
+
 - Use `import type` for type-only imports to reduce bundle size
 - Leverage centralized exports from `$lib` and `$shared`
 - Tree-shaking optimized with proper ES module structure
 
 ### WebSocket Performance
+
 - Single WebSocket connection per page with message routing
 - Efficient state updates using Svelte 5 runes
 - Proper cleanup in `$effect` cleanup functions
