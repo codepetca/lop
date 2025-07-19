@@ -13,7 +13,7 @@ import {
 	SceneTransitionMessageSchema,
 	GameCompletedMessageSchema,
 	GameErrorMessageSchema
-} from '../../shared/schemas/message';
+} from '$shared/schemas/message';
 import {
 	createGameChoiceMessage,
 	createGameUpdateMessage,

@@ -6,9 +6,9 @@ import {
 	GameSessionSchema,
 	GameMetadataSchema,
 	VoteResultSchema
-} from '../../shared/schemas/game';
-import { GamePlayerSchema as CharacterStateSchema } from '../../shared/schemas/player';
-import { StoryGenre, StoryDifficulty } from '../../shared/schemas/story';
+} from '$shared/schemas/game';
+import { GamePlayerSchema as CharacterStateSchema } from '$shared/schemas/player';
+import { StoryGenre, StoryDifficulty } from '$shared/schemas/story';
 import {
 	createTestCharacterState,
 	createTestStoryChoice,

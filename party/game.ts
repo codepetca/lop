@@ -16,7 +16,7 @@ import {
 	GameErrorMessage,
 	CreateGameRequestSchema,
 	JoinGameRequestSchema
-} from '../shared/schemas/index.js';
+} from '../shared/schemas/index';
 import {
 	handleGameChoice,
 	handleCreateGame,

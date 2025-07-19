@@ -5,7 +5,7 @@ import {
 	StoryCollectionSchema,
 	StoryFilterSchema,
 	StoryStatsSchema
-} from '../../shared/schemas/story';
+} from '$shared/schemas/story';
 import { createTestStoryTemplate, testStories } from '../utils/fixtures';
 
 describe('Story Schema Validation', () => {

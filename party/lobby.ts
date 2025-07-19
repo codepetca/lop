@@ -18,7 +18,7 @@ import {
 	GetStoriesResponseSchema,
 	RegisterGameRequestSchema,
 	RegisterGameResponseSchema
-} from '../shared/schemas/index.js';
+} from '../shared/schemas/index';
 import { PartyKitServer } from './lib/server';
 import { useMessageHandler, useBroadcast, useStorage } from './lib/hooks';
 import { generatePollId } from './utils';

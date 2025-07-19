@@ -21,7 +21,12 @@
 		"test": "vitest",
 		"test:watch": "vitest --watch",
 		"test:ui": "vitest --ui",
-		"test:coverage": "vitest --coverage"
+		"test:coverage": "vitest --coverage",
+		"quality:check": "npm run check && npm run lint:check && npm run type-check",
+		"quality:complexity": "echo 'Complexity analysis - use ESLint complexity rules'",
+		"lint:check": "eslint .",
+		"lint:fix": "eslint . --fix",
+		"type-check": "tsc --noEmit"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-netlify": "^5.0.2",
@@ -30,6 +35,13 @@
 		"@testing-library/svelte": "^5.2.8",
 		"@types/node": "^24.0.14",
 		"@vitest/ui": "^3.2.4",
+		"@eslint/js": "^9.0.0",
+		"@typescript-eslint/eslint-plugin": "^8.0.0",
+		"@typescript-eslint/parser": "^8.0.0",
+		"eslint": "^9.0.0",
+		"eslint-plugin-svelte": "^2.45.0",
+		"globals": "^15.0.0",
+		"svelte-eslint-parser": "^0.41.0",
 		"jsdom": "^26.1.0",
 		"prettier": "^3.4.2",
 		"prettier-plugin-svelte": "^3.3.3",

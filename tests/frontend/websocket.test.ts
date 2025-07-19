@@ -12,7 +12,7 @@ vi.mock('$env/static/public', () => ({
 }));
 
 // Mock the MessageSchema to always pass validation
-vi.mock('../../shared/schemas/index', () => ({
+vi.mock('$shared/schemas/index', () => ({
 	MessageSchema: {
 		parse: vi.fn().mockImplementation((data) => data)
 	}

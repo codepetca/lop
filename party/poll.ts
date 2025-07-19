@@ -6,7 +6,7 @@ import {
 	MessageSchema,
 	GetPollResponseSchema,
 	CreatePollResponseSchema
-} from '../shared/schemas/index.js';
+} from '../shared/schemas/index';
 import {
 	handleVote,
 	handlePlayerJoinPoll,

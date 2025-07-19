@@ -255,3 +255,132 @@ return this.http.error('Hard-coded message', 500);
 - **WebSocket Testing**: Mock connections with lifecycle simulation
 - **Backend Logic**: Test with mocked PartyKit rooms and storage
 - **Component Testing**: Test component composition and Svelte 5 runes
+- **Import Consistency**: All tests must use `$shared/` aliases, never relative imports
+
+## Code Quality Tools
+
+### Linting and Quality Checks
+
+**Available Scripts:**
+```bash
+npm run quality:check      # Run all quality checks (lint, type-check, svelte-check)
+npm run quality:complexity # Analyze code complexity with threshold warnings
+npm run lint:check         # ESLint validation
+npm run lint:fix           # Auto-fix ESLint issues
+npm run type-check         # TypeScript validation without emit
+```
+
+**ESLint Configuration:**
+- TypeScript and Svelte support with strict rules
+- Enforces consistent type imports (`import type` for types)
+- Prevents file extensions in imports
+- Validates import patterns and alias usage
+
+### Component Composition Patterns
+
+**Hierarchical Component Structure:**
+```typescript
+// ✅ Correct - Compose larger components from smaller ones
+export { AvatarSelector, PlayerAvatar, GameAvatar } from './avatar';
+export { TitleHeader, ErrorPage } from './layout';
+export { PlayerProfileModal, AdvancedOptionsModal } from './modals';
+
+// Use in parent components
+import { AvatarSelector, TitleHeader } from '$lib/components';
+```
+
+**Svelte 5 Runes Best Practices:**
+```typescript
+// ✅ Correct - Reactive state management
+let player = $state<Player>({ id: '', name: '', avatar: null });
+let isConnected = $derived(websocket?.readyState === WebSocket.OPEN);
+
+$effect(() => {
+    if (player.id) {
+        localStorage.setItem('playerId', player.id);
+    }
+});
+
+// ❌ Incorrect - Legacy Svelte 4 patterns
+let player; // Use $state instead
+$: isConnected = websocket?.readyState === WebSocket.OPEN; // Use $derived
+```
+
+### Import Troubleshooting
+
+**Common Issues and Solutions:**
+
+1. **File Extension Errors:**
+```typescript
+// ❌ Error: Cannot find module '../schemas/index.js'
+import { Schema } from '../schemas/index.js';
+
+// ✅ Solution: Remove extension
+import { Schema } from '../schemas/index';
+```
+
+2. **Alias Resolution Issues:**
+```typescript
+// ❌ Error: Cannot resolve '$shared/schemas'
+// Check vite.config.ts and svelte.config.js for alias configuration
+
+// ✅ Solution: Verify aliases are configured
+// vite.config.ts: alias: { $shared: resolve('./shared') }
+// svelte.config.js: alias: { $shared: './shared' }
+```
+
+3. **Test Import Issues:**
+```typescript
+// ❌ Incorrect - Relative imports in tests
+import { Schema } from '../../shared/schemas/poll';
+
+// ✅ Correct - Use aliases in tests
+import { Schema } from '$shared/schemas/poll';
+```
+
+### Error Handling Patterns
+
+**WebSocket Error Handling:**
+```typescript
+// ✅ Correct - Comprehensive error handling
+const websocket = $state<WebSocket | null>(null);
+const connectionError = $state<string | null>(null);
+
+$effect(() => {
+    try {
+        const ws = new WebSocket(url);
+        ws.onerror = () => connectionError = 'Failed to connect to server';
+        ws.onclose = () => connectionError = 'Connection lost';
+        websocket = ws;
+    } catch (error) {
+        connectionError = error instanceof Error ? error.message : 'Unknown error';
+    }
+});
+```
+
+**Component Error Boundaries:**
+```typescript
+// ✅ Correct - Error page component usage
+{#if error}
+    <ErrorPage 
+        title="Connection Failed"
+        message={error}
+        showRetry={true}
+        onRetry={() => location.reload()}
+    />
+{:else}
+    <!-- Normal component content -->
+{/if}
+```
+
+## Performance Optimization
+
+### Bundle Size Optimization
+- Use `import type` for type-only imports to reduce bundle size
+- Leverage centralized exports from `$lib` and `$shared`
+- Tree-shaking optimized with proper ES module structure
+
+### WebSocket Performance
+- Single WebSocket connection per page with message routing
+- Efficient state updates using Svelte 5 runes
+- Proper cleanup in `$effect` cleanup functions

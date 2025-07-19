@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { MessageSchema } from '../../shared/schemas/message';
+import { MessageSchema } from '$shared/schemas/message';
 import {
 	useMessageHandler,
 	useBroadcast,

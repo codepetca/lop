@@ -5,8 +5,8 @@ import {
 	PollUpdateMessageSchema,
 	RoomListRequestMessageSchema,
 	RoomListMessageSchema
-} from '../../shared/schemas/message';
-import { PollSchema } from '../../shared/schemas/poll';
+} from '$shared/schemas/message';
+import { PollSchema } from '$shared/schemas/poll';
 import { createTestPoll, createVoteMessage, createPollUpdateMessage } from '../utils/fixtures';
 
 describe('Schema Validation', () => {

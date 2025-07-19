@@ -10,7 +10,7 @@ import {
 	JoinGameResponseSchema,
 	RegisterGameRequestSchema,
 	RegisterGameResponseSchema
-} from '../../shared/schemas/api';
+} from '$shared/schemas/api';
 import { createTestGameSession, createTestGameMetadata, testStories } from '../utils/fixtures';
 
 describe('Game API Schema Validation', () => {
