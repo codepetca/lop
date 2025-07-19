@@ -100,7 +100,8 @@
 		ws.send({
 			type: 'player-join-poll',
 			playerId,
-			playerName
+			playerName,
+			avatar: store.player?.avatar
 		});
 	}
 

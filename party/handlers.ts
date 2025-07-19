@@ -112,7 +112,7 @@ export async function handlePlayerJoinPoll(
 		id: playerId,
 		name: playerName,
 		joinedAt: new Date().toISOString(),
-		avatar: generateAvatarFromPlayerId(playerId)
+		avatar: message.avatar || generateAvatarFromPlayerId(playerId)
 	};
 
 	// Add player to poll
@@ -353,7 +353,7 @@ export async function handlePlayerJoin(
 		id: playerId,
 		name: message.playerName,
 		joinedAt: new Date().toISOString(),
-		avatar: generateAvatarFromPlayerId(playerId),
+		avatar: message.avatar || generateAvatarFromPlayerId(playerId),
 		stats: { ...storyTemplate.initialStats },
 		inventory: [...storyTemplate.initialInventory],
 		choices: [],

@@ -103,7 +103,8 @@
 		ws.send({
 			type: 'player-join',
 			playerName: store.player.name,
-			playerId: store.player.id
+			playerId: store.player.id,
+			avatar: store.player.avatar
 		});
 	}
 

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { PollSchema } from './poll';
-import { PollPlayerSchema, GamePlayerSchema } from './player';
+import { PollPlayerSchema, GamePlayerSchema, AvatarConfigSchema } from './player';
 import { GameSessionSchema, GameMetadataSchema, StoryChoiceSchema, VoteResultSchema } from './game';
 
 /**
@@ -25,7 +25,8 @@ export const VoteMessageSchema = z.object({
 export const PlayerJoinPollMessageSchema = z.object({
 	type: z.literal('player-join-poll'),
 	playerName: z.string().min(1).max(50).optional(), // Optional - will generate if not provided
-	playerId: z.string().uuid().optional() // Optional - will generate if not provided
+	playerId: z.string().uuid().optional(), // Optional - will generate if not provided
+	avatar: AvatarConfigSchema.optional()
 });
 
 /** Broadcast when a player joins a poll */
@@ -96,7 +97,8 @@ export const GameListMessageSchema = z.object({
 export const PlayerJoinMessageSchema = z.object({
 	type: z.literal('player-join'),
 	playerName: z.string().min(1).max(50),
-	playerId: z.string().uuid().optional()
+	playerId: z.string().uuid().optional(),
+	avatar: AvatarConfigSchema.optional()
 });
 
 /** Broadcast when a player joins a game */
