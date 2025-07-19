@@ -287,6 +287,18 @@ export default class LobbyServer extends PartyKitServer {
 		try {
 			const requestData = await req.json();
 			console.log('Game creation request data:', JSON.stringify(requestData, null, 2));
+			
+			// Add defensive avatar validation
+			if (requestData.creator?.avatar) {
+				const avatar = requestData.creator.avatar;
+				if (!avatar.backgroundColor) {
+					avatar.backgroundColor = 'f0f0f0'; // Default background color
+				}
+				if (!avatar.backgroundType) {
+					avatar.backgroundType = 'solid'; // Default background type
+				}
+			}
+			
 			const gameRequest = CreateGameRequestSchema.parse(requestData);
 
 			// Generate a random game ID
@@ -356,9 +368,10 @@ export default class LobbyServer extends PartyKitServer {
 		} catch (error) {
 			console.error('Error creating game:', error);
 			if (error instanceof z.ZodError) {
-				console.error('Validation errors:', JSON.stringify(error.errors, null, 2));
+				console.error('Validation errors:', error.errors ? JSON.stringify(error.errors, null, 2) : 'No error details available');
+				const errorMessages = error.errors?.map((e) => e.message).join(', ') || 'Validation failed';
 				return this.http.error(
-					`Validation failed: ${error.errors.map((e) => e.message).join(', ')}`,
+					`Validation failed: ${errorMessages}`,
 					400
 				);
 			}
