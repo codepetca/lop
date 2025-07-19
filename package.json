@@ -6,6 +6,7 @@
 	"scripts": {
 		"dev": "npm run kill-ports && npm run dev:party & npm run dev:sveltekit",
 		"dev:clean": "npm run kill-ports && npm run dev",
+		"dev:fresh": "clear && rm -rf .partykit && npm run dev",
 		"kill-ports": "lsof -ti:1999 | xargs kill -9 2>/dev/null || true; lsof -ti:5173 | xargs kill -9 2>/dev/null || true; lsof -ti:5174 | xargs kill -9 2>/dev/null || true",
 		"dev:party": "partykit dev --port 1999",
 		"dev:sveltekit": "vite dev",
