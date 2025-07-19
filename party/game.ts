@@ -203,54 +203,75 @@ export default class GameServer extends PartyKitServer {
 	private async processVotingTimeout() {
 		if (!this.game) return;
 
-		// Process timeout by triggering a choice with the current votes
+		// Check if voting is still active (hasn't been completed already)
+		if (!this.game.votingEndsAt) {
+			// Voting already completed, no need to process timeout
+			return;
+		}
+
+		// Process timeout by checking current vote state without fake player
 		const totalVotes = Object.values(this.game.votes).reduce((sum, count) => sum + count, 0);
 		if (totalVotes > 0) {
+			// Force voting completion by setting time as expired
+			const updatedGame = {
+				...this.game,
+				votingEndsAt: new Date(Date.now() - 1000).toISOString() // Force expired
+			};
+
 			// Find the most voted choice
 			const winningChoiceId = Object.entries(this.game.votes).reduce((a, b) =>
 				this.game!.votes[a[0]] > this.game!.votes[b[0]] ? a : b
 			)[0];
 
-			// Force complete the voting by triggering the handler with time expired
-			const result = await handleGameChoice(
-				this.room,
-				this.game,
-				{ type: 'game-choice', choiceId: winningChoiceId, playerId: 'timeout' },
-				'timeout'
-			);
+			// Find a player who hasn't voted yet, or use first player if all have voted
+			let triggerPlayer = this.game.players.find(p => !this.game!.playerVotes[p.id]);
+			if (!triggerPlayer) {
+				triggerPlayer = this.game.players[0];
+			}
+			if (!triggerPlayer) return;
 
-			if (result.updatedGame) {
-				this.game = result.updatedGame;
-				await this.storage.set('game', this.game);
+			// Only process if the player exists and hasn't voted for this choice yet
+			if (!this.game.playerVotes[triggerPlayer.id] || this.game.playerVotes[triggerPlayer.id] !== winningChoiceId) {
+				const result = await handleGameChoice(
+					this.room,
+					updatedGame,
+					{ type: 'game-choice', choiceId: winningChoiceId, playerId: triggerPlayer.id },
+					triggerPlayer.id
+				);
 
-				// Broadcast updates
-				this.gameBroadcast.broadcast({
-					type: 'game-update',
-					game: this.game
-				});
+				if (result.updatedGame) {
+					this.game = result.updatedGame;
+					await this.storage.set('game', this.game);
 
-				if (result.voteResult) {
-					this.votingBroadcast.broadcast({
-						type: 'voting-ended',
-						result: result.voteResult
+					// Broadcast updates
+					this.gameBroadcast.broadcast({
+						type: 'game-update',
+						game: this.game
 					});
-				}
 
-				if (result.sceneTransition) {
-					this.sceneBroadcast.broadcast({
-						type: 'scene-transition',
-						currentScene: result.sceneTransition.currentScene,
-						title: result.sceneTransition.title,
-						description: result.sceneTransition.description,
-						isEnding: result.sceneTransition.isEnding
-					});
-				}
+					if (result.voteResult) {
+						this.votingBroadcast.broadcast({
+							type: 'voting-ended',
+							result: result.voteResult
+						});
+					}
 
-				if (result.gameCompleted) {
-					this.completeBroadcast.broadcast({
-						type: 'game-completed',
-						finalStats: result.finalStats || {}
-					});
+					if (result.sceneTransition) {
+						this.sceneBroadcast.broadcast({
+							type: 'scene-transition',
+							currentScene: result.sceneTransition.currentScene,
+							title: result.sceneTransition.title,
+							description: result.sceneTransition.description,
+							isEnding: result.sceneTransition.isEnding
+						});
+					}
+
+					if (result.gameCompleted) {
+						this.completeBroadcast.broadcast({
+							type: 'game-completed',
+							finalStats: result.finalStats || {}
+						});
+					}
 				}
 			}
 		}

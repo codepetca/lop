@@ -369,6 +369,34 @@ const sciFiStationStory: StoryTemplate = {
 			requirements: {}
 		},
 		{
+			id: 'crew-quarters',
+			title: 'The Crew Quarters',
+			description:
+				'You search through the crew quarters and find signs of a desperate evacuation. Personal belongings are scattered, and you discover a hidden message warning about the alien experiments.',
+			choices: [
+				{
+					id: 'follow-message',
+					text: 'Follow the clues in the hidden message',
+					nextScene: 'dark-revelation',
+					requirements: {},
+					effects: {},
+					addItems: ['crew-message'],
+					removeItems: []
+				},
+				{
+					id: 'check-escape-pods',
+					text: 'Check the escape pod bay',
+					nextScene: 'evacuation-ending',
+					requirements: {},
+					effects: {},
+					addItems: [],
+					removeItems: []
+				}
+			],
+			isEnding: false,
+			requirements: {}
+		},
+		{
 			id: 'system-diagnostics',
 			title: 'System Diagnostics',
 			description:
@@ -389,6 +417,62 @@ const sciFiStationStory: StoryTemplate = {
 					nextScene: 'survivor-encounter',
 					requirements: {},
 					effects: {},
+					addItems: [],
+					removeItems: []
+				}
+			],
+			isEnding: false,
+			requirements: {}
+		},
+		{
+			id: 'system-repair',
+			title: 'Life Support Repairs',
+			description:
+				'You work frantically to repair the failing life support systems. Your technical expertise pays off as you manage to stabilize the station, but you discover the real threat comes from something else entirely.',
+			choices: [
+				{
+					id: 'investigate-threat',
+					text: 'Investigate the source of the real threat',
+					nextScene: 'dark-revelation',
+					requirements: {},
+					effects: { energy: -10 },
+					addItems: ['repair-tools'],
+					removeItems: []
+				},
+				{
+					id: 'secure-station',
+					text: 'Focus on securing the station systems',
+					nextScene: 'evacuation-ending',
+					requirements: { tech: 20 },
+					effects: {},
+					addItems: [],
+					removeItems: []
+				}
+			],
+			isEnding: false,
+			requirements: {}
+		},
+		{
+			id: 'survivor-encounter',
+			title: 'Finding Survivors',
+			description:
+				'You discover a small group of survivors hiding in the emergency shelter. They tell you a terrifying story about alien creatures that escaped from the research labs and are hunting the crew.',
+			choices: [
+				{
+					id: 'learn-more',
+					text: 'Learn more about the alien threat',
+					nextScene: 'dark-revelation',
+					requirements: {},
+					effects: {},
+					addItems: ['survivor-testimony'],
+					removeItems: []
+				},
+				{
+					id: 'evacuate-survivors',
+					text: 'Focus on evacuating the survivors',
+					nextScene: 'evacuation-ending',
+					requirements: {},
+					effects: { energy: -15 },
 					addItems: [],
 					removeItems: []
 				}
