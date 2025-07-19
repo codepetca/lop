@@ -113,6 +113,7 @@ export const createTestStoryScene = (overrides: Partial<StoryScene> = {}): Story
 	],
 	isEnding: false,
 	requirements: {},
+	interactionMode: 'cards',
 	...overrides
 });
 

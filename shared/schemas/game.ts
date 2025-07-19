@@ -8,6 +8,18 @@ import { GamePlayerSchema, BasePlayerSchema } from './player';
  * Players progress through scenes by making collective choices.
  */
 
+// Position schema for interactive image targets
+export const PositionSchema = z.object({
+	x: z.number().min(0).max(100), // percentage from left
+	y: z.number().min(0).max(100) // percentage from top
+});
+
+// Size schema for interactive image targets
+export const SizeSchema = z.object({
+	width: z.number().min(1).max(100), // percentage of container width
+	height: z.number().min(1).max(100) // percentage of container height
+});
+
 // Story choice schema - individual choice option
 export const StoryChoiceSchema = z.object({
 	id: z.string(),
@@ -16,17 +28,27 @@ export const StoryChoiceSchema = z.object({
 	requirements: z.record(z.string(), z.number()).default({}), // stat requirements
 	effects: z.record(z.string(), z.number()).default({}), // stat changes
 	addItems: z.array(z.string()).default([]), // items to add
-	removeItems: z.array(z.string()).default([]) // items to remove
+	removeItems: z.array(z.string()).default([]), // items to remove
+	// Visual interactive elements
+	imageUrl: z.string().optional(), // image for this choice
+	position: PositionSchema.optional(), // position on background image
+	size: SizeSchema.optional() // size of interactive target
 });
+
+// Interaction mode enum for scenes
+export const InteractionModeSchema = z.enum(['cards', 'image-targets']);
 
 // Story scene schema - individual scene/page
 export const StorySceneSchema = z.object({
 	id: z.string(),
 	title: z.string().min(1),
 	description: z.string().min(1),
-	choices: z.array(StoryChoiceSchema).min(1),
+	choices: z.array(StoryChoiceSchema),
 	isEnding: z.boolean().default(false),
-	requirements: z.record(z.string(), z.number()).default({}) // requirements to access scene
+	requirements: z.record(z.string(), z.number()).default({}), // requirements to access scene
+	// Visual interactive elements
+	backgroundImage: z.string().optional(), // background image URL
+	interactionMode: InteractionModeSchema.optional() // how choices are presented
 });
 
 // Story template schema - complete story definition
@@ -106,6 +128,9 @@ export type StoryChoice = z.infer<typeof StoryChoiceSchema>;
 export type StoryScene = z.infer<typeof StorySceneSchema>;
 export type StoryTemplate = z.infer<typeof StoryTemplateSchema>;
 export type VoteResult = z.infer<typeof VoteResultSchema>;
+export type Position = z.infer<typeof PositionSchema>;
+export type Size = z.infer<typeof SizeSchema>;
+export type InteractionMode = z.infer<typeof InteractionModeSchema>;
 
 // Re-export player types for convenience
 export type { GamePlayer, CharacterState } from './player';

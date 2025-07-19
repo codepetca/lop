@@ -1132,13 +1132,101 @@ const comedyOfficeStory: StoryTemplate = {
 	]
 };
 
+// Visual Demo Story - Testing interactive image targets
+const visualDemoStory: StoryTemplate = {
+	id: 'visual-demo',
+	title: 'The Armory Demo',
+	description: 'A demo story showcasing visual interactive elements with weapon selection.',
+	genre: 'adventure',
+	difficulty: 'easy',
+	estimatedTime: 10,
+	startingScene: 'armory-entrance',
+	initialStats: { health: 100, attack: 10, defense: 10 },
+	initialInventory: ['basic-gear'],
+	scenes: [
+		{
+			id: 'armory-entrance',
+			title: 'The Ancient Armory',
+			description:
+				'You enter a dimly lit armory filled with weapons and armor from ages past. Three legendary weapons await your choice, each offering different advantages in the trials ahead.',
+			backgroundImage: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=600&fit=crop',
+			interactionMode: 'image-targets',
+			choices: [
+				{
+					id: 'choose-sword',
+					text: 'Flamebrand Sword - A fierce blade wreathed in eternal flames',
+					nextScene: 'sword-ending',
+					requirements: {},
+					effects: { attack: 15 },
+					addItems: ['flamebrand-sword'],
+					removeItems: [],
+					position: { x: 25, y: 60 },
+					size: { width: 15, height: 25 }
+				},
+				{
+					id: 'choose-bow',
+					text: 'Windshot Bow - A masterwork bow that never misses its mark',
+					nextScene: 'bow-ending',
+					requirements: {},
+					effects: { attack: 10, defense: 5 },
+					addItems: ['windshot-bow'],
+					removeItems: [],
+					position: { x: 50, y: 45 },
+					size: { width: 12, height: 30 }
+				},
+				{
+					id: 'choose-staff',
+					text: 'Voidcaller Staff - A mystical staff channeling dark magic',
+					nextScene: 'staff-ending',
+					requirements: {},
+					effects: { attack: 20, defense: -5 },
+					addItems: ['voidcaller-staff'],
+					removeItems: [],
+					position: { x: 75, y: 55 },
+					size: { width: 10, height: 35 }
+				}
+			],
+			isEnding: false,
+			requirements: {}
+		},
+		{
+			id: 'sword-ending',
+			title: 'The Flame Warrior',
+			description:
+				'You grasp the Flamebrand Sword and feel its power surge through you. The flames dance along the blade, promising victory against any foe. You are now a true flame warrior.',
+			choices: [],
+			isEnding: true,
+			requirements: {}
+		},
+		{
+			id: 'bow-ending',
+			title: 'The Wind Archer',
+			description:
+				'You take up the Windshot Bow and feel the wind itself bend to your will. Every shot will find its target, guided by the ancient magic within. You are now a master archer.',
+			choices: [],
+			isEnding: true,
+			requirements: {}
+		},
+		{
+			id: 'staff-ending',
+			title: 'The Void Mage',
+			description:
+				'You claim the Voidcaller Staff and dark energy courses through your veins. The shadows whisper secrets of power, but at what cost? You are now a practitioner of the void arts.',
+			choices: [],
+			isEnding: true,
+			requirements: {}
+		}
+	]
+};
+
 // Story registry
 const STORY_TEMPLATES: Record<string, StoryTemplate> = {
 	'fantasy-adventure': fantasyAdventureStory,
 	'sci-fi-station': sciFiStationStory,
 	'horror-mansion': horrorMansionStory,
 	'mystery-detective': mysteryDetectiveStory,
-	'comedy-office': comedyOfficeStory
+	'comedy-office': comedyOfficeStory,
+	'visual-demo': visualDemoStory
 };
 
 /**

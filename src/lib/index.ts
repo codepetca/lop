@@ -33,3 +33,9 @@ export { default as AdvancedOptionsModal } from './components/AdvancedOptionsMod
 export { default as GameAvatar } from './components/GameAvatar.svelte';
 export { default as ErrorPage } from './components/ErrorPage.svelte';
 export { default as GameCardSkeleton } from './components/GameCardSkeleton.svelte';
+
+// Re-export game components
+export { default as InteractiveScene } from './components/game/InteractiveScene.svelte';
+export { default as ImageTarget } from './components/game/ImageTarget.svelte';
+export { default as BackgroundScene } from './components/game/BackgroundScene.svelte';
+export { default as VotingFallback } from './components/game/VotingFallback.svelte';
