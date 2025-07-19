@@ -29,7 +29,10 @@
 	// Initialize WebSocket hook
 	const ws = useWebSocket<Message, GameChoiceMessage | PlayerJoinMessage>('game', data.gameId, {
 		onOpen: () => console.log('Connected to game'),
-		onClose: () => console.log('Disconnected from game')
+		onClose: () => console.log('Disconnected from game'),
+		onServerUnavailable: () => {
+			console.log('Game server appears to be unavailable after multiple reconnection attempts');
+		}
 	});
 
 	// Calculate total votes for current scene
@@ -201,6 +204,16 @@
 			<div class="status">Connecting to live updates...</div>
 		{:else if ws.status === 'error'}
 			<div class="status error">Connection error - retrying...</div>
+		{:else if ws.status === 'server-unavailable'}
+			<div class="server-unavailable">
+				<div class="server-message">Oops! Server connection lost.</div>
+				<div class="server-actions">
+					<button class="retry-btn" onclick={() => ws.retry()}> Try Reconnecting </button>
+					<button class="refresh-btn" onclick={() => window.location.reload()}>
+						Refresh Page
+					</button>
+				</div>
+			</div>
 		{/if}
 
 		<div class="players-section">
@@ -426,6 +439,47 @@
 		color: #dc2626;
 	}
 
+	.server-unavailable {
+		background: #f3e8ff;
+		border: 2px solid #8b5cf6;
+		border-radius: 12px;
+		padding: 1.5rem;
+		margin-bottom: 1rem;
+		text-align: center;
+	}
+
+	.server-message {
+		color: #5b21b6;
+		font-weight: 600;
+		margin-bottom: 1rem;
+		font-size: 1rem;
+	}
+
+	.server-actions {
+		display: flex;
+		gap: 1rem;
+		justify-content: center;
+		flex-wrap: wrap;
+	}
+
+	.retry-btn,
+	.refresh-btn {
+		background: #8b5cf6;
+		color: white;
+		border: none;
+		border-radius: 8px;
+		padding: 0.5rem 1rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: background-color 0.2s;
+		font-size: 0.9rem;
+	}
+
+	.retry-btn:hover,
+	.refresh-btn:hover {
+		background: #7c3aed;
+	}
+
 	.voting-timer {
 		text-align: center;
 		background: #fef3c7;
@@ -600,7 +654,6 @@
 		transform: translateY(-2px);
 		box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 	}
-
 
 	@media (max-width: 640px) {
 		.container {

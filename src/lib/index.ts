@@ -31,3 +31,4 @@ export { default as AvatarSelector } from './components/AvatarSelector.svelte';
 export { default as TitleHeader } from './components/TitleHeader.svelte';
 export { default as AdvancedOptionsModal } from './components/AdvancedOptionsModal.svelte';
 export { default as GameAvatar } from './components/GameAvatar.svelte';
+export { default as ErrorPage } from './components/ErrorPage.svelte';

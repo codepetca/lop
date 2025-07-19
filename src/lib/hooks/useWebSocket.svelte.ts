@@ -2,7 +2,12 @@ import { browser } from '$app/environment';
 import { PUBLIC_PARTYKIT_HOST } from '$env/static/public';
 import { MessageSchema } from '$shared/schemas/index';
 
-export type WebSocketStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
+export type WebSocketStatus =
+	| 'connecting'
+	| 'connected'
+	| 'disconnected'
+	| 'error'
+	| 'server-unavailable';
 
 interface UseWebSocketOptions {
 	reconnectInterval?: number;
@@ -10,6 +15,7 @@ interface UseWebSocketOptions {
 	onOpen?: () => void;
 	onClose?: () => void;
 	onError?: (error: Event) => void;
+	onServerUnavailable?: () => void;
 }
 
 export function useWebSocket<TMessage = any, TSendMessage = any>(
@@ -17,7 +23,14 @@ export function useWebSocket<TMessage = any, TSendMessage = any>(
 	roomId: string,
 	options: UseWebSocketOptions = {}
 ) {
-	const { reconnectInterval = 3000, maxReconnectAttempts = 5, onOpen, onClose, onError } = options;
+	const {
+		reconnectInterval = 3000,
+		maxReconnectAttempts = 5,
+		onOpen,
+		onClose,
+		onError,
+		onServerUnavailable
+	} = options;
 
 	let socket: WebSocket | null = null;
 	let reconnectAttempts = 0;
@@ -65,15 +78,28 @@ export function useWebSocket<TMessage = any, TSendMessage = any>(
 				}
 			};
 
-			socket.onclose = () => {
+			socket.onclose = (event) => {
 				status = 'disconnected';
 				socket = null;
 				onClose?.();
+
+				// Check if this looks like a server unavailable scenario
+				if (event.code === 1006 || event.code === 1001) {
+					// WebSocket closed abnormally or server going away
+					if (reconnectAttempts >= maxReconnectAttempts) {
+						status = 'server-unavailable';
+						onServerUnavailable?.();
+						return;
+					}
+				}
 
 				// Attempt reconnection if within limits
 				if (reconnectAttempts < maxReconnectAttempts) {
 					reconnectAttempts++;
 					reconnectTimeoutId = window.setTimeout(connect, reconnectInterval);
+				} else {
+					status = 'server-unavailable';
+					onServerUnavailable?.();
 				}
 			};
 
@@ -119,6 +145,13 @@ export function useWebSocket<TMessage = any, TSendMessage = any>(
 		disconnect();
 	}
 
+	// Retry connection (useful for manual retries)
+	function retry() {
+		reconnectAttempts = 0; // Reset attempts
+		status = 'disconnected';
+		connect();
+	}
+
 	// Return the hook interface with getters for reactive state
 	return {
 		get status() {
@@ -130,9 +163,16 @@ export function useWebSocket<TMessage = any, TSendMessage = any>(
 		get isConnected() {
 			return isConnected;
 		},
+		get reconnectAttempts() {
+			return reconnectAttempts;
+		},
+		get maxReconnectAttempts() {
+			return maxReconnectAttempts;
+		},
 		send,
 		connect,
 		disconnect,
-		cleanup
+		cleanup,
+		retry
 	};
 }

@@ -25,7 +25,10 @@
 			// Auto-join the poll when connected
 			joinPoll();
 		},
-		onClose: () => console.log('Disconnected from PartyKit')
+		onClose: () => console.log('Disconnected from PartyKit'),
+		onServerUnavailable: () => {
+			console.log('Server appears to be unavailable after multiple reconnection attempts');
+		}
 	});
 
 	// Calculate total votes (now working with arrays of player IDs)
@@ -163,6 +166,14 @@
 		<div class="status">Connecting to live updates...</div>
 	{:else if ws.status === 'error'}
 		<div class="status error">Connection error - retrying...</div>
+	{:else if ws.status === 'server-unavailable'}
+		<div class="server-unavailable">
+			<div class="server-message">Oops! Server connection lost.</div>
+			<div class="server-actions">
+				<button class="retry-btn" onclick={() => ws.retry()}> Try Reconnecting </button>
+				<button class="refresh-btn" onclick={() => window.location.reload()}> Refresh Page </button>
+			</div>
+		</div>
 	{/if}
 
 	<div class="poll-stats">
@@ -266,6 +277,47 @@
 
 	.status.error {
 		color: #dc2626;
+	}
+
+	.server-unavailable {
+		background: #fef3c7;
+		border: 2px solid #f59e0b;
+		border-radius: 12px;
+		padding: 1.5rem;
+		margin-bottom: 1rem;
+		text-align: center;
+	}
+
+	.server-message {
+		color: #92400e;
+		font-weight: 600;
+		margin-bottom: 1rem;
+		font-size: 1rem;
+	}
+
+	.server-actions {
+		display: flex;
+		gap: 1rem;
+		justify-content: center;
+		flex-wrap: wrap;
+	}
+
+	.retry-btn,
+	.refresh-btn {
+		background: #f59e0b;
+		color: white;
+		border: none;
+		border-radius: 8px;
+		padding: 0.5rem 1rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: background-color 0.2s;
+		font-size: 0.9rem;
+	}
+
+	.retry-btn:hover,
+	.refresh-btn:hover {
+		background: #d97706;
 	}
 
 	.poll-stats {

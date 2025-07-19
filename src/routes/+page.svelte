@@ -254,7 +254,6 @@
 		border: 1px solid #e2e8f0;
 	}
 
-
 	/* Room Browser Styles */
 	.loading,
 	.no-rooms {
