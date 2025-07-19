@@ -24,7 +24,7 @@ import {
 } from '$shared/schemas';
 import { getRandomQuestion } from './questions';
 import { initializePollVotes, generatePollId, generatePlayerId } from './utils';
-import { generatePlayerName } from './name-generator';
+import { generatePlayerName } from './nameGenerator';
 import { getLobbyUrl } from './lib/config';
 import { useStorage, useBroadcast, useHttpResponse } from './lib/hooks';
 import { getStoryTemplate, getStoryScene } from './stories';

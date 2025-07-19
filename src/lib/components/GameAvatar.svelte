@@ -1,5 +1,5 @@
 <script lang="ts">
-	import PlayerAvatar from './PlayerAvatar.svelte';
+	import { PlayerAvatar } from '$lib';
 	import type { GamePlayer } from '$shared/schemas';
 
 	let {

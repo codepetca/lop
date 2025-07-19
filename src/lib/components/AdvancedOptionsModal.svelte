@@ -1,7 +1,17 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import type { ActionData, PageData } from '../../routes/$types';
 	import { store } from '$lib/stores';
+	import type { StoryTemplate } from '$shared/schemas';
+
+	type PageData = {
+		stories: StoryTemplate[];
+	};
+
+	type ActionData = {
+		gameId?: string;
+		gameTitle?: string;
+		error?: string;
+	} | null;
 
 	let {
 		isOpen = $bindable(),

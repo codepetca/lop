@@ -1,3 +1,14 @@
+import type { AvatarConfig } from '$shared/schemas/player';
+
+// Frontend-specific types
+export interface Player {
+	id: string;
+	name: string;
+	isGenerated: boolean;
+	createdAt: number;
+	avatar: AvatarConfig;
+}
+
 // Re-export shared types for frontend use
 export type {
 	Poll,

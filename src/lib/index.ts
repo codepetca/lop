@@ -28,3 +28,6 @@ export * from './avatar/utils';
 export { default as PlayerAvatar } from './components/PlayerAvatar.svelte';
 export { default as PlayerProfileModal } from './components/PlayerProfileModal.svelte';
 export { default as AvatarSelector } from './components/AvatarSelector.svelte';
+export { default as TitleHeader } from './components/TitleHeader.svelte';
+export { default as AdvancedOptionsModal } from './components/AdvancedOptionsModal.svelte';
+export { default as GameAvatar } from './components/GameAvatar.svelte';

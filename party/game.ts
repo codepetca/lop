@@ -224,14 +224,17 @@ export default class GameServer extends PartyKitServer {
 			)[0];
 
 			// Find a player who hasn't voted yet, or use first player if all have voted
-			let triggerPlayer = this.game.players.find(p => !this.game!.playerVotes[p.id]);
+			let triggerPlayer = this.game.players.find((p) => !this.game!.playerVotes[p.id]);
 			if (!triggerPlayer) {
 				triggerPlayer = this.game.players[0];
 			}
 			if (!triggerPlayer) return;
 
 			// Only process if the player exists and hasn't voted for this choice yet
-			if (!this.game.playerVotes[triggerPlayer.id] || this.game.playerVotes[triggerPlayer.id] !== winningChoiceId) {
+			if (
+				!this.game.playerVotes[triggerPlayer.id] ||
+				this.game.playerVotes[triggerPlayer.id] !== winningChoiceId
+			) {
 				const result = await handleGameChoice(
 					this.room,
 					updatedGame,

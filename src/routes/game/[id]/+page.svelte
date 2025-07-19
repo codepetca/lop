@@ -10,9 +10,9 @@
 		CharacterState,
 		StoryChoice
 	} from '$lib/types';
-	import { useWebSocket } from '$lib/hooks/useWebSocket.svelte';
+	import { useWebSocket } from '$lib';
 	import { store } from '$lib/stores';
-	import GameAvatar from '$lib/components/GameAvatar.svelte';
+	import { GameAvatar } from '$lib';
 
 	let { data }: { data: PageData } = $props();
 
@@ -209,15 +209,14 @@
 						{player}
 						isCurrentPlayer={currentPlayer?.id === player.id}
 						hasVoted={game.playerVotes && game.playerVotes[player.id] ? true : false}
-						onclick={(clickedPlayer) => {
+						onclick={(clickedPlayer: CharacterState) => {
 							console.log('Clicked player:', clickedPlayer.name);
 							// TODO: Show player details modal
 						}}
 					/>
 				{/each}
 			</div>
-			<div class="game-stats">
-			</div>
+			<div class="game-stats"></div>
 		</div>
 
 		{#if game.isCompleted}
@@ -254,12 +253,10 @@
 										<span class="choice-votes">{votes}</span>
 									</div>
 
-									{#if choice.effects && choice.effects.length > 0}
+									{#if choice.effects && Object.keys(choice.effects).length > 0}
 										<div class="choice-effects">
-											{#each choice.effects as effect}
-												<span class="effect"
-													>{effect.stat}: {effect.change > 0 ? '+' : ''}{effect.change}</span
-												>
+											{#each Object.entries(choice.effects) as [stat, change]}
+												<span class="effect">{stat}: {change > 0 ? '+' : ''}{change}</span>
 											{/each}
 										</div>
 									{/if}

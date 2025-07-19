@@ -1,9 +1,9 @@
 /**
- * Simple name generator for player names
+ * Shared name generator constants and functions
  * Creates fun, single-word combinations using adjective + noun
  */
 
-const adjectives = [
+export const adjectives = [
 	'Swift',
 	'Bright',
 	'Clever',
@@ -42,7 +42,7 @@ const adjectives = [
 	'Radiant'
 ];
 
-const nouns = [
+export const nouns = [
 	'Panda',
 	'Wolf',
 	'Eagle',

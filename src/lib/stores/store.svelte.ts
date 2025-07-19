@@ -1,18 +1,11 @@
 import { browser } from '$app/environment';
-import { generatePlayerName, isGeneratedName } from './nameGenerator';
+import { generatePlayerName, isGeneratedName } from '$lib/stores/nameGenerator';
 import {
 	generateAvatarFromPlayerId,
 	generateNewRandomAvatar,
 	type AvatarConfig
 } from '$lib/avatar/utils';
-
-interface Player {
-	id: string;
-	name: string;
-	isGenerated: boolean;
-	createdAt: number;
-	avatar: AvatarConfig;
-}
+import type { Player } from '$lib/types';
 
 interface AppState {
 	player: Player | null;

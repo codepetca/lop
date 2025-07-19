@@ -1,5 +1,5 @@
 <script lang="ts">
-	import PlayerAvatar from './PlayerAvatar.svelte';
+	import { PlayerAvatar } from '$lib';
 	import type { Player } from '$lib/types';
 
 	let {

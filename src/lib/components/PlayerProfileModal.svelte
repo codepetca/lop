@@ -1,8 +1,5 @@
 <script lang="ts">
-	import { store } from '$lib/stores';
-	import PlayerAvatar from './PlayerAvatar.svelte';
-	import AvatarSelector from './AvatarSelector.svelte';
-	import type { AvatarConfig } from '$lib/avatar/utils';
+	import { store, PlayerAvatar, AvatarSelector, type AvatarConfig } from '$lib';
 
 	let {
 		isOpen = $bindable(),

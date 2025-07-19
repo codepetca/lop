@@ -5,56 +5,16 @@
  * building DiceBear URLs, and managing avatar state.
  */
 
-export interface AvatarConfig {
-	style: string;
-	seed: string;
-	backgroundColor?: string;
-	backgroundType?: string;
-}
+import type { AvatarConfig } from '$shared/schemas/player';
+import {
+	AVATAR_STYLES,
+	BACKGROUND_COLORS,
+	simpleHash,
+	type AvatarStyle
+} from '$shared/constants/avatar';
 
-// Available DiceBear styles
-export const AVATAR_STYLES = [
-	'adventurer',
-	'adventurer-neutral',
-	'avataaars',
-	'big-ears',
-	'big-ears-neutral',
-	'big-smile',
-	'bottts',
-	'bottts-neutral',
-	'croodles',
-	'croodles-neutral',
-	'fun-emoji',
-	'icons',
-	'identicon',
-	'initials',
-	'lorelei',
-	'lorelei-neutral',
-	'micah',
-	'miniavs',
-	'open-peeps',
-	'personas',
-	'pixel-art',
-	'pixel-art-neutral',
-	'shapes',
-	'thumbs'
-] as const;
-
-export type AvatarStyle = (typeof AVATAR_STYLES)[number];
-
-// Background colors for avatars
-const BACKGROUND_COLORS = [
-	'b6e3f4', // light blue
-	'c2f0c2', // light green
-	'ffd3a5', // light orange
-	'fd9cc8', // light pink
-	'd1c4e9', // light purple
-	'fff9c4', // light yellow
-	'ffcdd2', // light red
-	'f3e5ab', // light beige
-	'e1f5fe', // very light blue
-	'f1f8e9' // very light green
-];
+export type { AvatarConfig, AvatarStyle };
+export { AVATAR_STYLES };
 
 /**
  * Generate a random avatar configuration based on a seed
@@ -100,19 +60,6 @@ export function buildAvatarUrl(config: AvatarConfig, size: number = 64): string 
  */
 export function generateAvatarFromPlayerId(playerId: string): AvatarConfig {
 	return generateRandomAvatar(playerId);
-}
-
-/**
- * Simple hash function for consistent randomness
- */
-function simpleHash(str: string): number {
-	let hash = 0;
-	for (let i = 0; i < str.length; i++) {
-		const char = str.charCodeAt(i);
-		hash = (hash << 5) - hash + char;
-		hash = hash & hash; // Convert to 32-bit integer
-	}
-	return Math.abs(hash);
 }
 
 /**

@@ -4,60 +4,8 @@
  * Backend version of the frontend avatar utilities
  */
 
-import type { AvatarConfig } from '../shared/schemas/player';
-
-// Available DiceBear styles (subset of frontend styles for consistency)
-const AVATAR_STYLES = [
-	'adventurer',
-	'adventurer-neutral',
-	'avataaars',
-	'big-ears',
-	'big-ears-neutral',
-	'big-smile',
-	'bottts',
-	'bottts-neutral',
-	'croodles',
-	'croodles-neutral',
-	'fun-emoji',
-	'identicon',
-	'lorelei',
-	'lorelei-neutral',
-	'micah',
-	'miniavs',
-	'open-peeps',
-	'personas',
-	'pixel-art',
-	'pixel-art-neutral',
-	'shapes',
-	'thumbs'
-] as const;
-
-// Background colors for avatars
-const BACKGROUND_COLORS = [
-	'b6e3f4', // light blue
-	'c2f0c2', // light green
-	'ffd3a5', // light orange
-	'fd9cc8', // light pink
-	'd1c4e9', // light purple
-	'fff9c4', // light yellow
-	'ffcdd2', // light red
-	'f3e5ab', // light beige
-	'e1f5fe', // very light blue
-	'f1f8e9' // very light green
-];
-
-/**
- * Simple hash function for consistent randomness
- */
-function simpleHash(str: string): number {
-	let hash = 0;
-	for (let i = 0; i < str.length; i++) {
-		const char = str.charCodeAt(i);
-		hash = (hash << 5) - hash + char;
-		hash = hash & hash; // Convert to 32-bit integer
-	}
-	return Math.abs(hash);
-}
+import type { AvatarConfig } from '$shared/schemas/player';
+import { AVATAR_STYLES, BACKGROUND_COLORS, simpleHash } from '$shared/constants/avatar';
 
 /**
  * Generate a deterministic avatar configuration based on a player ID

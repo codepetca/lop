@@ -10,11 +10,7 @@
 		RoomListRequestMessage,
 		GameListRequestMessage
 	} from '$lib/types';
-	import { useWebSocket } from '$lib/hooks/useWebSocket.svelte';
-	import { store } from '$lib/stores';
-	import TitleHeader from '$lib/components/TitleHeader.svelte';
-	import PlayerProfileModal from '$lib/components/PlayerProfileModal.svelte';
-	import AdvancedOptionsModal from '$lib/components/AdvancedOptionsModal.svelte';
+	import { useWebSocket, store, PlayerProfileModal, TitleHeader, AdvancedOptionsModal } from '$lib';
 
 	let { form, data }: { form: ActionData; data: PageData } = $props();
 
@@ -60,6 +56,12 @@
 		// Ensure player is initialized
 		if (!store.player) {
 			store.initializePlayer();
+		}
+
+		// Player should exist after initialization
+		if (!store.player) {
+			console.error('Failed to initialize player');
+			return;
 		}
 
 		// Create a random game with default settings

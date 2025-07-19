@@ -6,7 +6,7 @@
 		type AvatarConfig,
 		type AvatarStyle
 	} from '$lib/avatar/utils';
-	import PlayerAvatar from './PlayerAvatar.svelte';
+	import { PlayerAvatar } from '$lib';
 
 	let {
 		currentAvatar,

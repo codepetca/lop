@@ -9,7 +9,7 @@
 		PlayerJoinPollMessage,
 		PlayerJoinedPollMessage
 	} from '$lib/types';
-	import { useWebSocket } from '$lib/hooks/useWebSocket.svelte';
+	import { useWebSocket } from '$lib';
 	import { store } from '$lib/stores';
 
 	let { data }: { data: PageData } = $props();
