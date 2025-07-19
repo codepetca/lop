@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { vi, beforeEach, afterEach } from 'vitest';
 import type { Poll } from '$shared/schemas/poll';
 
 /**
@@ -12,6 +12,13 @@ export const createMockRoom = () => {
 
 	return {
 		id: 'test-room',
+		internalID: 'internal-test-room',
+		name: 'test-room',
+		env: {},
+		blockConcurrencyWhile: vi.fn(),
+		hibernationManager: null,
+		getConnectionTags: vi.fn().mockReturnValue([]),
+		getConnections: vi.fn().mockReturnValue([]),
 		storage: {
 			get: vi.fn().mockImplementation((key: string) => Promise.resolve(storage.get(key))),
 			put: vi.fn().mockImplementation((key: string, value: any) => {
@@ -45,16 +52,24 @@ export const createMockRoom = () => {
 		_getStorageItem: (key: string) => storage.get(key),
 		_clearStorage: () => storage.clear(),
 		_getConnections: () => connections
-	};
+	} as any; // Use 'as any' to satisfy PartyKit types
 };
 
 // Mock PartyKit Connection
-export const createMockConnection = (id = 'test-connection') => ({
-	id,
-	send: vi.fn(),
-	close: vi.fn(),
-	readyState: 1 // WebSocket.OPEN
-});
+export const createMockConnection = (id = 'test-connection') =>
+	({
+		id,
+		send: vi.fn(),
+		close: vi.fn(),
+		readyState: 1, // WebSocket.OPEN
+		uri: 'ws://localhost:1999',
+		cf: {},
+		tags: [],
+		setState: vi.fn(),
+		getState: vi.fn(),
+		deserializeAttachment: vi.fn(),
+		serializeAttachment: vi.fn()
+	}) as any; // Use 'as any' to satisfy PartyKit types
 
 // Mock WebSocket
 export const createMockWebSocket = () => {
@@ -124,3 +139,23 @@ export const createPollWithVotes = (votes: Record<string, string[]>): Poll => ({
 	votes,
 	players: []
 });
+
+// Mock RequestEvent for SvelteKit actions
+export const createMockRequestEvent = (request: Request = {} as Request) =>
+	({
+		request,
+		cookies: {
+			get: vi.fn(),
+			set: vi.fn(),
+			delete: vi.fn(),
+			getAll: vi.fn().mockReturnValue([])
+		},
+		fetch: vi.fn(),
+		getClientAddress: vi.fn().mockReturnValue('127.0.0.1'),
+		locals: {},
+		params: {},
+		platform: {},
+		route: { id: 'test' },
+		setHeaders: vi.fn(),
+		url: new URL('http://localhost:5173')
+	}) as any; // Use 'as any' to satisfy SvelteKit types

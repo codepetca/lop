@@ -1,4 +1,4 @@
-import { StoryTemplate, StoryScene, StoryChoice } from '$shared/schemas';
+import type { StoryTemplate, StoryScene, StoryChoice } from '$shared/schemas';
 
 /**
  * Story template definitions with branching narratives

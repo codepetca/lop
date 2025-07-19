@@ -9,10 +9,20 @@ import type {
 	CharacterState,
 	VoteResult
 } from '$shared/schemas/game';
+import type { BasePlayer } from '$shared/schemas/player';
+import { generateAvatarFromPlayerId } from '$shared/constants/avatar';
 
 /**
  * Centralized test data generators - easy to update when schemas change
  */
+
+export const createTestBasePlayer = (overrides: Partial<BasePlayer> = {}): BasePlayer => ({
+	id: 'player-base-123',
+	name: 'TestPlayer',
+	joinedAt: new Date().toISOString(),
+	avatar: generateAvatarFromPlayerId('player-base-123'),
+	...overrides
+});
 
 export const createTestPoll = (overrides: Partial<Poll> = {}): Poll => ({
 	id: 'test-poll-123',
@@ -130,6 +140,7 @@ export const createTestCharacterState = (
 	id: 'player-1',
 	name: 'Alice',
 	joinedAt: new Date().toISOString(),
+	avatar: generateAvatarFromPlayerId('player-1'),
 	stats: { health: 100, coins: 10 },
 	inventory: ['torch'],
 	choices: [],
@@ -175,6 +186,7 @@ export const createTestGameMetadata = (overrides: Partial<GameMetadata> = {}): G
 	maxPlayers: 20,
 	estimatedTime: 30,
 	requiresVoting: true,
+	creator: createTestBasePlayer(),
 	...overrides
 });
 

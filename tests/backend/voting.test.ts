@@ -26,7 +26,9 @@ describe('Voting Logic', () => {
 
 		it('should handle multiple votes for same option', async () => {
 			const room = createMockRoom();
-			const poll = createTestPoll({ votes: { Red: 2, Blue: 1, Green: 0, Yellow: 0 } });
+			const poll = createTestPoll({
+				votes: { Red: ['player1', 'player2'], Blue: ['player3'], Green: [], Yellow: [] }
+			});
 			const voteMessage = createVoteMessage({ option: 'Red' });
 
 			const result = await handleVote(room, poll, voteMessage);
@@ -80,7 +82,7 @@ describe('Voting Logic', () => {
 		it('should handle vote when option has no existing votes', async () => {
 			const room = createMockRoom();
 			const poll = createTestPoll({
-				votes: { Red: 0, Blue: 0, Green: 0, Yellow: 0 }
+				votes: { Red: [], Blue: [], Green: [], Yellow: [] }
 			});
 			const voteMessage = createVoteMessage({ option: 'Green' });
 
@@ -93,7 +95,12 @@ describe('Voting Logic', () => {
 		it('should preserve other vote counts when voting', async () => {
 			const room = createMockRoom();
 			const poll = createTestPoll({
-				votes: { Red: 5, Blue: 3, Green: 1, Yellow: 2 }
+				votes: {
+					Red: ['p1', 'p2', 'p3', 'p4', 'p5'],
+					Blue: ['p6', 'p7', 'p8'],
+					Green: ['p9'],
+					Yellow: ['p10', 'p11']
+				}
 			});
 			const voteMessage = createVoteMessage({ option: 'Blue' });
 

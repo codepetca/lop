@@ -600,11 +600,6 @@
 		box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 	}
 
-	.game-footer {
-		text-align: center;
-		padding-top: 2rem;
-		border-top: 1px solid #e5e7eb;
-	}
 
 	@media (max-width: 640px) {
 		.container {

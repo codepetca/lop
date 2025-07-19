@@ -254,11 +254,6 @@
 		border: 1px solid #e2e8f0;
 	}
 
-	h2 {
-		color: #333;
-		margin-bottom: 1.5rem;
-		font-size: 1.5rem;
-	}
 
 	/* Room Browser Styles */
 	.loading,

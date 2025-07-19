@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { store } from '$lib/stores';
-	import type { StoryTemplate } from '$shared/schemas';
+	import type { GetStoriesResponse } from '$shared/schemas';
 
 	type PageData = {
-		stories: StoryTemplate[];
+		stories: GetStoriesResponse['stories'];
 	};
 
 	type ActionData = {
@@ -154,7 +154,7 @@
 								<p>Game ID: <strong>{form.gameId}</strong></p>
 								<p class="game-title">{form.gameTitle}</p>
 								<div class="result-actions">
-									<button class="copy-btn" onclick={() => copyToClipboard(form.gameId)}>
+									<button class="copy-btn" onclick={() => copyToClipboard(form.gameId || '')}>
 										📋 Copy ID
 									</button>
 									<a href="/game/{form.gameId}" class="join-btn"> Join Game → </a>

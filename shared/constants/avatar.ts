@@ -2,6 +2,8 @@
  * Shared avatar constants used by both frontend and backend
  */
 
+import type { AvatarConfig } from '../schemas/player';
+
 // Available DiceBear styles
 export const AVATAR_STYLES = [
 	'adventurer',
@@ -55,4 +57,21 @@ export function simpleHash(str: string): number {
 		hash = hash & hash; // Convert to 32-bit integer
 	}
 	return Math.abs(hash);
+}
+
+/**
+ * Generate a deterministic avatar configuration based on a player ID
+ */
+export function generateAvatarFromPlayerId(playerId: string): AvatarConfig {
+	const hash = simpleHash(playerId);
+
+	const styleIndex = hash % AVATAR_STYLES.length;
+	const colorIndex = (hash >> 8) % BACKGROUND_COLORS.length;
+
+	return {
+		style: AVATAR_STYLES[styleIndex],
+		seed: playerId,
+		backgroundColor: BACKGROUND_COLORS[colorIndex],
+		backgroundType: 'solid'
+	};
 }

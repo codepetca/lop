@@ -49,15 +49,11 @@ describe('WebSocket Hook', () => {
 			writable: true
 		});
 
-		// Add WebSocket constants
-		WebSocketSpy.CONNECTING = 0;
-		WebSocketSpy.OPEN = 1;
-		WebSocketSpy.CLOSING = 2;
-		WebSocketSpy.CLOSED = 3;
-		global.WebSocket.CONNECTING = 0;
-		global.WebSocket.OPEN = 1;
-		global.WebSocket.CLOSING = 2;
-		global.WebSocket.CLOSED = 3;
+		// Add WebSocket constants to constructor
+		Object.defineProperty(global.WebSocket, 'CONNECTING', { value: 0, writable: false });
+		Object.defineProperty(global.WebSocket, 'OPEN', { value: 1, writable: false });
+		Object.defineProperty(global.WebSocket, 'CLOSING', { value: 2, writable: false });
+		Object.defineProperty(global.WebSocket, 'CLOSED', { value: 3, writable: false });
 
 		// Dynamically import to ensure mocks are applied
 		const module = await import('../../src/lib/hooks/useWebSocket.svelte');

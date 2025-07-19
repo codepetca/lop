@@ -119,7 +119,7 @@ describe('Schema Validation', () => {
 		it('should reject poll with less than 2 options', () => {
 			const invalidPoll = createTestPoll({
 				options: ['Only One'],
-				votes: { 'Only One': 0 }
+				votes: { 'Only One': [] }
 			});
 			const result = PollSchema.safeParse(invalidPoll);
 			expect(result.success).toBe(false);
@@ -135,7 +135,7 @@ describe('Schema Validation', () => {
 			// The schema allows extra keys in the votes record
 			const validPoll = createTestPoll({
 				options: ['Red', 'Blue'],
-				votes: { Red: 0, Blue: 0, Green: 0 } // Green not in options but valid in record
+				votes: { Red: [], Blue: [], Green: [] } // Green not in options but valid in record
 			});
 			const result = PollSchema.safeParse(validPoll);
 			expect(result.success).toBe(true);

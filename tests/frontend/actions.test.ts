@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { actions } from '../../src/routes/+page.server';
-import { createMockFetch } from '../utils/mocks';
+import { createMockFetch, createMockRequestEvent } from '../utils/mocks';
 import { createTestPoll } from '../utils/fixtures';
 
 // Mock SvelteKit dependencies
@@ -38,8 +38,8 @@ describe('Server Actions', () => {
 			});
 			global.fetch = mockFetch;
 
-			const mockRequest = {} as Request;
-			const result = await actions.createPoll({ request: mockRequest });
+			const mockRequestEvent = createMockRequestEvent({} as Request);
+			const result = await actions.createPoll(mockRequestEvent);
 
 			expect(result).toEqual({ pollId: testPoll.id });
 			expect(mockFetch).toHaveBeenCalledWith(
@@ -66,8 +66,8 @@ describe('Server Actions', () => {
 			});
 			global.fetch = mockFetch;
 
-			const mockRequest = {} as Request;
-			const result = await actions.createPoll({ request: mockRequest });
+			const mockRequestEvent = createMockRequestEvent({} as Request);
+			const result = await actions.createPoll(mockRequestEvent);
 
 			expect(result).toEqual({
 				status: 500,
@@ -89,8 +89,8 @@ describe('Server Actions', () => {
 			});
 			global.fetch = mockFetch;
 
-			const mockRequest = {} as Request;
-			const result = await actions.createPoll({ request: mockRequest });
+			const mockRequestEvent = createMockRequestEvent({} as Request);
+			const result = await actions.createPoll(mockRequestEvent);
 
 			expect(result).toEqual({
 				status: 500,
@@ -112,8 +112,8 @@ describe('Server Actions', () => {
 			});
 			global.fetch = mockFetch;
 
-			const mockRequest = {} as Request;
-			const result = await actions.createPoll({ request: mockRequest });
+			const mockRequestEvent = createMockRequestEvent({} as Request);
+			const result = await actions.createPoll(mockRequestEvent);
 
 			expect(result).toEqual({
 				status: 500,
@@ -132,8 +132,8 @@ describe('Server Actions', () => {
 			});
 			global.fetch = mockFetch;
 
-			const mockRequest = {} as Request;
-			const result = await actions.createPoll({ request: mockRequest });
+			const mockRequestEvent = createMockRequestEvent({} as Request);
+			const result = await actions.createPoll(mockRequestEvent);
 
 			expect(result).toEqual({
 				status: 500,
@@ -158,8 +158,8 @@ describe('Server Actions', () => {
 			});
 			global.fetch = mockFetch;
 
-			const mockRequest = {} as Request;
-			const result = await actions.createPoll({ request: mockRequest });
+			const mockRequestEvent = createMockRequestEvent({} as Request);
+			const result = await actions.createPoll(mockRequestEvent);
 
 			expect(result).toEqual({ pollId: testPoll.id });
 		});
@@ -183,8 +183,8 @@ describe('Server Actions', () => {
 			});
 			global.fetch = mockFetch;
 
-			const mockRequest = {} as Request;
-			const result = await actions.createPoll({ request: mockRequest });
+			const mockRequestEvent = createMockRequestEvent({} as Request);
+			const result = await actions.createPoll(mockRequestEvent);
 
 			expect(result).toEqual({
 				status: 500,
