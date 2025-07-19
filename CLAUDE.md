@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Real-time polling app: SvelteKit frontend + PartyKit WebSocket backend. Server-generated questions, anonymous voting.
+Multi-game platform: SvelteKit frontend + PartyKit WebSocket backend. Supports real-time polling and story-based multiplayer games with voting mechanics.
 
 ## Commands
 
@@ -9,6 +9,8 @@ Real-time polling app: SvelteKit frontend + PartyKit WebSocket backend. Server-g
 npm run dev              # Full stack (SvelteKit + PartyKit)
 npm run dev:sveltekit    # Frontend only
 npm run dev:party        # WebSocket server only
+npm run dev:fresh        # Clean dev start with port cleanup
+npm run kill-ports       # Kill development ports
 
 # Quality
 npm run check            # TypeScript check
@@ -30,15 +32,20 @@ npm run test:coverage    # Run tests with coverage
 
 ```
 src/routes/
-├── +page.svelte           # Home: create/join polls
-├── +page.server.ts        # Poll creation via lobby API
-└── [poll_id]/+page.svelte # Poll voting UI + WebSocket
+├── +page.svelte           # Home: create/join polls & games
+├── +page.server.ts        # Poll/game creation via lobby API
+├── [poll_id]/+page.svelte # Poll voting UI + WebSocket
+└── game/[id]/+page.svelte # Story game UI + WebSocket
 
 party/                     # PartyKit servers
-├── lobby.ts              # Main server: room registry, poll creation
+├── lobby.ts              # Main server: room registry
 ├── poll.ts               # Poll server: voting, state management
+├── game.ts               # Game server: story games, voting
+├── avatar.ts             # Avatar generation service
+├── stories.ts            # Story template management
+├── nameGenerator.ts      # Name generation service
 ├── handlers.ts           # Business logic for messages/requests
-├── questions.ts          # 15 question bank
+├── questions.ts          # Poll question bank
 ├── utils.ts              # Helper functions
 └── lib/
     ├── hooks.ts          # WebSocket & storage hooks
@@ -46,10 +53,16 @@ party/                     # PartyKit servers
 
 shared/schemas/           # Zod schemas (runtime validation)
 ├── poll.ts              # Poll, RoomMetadata types
+├── game.ts              # Game, Player, Choice types
+├── story.ts             # Story template system
+├── player.ts            # Player management
 ├── message.ts           # WebSocket message types
 └── api.ts               # HTTP request/response types
 
 src/lib/
+├── components/          # Svelte components (hierarchical)
+├── stores/              # Svelte 5 runes state management
+├── avatar/              # Avatar generation utilities
 ├── types.ts             # Frontend TypeScript types
 └── hooks/useWebSocket.svelte.ts  # WebSocket connection hook
 
@@ -58,6 +71,22 @@ tests/
 ├── frontend/            # Frontend tests
 └── utils/               # Test utilities (fixtures, mocks)
 ```
+
+## Component Architecture
+
+**Prioritize hierarchical, composed components for reusability and maintainability:**
+
+- `ErrorPage` - Centralized error handling
+- `AvatarSelector` - Avatar customization interface  
+- `GameAvatar`/`PlayerAvatar` - Avatar display components
+- `PlayerProfileModal` - Player profile management
+- `AdvancedOptionsModal` - Game configuration
+- `TitleHeader` - Consistent header component
+
+**Composition Guidelines:**
+- Build larger components from smaller, focused ones
+- Use Svelte 5 runes for reactive state (`$state`, `$derived`, `$effect`)
+- Export components from `$lib` for centralized access
 
 ## Key Patterns
 
@@ -70,21 +99,28 @@ tests/
 ### WebSocket Messages
 
 ```typescript
-// Discriminated union in shared/schemas/message.ts
+// Discriminated union supporting polls & games
 type Message =
 	| { type: 'vote'; option: string }
 	| { type: 'poll-update'; poll: Poll }
+	| { type: 'game-choice'; choiceIndex: number }
+	| { type: 'game-update'; game: Game }
+	| { type: 'player-joined'; player: Player }
 	| { type: 'room-list-request' }
 	| { type: 'room-list'; rooms: RoomMetadata[] };
 ```
 
-### Poll Creation Flow
+### Game Creation Flow
 
-1. SvelteKit action posts to `/parties/main/main/create-poll`
-2. Lobby generates poll ID, creates poll room via `context.parties.poll.get(pollId)`
-3. Poll server generates random question, saves to storage
-4. Lobby registers room in registry, broadcasts update to WebSocket clients
-5. Returns poll data to frontend
+**Polls**: SvelteKit action → lobby generates ID → poll server creates question → room registry update
+**Games**: SvelteKit action → lobby generates ID → game server selects story → player management → real-time voting with time limits
+
+### Player & Avatar System
+
+- UUID-based player identification with localStorage persistence
+- DiceBear avatar generation (22+ styles) with deterministic seeding
+- Generated names with uniqueness guarantees
+- Avatar customization and regeneration support
 
 ### Environment Variables
 
@@ -137,6 +173,7 @@ import { useWebSocket } from './hooks/useWebSocket.svelte';
 ### Frontend (IMPORTANT)
 
 - **Always use Svelte 5** with runes (`$state`, `$derived`, `$effect`)
+- **Prioritize component composition** - build hierarchical, reusable components
 - Never use Svelte 4 patterns (stores, reactive statements)
 
 ### Backend (IMPORTANT)
@@ -207,17 +244,14 @@ return this.http.error('Hard-coded message', 500);
 
 ### State Management
 
-- PartyKit: Room storage (persistent)
-- Frontend: Svelte 5 runes only
-- Vote tracking: localStorage (prevents duplicate votes per browser)
+- **PartyKit**: Room storage (persistent game/poll state)
+- **Frontend**: Svelte 5 runes in `src/lib/stores/` (no legacy stores)
+- **Player State**: localStorage for player ID, avatar, and vote tracking
+- **Avatar State**: Deterministic generation with customization persistence
 
 ### Testing Strategy
 
-- **Schema Validation**: Comprehensive Zod schema tests (valid/invalid data, edge cases)
-- **WebSocket Testing**: Mock WebSocket connections with lifecycle simulation
-  - Mock `window.location`, `window.setTimeout` for test environment
-  - Use `vi.resetModules()` for isolated environment tests
-- **Server Actions**: Mock fetch responses and environment variables
-- **Backend Logic**: Test business logic with mocked PartyKit rooms
-  - Mock room storage and context
-  - Test vote counting and poll state management
+- **Schema Validation**: Comprehensive Zod tests for all schemas (poll, game, player, story)
+- **WebSocket Testing**: Mock connections with lifecycle simulation
+- **Backend Logic**: Test with mocked PartyKit rooms and storage
+- **Component Testing**: Test component composition and Svelte 5 runes
