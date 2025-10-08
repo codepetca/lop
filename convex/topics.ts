@@ -85,3 +85,38 @@ export const deleteTopic = mutation({
     return { success: true };
   },
 });
+
+// Clear all claims (admin only)
+export const clearAllClaims = mutation({
+  args: {
+    pollId: v.id("polls"),
+    adminToken: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const poll = await ctx.db.get(args.pollId);
+    if (!poll) throw new Error("Poll not found");
+    if (poll.adminToken !== args.adminToken) {
+      throw new Error("Invalid admin token");
+    }
+
+    // Find all topics for this poll
+    const topics = await ctx.db
+      .query("topics")
+      .withIndex("by_poll", (q) => q.eq("pollId", args.pollId))
+      .collect();
+
+    // Clear claims from all topics
+    let clearedCount = 0;
+    for (const topic of topics) {
+      if (topic.selectedByGroupId) {
+        await ctx.db.patch(topic._id, {
+          selectedByGroupId: undefined,
+          selectedAt: undefined,
+        });
+        clearedCount++;
+      }
+    }
+
+    return { success: true, clearedCount };
+  },
+});

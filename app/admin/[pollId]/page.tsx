@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Copy, Check, Lock, Unlock, Plus, Download, ExternalLink, GripVertical } from "lucide-react";
+import { Loader2, Copy, Check, Lock, Unlock, Plus, Download, ExternalLink, GripVertical, Trash2 } from "lucide-react";
 
 export default function AdminManagePage({ params }: { params: Promise<{ pollId: string }> }) {
   const { pollId: pollIdParam } = use(params);
@@ -37,14 +37,27 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   const addTopics = useMutation(api.polls.addTopics);
   const deleteTopic = useMutation(api.topics.deleteTopic);
   const reorderTopics = useMutation(api.topics.reorderTopics);
+  const clearAllClaims = useMutation(api.topics.clearAllClaims);
 
   const [draggedTopicId, setDraggedTopicId] = useState<Id<"topics"> | null>(null);
+  const [previewTopics, setPreviewTopics] = useState<typeof topics | null>(null);
+  const [optimisticOrder, setOptimisticOrder] = useState<Id<"topics">[] | null>(null);
 
   useEffect(() => {
     if (poll && adminToken && poll.adminToken === adminToken) {
       setIsAuthenticated(true);
     }
   }, [poll, adminToken]);
+
+  // Clear optimistic order when server data matches
+  useEffect(() => {
+    if (optimisticOrder && topics) {
+      const serverMatches = optimisticOrder.every((id, i) => topics[i]?._id === id);
+      if (serverMatches) {
+        setOptimisticOrder(null);
+      }
+    }
+  }, [optimisticOrder, topics]);
 
   const handleToggleOpen = async () => {
     try {
@@ -98,15 +111,12 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
 
   const handleDragStart = (topicId: Id<"topics">) => {
     setDraggedTopicId(topicId);
+    setPreviewTopics(null);
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent, targetTopicId: Id<"topics">) => {
     e.preventDefault();
-  };
-
-  const handleDrop = async (targetTopicId: Id<"topics">) => {
     if (!draggedTopicId || !topics || draggedTopicId === targetTopicId) {
-      setDraggedTopicId(null);
       return;
     }
 
@@ -114,27 +124,63 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
     const targetIndex = topics.findIndex((t) => t._id === targetTopicId);
 
     if (draggedIndex === -1 || targetIndex === -1) {
-      setDraggedTopicId(null);
       return;
     }
 
-    // Create new order
+    // Create preview order
     const reordered = [...topics];
     const [removed] = reordered.splice(draggedIndex, 1);
     reordered.splice(targetIndex, 0, removed);
+
+    setPreviewTopics(reordered);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedTopicId(null);
+    setPreviewTopics(null);
+  };
+
+  const handleDrop = async (targetTopicId: Id<"topics">) => {
+    if (!draggedTopicId || !previewTopics) {
+      setDraggedTopicId(null);
+      setPreviewTopics(null);
+      return;
+    }
+
+    // Use the preview order that's already been calculated
+    const finalOrder = previewTopics;
+    const finalOrderIds = finalOrder.map((t) => t._id);
+
+    // Commit to optimistic order and clear drag states
+    setOptimisticOrder(finalOrderIds);
+    setDraggedTopicId(null);
+    setPreviewTopics(null);
 
     // Send to server
     try {
       await reorderTopics({
         pollId,
         adminToken,
-        topicIds: reordered.map((t) => t._id),
+        topicIds: finalOrderIds,
       });
+      // optimisticOrder will be cleared by useEffect when server confirms
+    } catch (error) {
+      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      setOptimisticOrder(null);
+    }
+  };
+
+  const handleClearAllClaims = async () => {
+    if (!confirm("Are you sure you want to clear all topic claims? This will remove all student selections.")) {
+      return;
+    }
+
+    try {
+      const result = await clearAllClaims({ pollId, adminToken });
+      alert(`Successfully cleared ${result.clearedCount} claim${result.clearedCount !== 1 ? 's' : ''}`);
     } catch (error) {
       alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
-
-    setDraggedTopicId(null);
   };
 
   const handleExportCSV = () => {
@@ -285,15 +331,21 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
           </CardHeader>
         </Card>
 
-        {/* Share Links */}
+        {/* Share */}
         <Card>
           <CardHeader>
-            <CardTitle>Share Links</CardTitle>
+            <CardTitle>Share</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>Student URL</Label>
               <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => window.open(studentUrl, "_blank")}
+                  className="w-36 shrink-0"
+                >
+                  Student Page
+                </Button>
                 <Input
                   value={studentUrl}
                   readOnly
@@ -305,22 +357,20 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                   }`}
                   title="Click to copy"
                 />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => window.open(studentUrl, "_blank")}
-                  title="Open in new tab"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                </Button>
               </div>
               {copiedField === "student" && (
                 <p className="text-xs text-green-600 font-medium">✓ Copied to clipboard</p>
               )}
             </div>
             <div className="space-y-2">
-              <Label>Results URL</Label>
               <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => window.open(resultsUrl, "_blank")}
+                  className="w-36 shrink-0"
+                >
+                  Results Page
+                </Button>
                 <Input
                   value={resultsUrl}
                   readOnly
@@ -332,18 +382,16 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                   }`}
                   title="Click to copy"
                 />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => window.open(resultsUrl, "_blank")}
-                  title="Open in new tab"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                </Button>
               </div>
               {copiedField === "results" && (
                 <p className="text-xs text-green-600 font-medium">✓ Copied to clipboard</p>
               )}
+            </div>
+            <div className="pt-2">
+              <Button onClick={handleExportCSV} disabled={!exportResults}>
+                <Download className="mr-2 h-4 w-4" />
+                Download CSV
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -351,22 +399,40 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
         {/* Edit Topics */}
         <Card>
           <CardHeader>
-            <CardTitle>Edit Topics</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>Edit Topics</CardTitle>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleClearAllClaims}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Clear All Claims
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Existing Topics */}
             <div>
               <div className="space-y-2">
-                {topics.map((topic) => (
+                {(previewTopics ||
+                  (optimisticOrder && topics
+                    ? optimisticOrder.map(id => topics.find(t => t._id === id)!).filter(Boolean)
+                    : topics)
+                ).map((topic) => (
                   <div
                     key={topic._id}
                     draggable
                     onDragStart={() => handleDragStart(topic._id)}
-                    onDragOver={handleDragOver}
+                    onDragOver={(e) => handleDragOver(e, topic._id)}
+                    onDragEnd={handleDragEnd}
                     onDrop={() => handleDrop(topic._id)}
-                    className={`flex items-center gap-2 p-3 rounded-lg border bg-gray-50 cursor-move transition-opacity ${
-                      draggedTopicId === topic._id ? "opacity-50" : "opacity-100"
+                    className={`flex items-center gap-2 p-3 rounded-lg border cursor-move transition-[opacity,transform,background-color] duration-300 ease-in-out ${
+                      draggedTopicId === topic._id
+                        ? "opacity-40 bg-gray-200"
+                        : "bg-gray-50 border-gray-300"
                     }`}
+                    style={{ transition: "all 0.3s ease-in-out" }}
                   >
                     <GripVertical className="h-5 w-5 text-gray-400 flex-shrink-0" />
                     <div className="flex-1">
@@ -421,19 +487,6 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                 </Button>
               </form>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Export */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Export Results</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={handleExportCSV} disabled={!exportResults}>
-              <Download className="mr-2 h-4 w-4" />
-              Download CSV
-            </Button>
           </CardContent>
         </Card>
 
