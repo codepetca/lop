@@ -110,17 +110,14 @@ export default function AdminPage() {
               <CardTitle className="text-2xl text-green-600">
                 Poll Created Successfully!
               </CardTitle>
-              <CardDescription>
-                Save these links to manage and share your poll
-              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Student Share URL */}
               <div className="space-y-2">
-                <Label className="text-base font-semibold">
-                  Student Share URL
-                </Label>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2">
+                  <Label className="text-base font-semibold whitespace-nowrap">
+                    Student Share URL
+                  </Label>
                   <Input
                     value={studentUrl}
                     readOnly
@@ -148,8 +145,8 @@ export default function AdminPage() {
 
               {/* Results URL */}
               <div className="space-y-2">
-                <Label className="text-base font-semibold">Results URL</Label>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2">
+                  <Label className="text-base font-semibold whitespace-nowrap">Results URL</Label>
                   <Input
                     value={resultsUrl}
                     readOnly

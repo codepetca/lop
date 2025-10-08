@@ -76,30 +76,17 @@ export default function ResultsPage({ params }: { params: Promise<{ pollId: stri
               </div>
             </div>
             {/* View Toggle */}
-            <div className="flex gap-2 bg-gray-800 rounded-lg p-1">
-              <button
-                onClick={() => toggleViewMode("grid")}
-                className={`p-2 rounded transition-colors ${
-                  viewMode === "grid"
-                    ? "bg-gray-700 text-white"
-                    : "text-gray-400 hover:text-white"
-                }`}
-                title="Grid view"
-              >
-                <Grid3x3 className="h-5 w-5" />
-              </button>
-              <button
-                onClick={() => toggleViewMode("list")}
-                className={`p-2 rounded transition-colors ${
-                  viewMode === "list"
-                    ? "bg-gray-700 text-white"
-                    : "text-gray-400 hover:text-white"
-                }`}
-                title="List view"
-              >
-                <List className="h-5 w-5" />
-              </button>
-            </div>
+            <button
+              onClick={() => toggleViewMode(viewMode === "grid" ? "list" : "grid")}
+              className="p-2 bg-gray-800 rounded-lg text-gray-400 hover:text-white transition-colors"
+              title={viewMode === "grid" ? "Switch to list view" : "Switch to grid view"}
+            >
+              {viewMode === "grid" ? (
+                <List className="h-6 w-6" />
+              ) : (
+                <Grid3x3 className="h-6 w-6" />
+              )}
+            </button>
           </div>
         </div>
 

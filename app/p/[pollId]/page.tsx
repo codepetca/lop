@@ -122,18 +122,29 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
   const handleClaimTopic = async (topicId: Id<"topics">) => {
     if (!groupId) return;
 
+    // Check if clicking on currently selected topic (to unclaim)
+    if (currentSelection && currentSelection._id === topicId) {
+      if (!confirm(`Are you sure you want to remove "${currentSelection.label}" from your selection?`)) {
+        return;
+      }
+      try {
+        await unclaimTopic({ pollId, groupId });
+      } catch (error) {
+        alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      }
+      return;
+    }
+
+    // Check if already has a selection (changing to different topic)
+    if (currentSelection) {
+      const newTopic = topics?.find((t) => t._id === topicId);
+      if (!confirm(`Change selection from "${currentSelection.label}" to "${newTopic?.label}"?`)) {
+        return;
+      }
+    }
+
     try {
       await claimTopic({ pollId, groupId, topicId });
-    } catch (error) {
-      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
-    }
-  };
-
-  const handleUnclaim = async () => {
-    if (!groupId) return;
-
-    try {
-      await unclaimTopic({ pollId, groupId });
     } catch (error) {
       alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
@@ -242,53 +253,24 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
           </Card>
         ) : (
           <>
-            {/* Current Selection */}
+            {/* Group Info */}
             <Card>
-              <CardHeader>
-                <CardTitle>Your Selection</CardTitle>
-              </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <div className="space-y-4">
-                  <div>
-                    <strong>Group Members:</strong>
-                    <ul className="list-disc list-inside mt-1">
-                      {members.map((m, i) => (
-                        <li key={i}>
-                          {m.firstName} {m.lastName}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  <ul className="list-disc list-inside">
+                    {members.map((m, i) => (
+                      <li key={i}>
+                        {m.firstName} {m.lastName}
+                      </li>
+                    ))}
+                  </ul>
                   {recoveryCode && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                      <p className="text-sm font-medium text-blue-900 mb-1">
-                        Recovery Code
-                      </p>
-                      <p className="text-xs text-blue-700 mb-2">
-                        Save this code to access your submission from another device
-                      </p>
-                      <code className="bg-white px-3 py-2 rounded border border-blue-300 text-lg font-mono font-bold text-blue-900">
+                    <div className="text-sm">
+                      <span className="text-muted-foreground">Recovery Code</span>{" "}
+                      <code className="bg-gray-100 px-2 py-1 rounded font-mono font-semibold">
                         {recoveryCode}
                       </code>
                     </div>
-                  )}
-                  {currentSelection ? (
-                    <div className="mt-4">
-                      <p className="text-lg font-semibold text-green-600">
-                        Selected: {currentSelection.label}
-                      </p>
-                      <Button
-                        variant="outline"
-                        onClick={handleUnclaim}
-                        className="mt-2"
-                      >
-                        Change Selection
-                      </Button>
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground mt-4">
-                      No topic selected yet. Choose one below.
-                    </p>
                   )}
                 </div>
               </CardContent>
@@ -313,13 +295,13 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
                     return (
                       <button
                         key={topic._id}
-                        onClick={() => !isTaken && handleClaimTopic(topic._id)}
+                        onClick={() => handleClaimTopic(topic._id)}
                         disabled={isTaken}
                         className={`
                           p-4 rounded-lg border-2 text-left transition-all
                           ${
                             isYours
-                              ? "border-green-500 bg-green-50"
+                              ? "border-green-500 bg-green-50 cursor-pointer"
                               : isTaken
                               ? "border-gray-300 bg-gray-100 cursor-not-allowed opacity-60"
                               : "border-gray-300 hover:border-blue-500 hover:bg-blue-50 cursor-pointer"
