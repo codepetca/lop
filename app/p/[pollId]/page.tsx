@@ -20,9 +20,20 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
   const { pollId: pollIdParam } = use(params);
   const pollId = pollIdParam as Id<"polls">;
 
+  // Check if in preview mode
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      setIsPreviewMode(urlParams.get("preview") === "true");
+    }
+  }, []);
+
   const [members, setMembers] = useState<Member[]>([{ firstName: "", lastName: "" }]);
   const [groupId, setGroupId] = useState<Id<"groups"> | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [previewSelectedTopicId, setPreviewSelectedTopicId] = useState<Id<"topics"> | null>(null);
 
   const { confirm, ConfirmDialog } = useConfirm();
 
@@ -34,8 +45,10 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
   const claimTopic = useMutation(api.selections.claim);
   const unclaimTopic = useMutation(api.selections.unclaim);
 
-  // Check localStorage for saved group ID on mount
+  // Check localStorage for saved group ID on mount (skip in preview mode)
   useEffect(() => {
+    if (isPreviewMode) return;
+
     const storageKey = `poll_${pollId}_groupId`;
     const savedGroupId = localStorage.getItem(storageKey);
 
@@ -50,13 +63,19 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
         localStorage.removeItem(storageKey);
       }
     }
-  }, [pollId, groups]);
+  }, [pollId, groups, isPreviewMode]);
 
   // Get current selection for this group
   const currentSelection = useMemo(() => {
     if (!topics || !groupId) return null;
+
+    // In preview mode, use local state
+    if (isPreviewMode && previewSelectedTopicId) {
+      return topics.find((t) => t._id === previewSelectedTopicId) || null;
+    }
+
     return topics.find((t) => t.selectedByGroupId === groupId);
-  }, [topics, groupId]);
+  }, [topics, groupId, isPreviewMode, previewSelectedTopicId]);
 
   // Initialize members array based on poll requirement
   useMemo(() => {
@@ -81,6 +100,12 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
 
   const handleSubmitInfo = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // In preview mode, just set a fake group ID without saving
+    if (isPreviewMode) {
+      setGroupId("preview-mode" as Id<"groups">);
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -120,6 +145,17 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
 
   const handleClaimTopic = async (topicId: Id<"topics">) => {
     if (!groupId) return;
+
+    // In preview mode, just update local state
+    if (isPreviewMode) {
+      // Toggle if clicking same topic, otherwise change selection
+      if (previewSelectedTopicId === topicId) {
+        setPreviewSelectedTopicId(null);
+      } else {
+        setPreviewSelectedTopicId(topicId);
+      }
+      return;
+    }
 
     // Check if clicking on currently selected topic (to unclaim)
     if (currentSelection && currentSelection._id === topicId) {
@@ -200,6 +236,15 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 py-8">
       <div className="max-w-4xl mx-auto space-y-6">
+        {/* Preview Mode Banner */}
+        {isPreviewMode && (
+          <div className="bg-yellow-100 border-2 border-yellow-500 rounded-lg p-4 text-center">
+            <p className="text-yellow-900 font-semibold">
+              Preview Mode - No data will be saved
+            </p>
+          </div>
+        )}
+
         {/* Poll Header */}
         <Card>
           <CardHeader>
@@ -292,39 +337,44 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
                     const isTaken =
                       topic.selectedByGroupId &&
                       topic.selectedByGroupId !== groupId;
-                    const isYours = topic.selectedByGroupId === groupId;
+
+                    // In preview mode, check local state; otherwise check database
+                    const isYours = isPreviewMode
+                      ? previewSelectedTopicId === topic._id
+                      : topic.selectedByGroupId === groupId;
 
                     return (
                       <button
                         key={topic._id}
                         onClick={() => handleClaimTopic(topic._id)}
-                        disabled={isTaken}
+                        disabled={!isPreviewMode && isTaken}
                         className={`
                           p-4 rounded-lg border-2 text-left transition-all
                           ${
                             isYours
                               ? "border-green-500 bg-green-50 cursor-pointer"
-                              : isTaken
+                              : isTaken && !isPreviewMode
                               ? "border-gray-300 bg-gray-100 cursor-not-allowed opacity-60"
                               : "border-gray-300 hover:border-blue-500 hover:bg-blue-50 cursor-pointer"
                           }
                         `}
                       >
                         <div className="font-medium">{topic.label}</div>
-                        {topic.selectedBy && (
+                        {isYours && (
                           <div className="text-sm text-muted-foreground mt-1">
-                            {isYours ? (
-                              <span className="text-green-600 font-semibold">
-                                ✓ Your selection
-                              </span>
-                            ) : (
-                              <span>
-                                Taken by{" "}
-                                {topic.selectedBy
-                                  .map((m) => `${m.firstName} ${m.lastName}`)
-                                  .join(", ")}
-                              </span>
-                            )}
+                            <span className="text-green-600 font-semibold">
+                              ✓ Your selection
+                            </span>
+                          </div>
+                        )}
+                        {!isPreviewMode && topic.selectedBy && !isYours && (
+                          <div className="text-sm text-muted-foreground mt-1">
+                            <span>
+                              Taken by{" "}
+                              {topic.selectedBy
+                                .map((m) => `${m.firstName} ${m.lastName}`)
+                                .join(", ")}
+                            </span>
                           </div>
                         )}
                       </button>

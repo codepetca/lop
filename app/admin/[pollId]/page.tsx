@@ -468,26 +468,26 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                 />
                 <Button
                   variant="outline"
-                  onClick={() => window.open(studentUrl, "_blank")}
+                  onClick={() => window.open(`${studentUrl}?preview=true`, "_blank")}
                   className="w-32 shrink-0"
                 >
                   <ExternalLink className="mr-2 h-4 w-4" />
-                  Take Poll
+                  Preview Poll
                 </Button>
                 <Button
                   variant={poll.isOpen ? "destructive" : "default"}
                   onClick={handleToggleOpen}
-                  className="w-32 shrink-0"
+                  className="w-40 shrink-0"
                 >
                   {poll.isOpen ? (
                     <>
                       <Lock className="mr-2 h-4 w-4" />
-                      Close
+                      Close Poll
                     </>
                   ) : (
                     <>
                       <Unlock className="mr-2 h-4 w-4" />
-                      Open
+                      Open Poll
                     </>
                   )}
                 </Button>
@@ -523,17 +523,17 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                 <Button
                   variant={(poll.resultsVisible ?? true) ? "destructive" : "default"}
                   onClick={handleToggleResultsVisible}
-                  className="w-32 shrink-0"
+                  className="w-40 shrink-0"
                 >
                   {(poll.resultsVisible ?? true) ? (
                     <>
                       <Lock className="mr-2 h-4 w-4" />
-                      Hide
+                      Hide Results
                     </>
                   ) : (
                     <>
                       <Unlock className="mr-2 h-4 w-4" />
-                      Show
+                      Show Results
                     </>
                   )}
                 </Button>
