@@ -190,3 +190,43 @@ export const exportResults = query({
     return results;
   },
 });
+
+// Delete a poll and all associated data (admin only)
+export const deletePoll = mutation({
+  args: {
+    pollId: v.id("polls"),
+    adminToken: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const poll = await ctx.db.get(args.pollId);
+    if (!poll) throw new Error("Poll not found");
+    if (poll.adminToken !== args.adminToken) {
+      throw new Error("Invalid admin token");
+    }
+
+    // Delete all topics for this poll
+    const topics = await ctx.db
+      .query("topics")
+      .withIndex("by_poll", (q) => q.eq("pollId", args.pollId))
+      .collect();
+
+    for (const topic of topics) {
+      await ctx.db.delete(topic._id);
+    }
+
+    // Delete all groups for this poll
+    const groups = await ctx.db
+      .query("groups")
+      .withIndex("by_poll", (q) => q.eq("pollId", args.pollId))
+      .collect();
+
+    for (const group of groups) {
+      await ctx.db.delete(group._id);
+    }
+
+    // Delete the poll itself
+    await ctx.db.delete(args.pollId);
+
+    return { success: true };
+  },
+});

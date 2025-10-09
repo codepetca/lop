@@ -59,9 +59,11 @@ export default function Home() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <Card className="w-full max-w-2xl">
         <CardHeader className="text-center">
-          <CardTitle className="text-4xl font-bold mb-2">Topic Claim Poll</CardTitle>
+          <CardTitle className="text-4xl font-bold mb-2">Claims Poll</CardTitle>
           <CardDescription className="text-base">
-            Claim topics on a first-come, first-served basis.
+            First-come first-served
+            <br />
+            No repeat topics
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">

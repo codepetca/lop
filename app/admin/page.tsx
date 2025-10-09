@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Slider } from "@/components/ui/slider";
 import { Loader2, Copy, Check, History, ExternalLink } from "lucide-react";
 
 interface SavedPoll {
@@ -104,7 +105,7 @@ export default function AdminPage() {
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 py-8">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-3xl mx-auto">
           <Card>
             <CardHeader>
               <CardTitle className="text-2xl text-green-600">
@@ -112,12 +113,12 @@ export default function AdminPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Student Share URL */}
+              {/* Take Poll */}
               <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Label className="text-base font-semibold whitespace-nowrap">
-                    Student Share URL
-                  </Label>
+                <p className="text-sm text-muted-foreground">
+                  Give this link to participants
+                </p>
+                <div className="flex gap-2">
                   <Input
                     value={studentUrl}
                     readOnly
@@ -131,11 +132,11 @@ export default function AdminPage() {
                   />
                   <Button
                     variant="outline"
-                    size="icon"
                     onClick={() => window.open(studentUrl, "_blank")}
-                    title="Open in new tab"
+                    className="w-36 shrink-0"
                   >
-                    <ExternalLink className="h-4 w-4" />
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    Take Poll
                   </Button>
                 </div>
                 {copiedField === "student" && (
@@ -143,10 +144,12 @@ export default function AdminPage() {
                 )}
               </div>
 
-              {/* Results URL */}
+              {/* Results */}
               <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Label className="text-base font-semibold whitespace-nowrap">Results URL</Label>
+                <p className="text-sm text-muted-foreground">
+                  View the realtime results
+                </p>
+                <div className="flex gap-2">
                   <Input
                     value={resultsUrl}
                     readOnly
@@ -160,11 +163,11 @@ export default function AdminPage() {
                   />
                   <Button
                     variant="outline"
-                    size="icon"
                     onClick={() => window.open(resultsUrl, "_blank")}
-                    title="Open in new tab"
+                    className="w-36 shrink-0"
                   >
-                    <ExternalLink className="h-4 w-4" />
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    Results
                   </Button>
                 </div>
                 {copiedField === "results" && (
@@ -207,7 +210,7 @@ export default function AdminPage() {
       <div className="max-w-2xl mx-auto">
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Create New Topic Claims Poll</CardTitle>
+            <CardTitle className="text-2xl">Create New Claims Poll</CardTitle>
             <CardDescription>
               Topics are claimed on a first-come basis and removed once selected
             </CardDescription>
@@ -239,16 +242,26 @@ export default function AdminPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="membersPerGroup">Members per Group (Max 10) *</Label>
-                <Input
-                  id="membersPerGroup"
-                  type="number"
-                  min={1}
-                  max={10}
-                  value={membersPerGroup}
-                  onChange={(e) => setMembersPerGroup(parseInt(e.target.value) || 1)}
-                  required
-                />
+                <Label htmlFor="membersPerGroup">Members per Group *</Label>
+                <div className="flex items-center gap-4">
+                  <Input
+                    type="number"
+                    min={1}
+                    max={10}
+                    value={membersPerGroup}
+                    onChange={(e) => setMembersPerGroup(parseInt(e.target.value) || 1)}
+                    className="w-20 text-center"
+                  />
+                  <Slider
+                    id="membersPerGroup"
+                    min={1}
+                    max={10}
+                    step={1}
+                    value={[membersPerGroup]}
+                    onValueChange={(value) => setMembersPerGroup(value[0])}
+                    className="flex-1"
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -257,7 +270,7 @@ export default function AdminPage() {
                   id="topics"
                   value={topics}
                   onChange={(e) => setTopics(e.target.value)}
-                  placeholder={`Machine Learning\nBlockchain Technology\nQuantum Computing`}
+                  placeholder="Type or paste topics one per line"
                   rows={10}
                   required
                   className="font-mono"

@@ -6,7 +6,7 @@ import { ConvexClientProvider } from "./ConvexClientProvider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Topic Claim Poll",
+  title: "Claims Poll",
   description: "Claim topics on a first-come, first-served basis",
 };
 

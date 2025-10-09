@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import { useConfirm } from "@/components/ui/use-confirm";
 
 interface Member {
   firstName: string;
@@ -23,6 +24,8 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
   const [groupId, setGroupId] = useState<Id<"groups"> | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [recoveryCode, setRecoveryCode] = useState<string>("");
+
+  const { confirm, ConfirmDialog } = useConfirm();
 
   const poll = useQuery(api.polls.get, { pollId });
   const topics = useQuery(api.topics.list, { pollId });
@@ -124,9 +127,15 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
 
     // Check if clicking on currently selected topic (to unclaim)
     if (currentSelection && currentSelection._id === topicId) {
-      if (!confirm(`Are you sure you want to remove "${currentSelection.label}" from your selection?`)) {
-        return;
-      }
+      const confirmed = await confirm({
+        title: "Remove Selection",
+        description: `Are you sure you want to remove "${currentSelection.label}" from your selection?`,
+        actionLabel: "Remove",
+        destructive: true,
+      });
+
+      if (!confirmed) return;
+
       try {
         await unclaimTopic({ pollId, groupId });
       } catch (error) {
@@ -138,9 +147,13 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
     // Check if already has a selection (changing to different topic)
     if (currentSelection) {
       const newTopic = topics?.find((t) => t._id === topicId);
-      if (!confirm(`Change selection from "${currentSelection.label}" to "${newTopic?.label}"?`)) {
-        return;
-      }
+      const confirmed = await confirm({
+        title: "Change Selection",
+        description: `Change selection from "${currentSelection.label}" to "${newTopic?.label}"?`,
+        actionLabel: "Change",
+      });
+
+      if (!confirmed) return;
     }
 
     try {
@@ -207,7 +220,7 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
         {!groupId ? (
           <Card>
             <CardHeader>
-              <CardTitle>Member Information</CardTitle>
+              <CardTitle>Participant Information</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmitInfo} className="space-y-4">
@@ -216,7 +229,7 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
                   <div key={index} className="space-y-4">
                     {poll && (poll.membersPerGroup ?? 1) > 1 && (
                       <Label className="text-base">
-                        Member {index + 1} {index === 0 && "(Primary)"}
+                        Participant {index + 1} {index === 0 && "(Primary)"}
                       </Label>
                     )}
                     <div className="grid grid-cols-2 gap-4">
@@ -255,23 +268,26 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
           <>
             {/* Group Info */}
             <Card>
-              <CardContent className="pt-6">
-                <div className="space-y-4">
-                  <ul className="list-disc list-inside">
-                    {members.map((m, i) => (
-                      <li key={i}>
-                        {m.firstName} {m.lastName}
-                      </li>
-                    ))}
-                  </ul>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Participant</CardTitle>
                   {recoveryCode && (
                     <div className="text-sm">
-                      <span className="text-muted-foreground">Recovery Code</span>{" "}
+                      <span className="text-muted-foreground">Code</span>{" "}
                       <code className="bg-gray-100 px-2 py-1 rounded font-mono font-semibold">
                         {recoveryCode}
                       </code>
                     </div>
                   )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-1">
+                  {members.map((m, i) => (
+                    <div key={i}>
+                      {m.firstName} {m.lastName}
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
@@ -334,6 +350,7 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
           </>
         )}
       </div>
+      <ConfirmDialog />
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import { use, useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
@@ -11,12 +11,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Copy, Check, Lock, Unlock, Plus, Download, ExternalLink, GripVertical, Trash2 } from "lucide-react";
+import { useConfirm } from "@/components/ui/use-confirm";
 
 export default function AdminManagePage({ params }: { params: Promise<{ pollId: string }> }) {
   const { pollId: pollIdParam } = use(params);
   const pollId = pollIdParam as Id<"polls">;
   const searchParams = useSearchParams();
   const tokenParam = searchParams.get("token");
+  const router = useRouter();
 
   const [adminToken, setAdminToken] = useState(tokenParam || "");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -36,10 +38,13 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   const deleteTopic = useMutation(api.topics.deleteTopic);
   const reorderTopics = useMutation(api.topics.reorderTopics);
   const clearAllClaims = useMutation(api.topics.clearAllClaims);
+  const deletePoll = useMutation(api.polls.deletePoll);
 
   const [draggedTopicId, setDraggedTopicId] = useState<Id<"topics"> | null>(null);
   const [previewTopics, setPreviewTopics] = useState<typeof topics | null>(null);
   const [optimisticOrder, setOptimisticOrder] = useState<Id<"topics">[] | null>(null);
+
+  const { confirm, ConfirmDialog } = useConfirm();
 
   useEffect(() => {
     if (poll && adminToken && poll.adminToken === adminToken) {
@@ -96,9 +101,14 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   };
 
   const handleDeleteTopic = async (topicId: Id<"topics">) => {
-    if (!confirm("Delete this topic? If claimed, the student's submission will also be removed.")) {
-      return;
-    }
+    const confirmed = await confirm({
+      title: "Delete Topic",
+      description: "Delete this topic? If claimed, the student's submission will also be removed.",
+      actionLabel: "Delete",
+      destructive: true,
+    });
+
+    if (!confirmed) return;
 
     try {
       await deleteTopic({ topicId, adminToken });
@@ -169,9 +179,14 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   };
 
   const handleClearAllClaims = async () => {
-    if (!confirm("Are you sure you want to clear all topic claims? This will remove all student selections.")) {
-      return;
-    }
+    const confirmed = await confirm({
+      title: "Clear All Claims",
+      description: "Are you sure you want to clear all topic claims? This will remove all student selections.",
+      actionLabel: "Clear All",
+      destructive: true,
+    });
+
+    if (!confirmed) return;
 
     try {
       const result = await clearAllClaims({ pollId, adminToken });
@@ -202,6 +217,24 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
     a.download = `poll-${pollId}-results.csv`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleDeletePoll = async () => {
+    const confirmed = await confirm({
+      title: "Delete Poll",
+      description: "Are you sure you want to permanently delete this poll? This will delete all topics, groups, and submissions. This action cannot be undone.",
+      actionLabel: "Delete Poll",
+      destructive: true,
+    });
+
+    if (!confirmed) return;
+
+    try {
+      await deletePoll({ pollId, adminToken });
+      router.push("/admin");
+    } catch (error) {
+      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+    }
   };
 
   if (poll === undefined || topics === undefined) {
@@ -336,14 +369,10 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Give this link to participants
+              </p>
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => window.open(studentUrl, "_blank")}
-                  className="w-36 shrink-0"
-                >
-                  Student Page
-                </Button>
                 <Input
                   value={studentUrl}
                   readOnly
@@ -355,20 +384,24 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                   }`}
                   title="Click to copy"
                 />
+                <Button
+                  variant="outline"
+                  onClick={() => window.open(studentUrl, "_blank")}
+                  className="w-36 shrink-0"
+                >
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  Take Poll
+                </Button>
               </div>
               {copiedField === "student" && (
                 <p className="text-xs text-green-600 font-medium">✓ Copied to clipboard</p>
               )}
             </div>
             <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                View the realtime results
+              </p>
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => window.open(resultsUrl, "_blank")}
-                  className="w-36 shrink-0"
-                >
-                  Results Page
-                </Button>
                 <Input
                   value={resultsUrl}
                   readOnly
@@ -380,6 +413,14 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                   }`}
                   title="Click to copy"
                 />
+                <Button
+                  variant="outline"
+                  onClick={() => window.open(resultsUrl, "_blank")}
+                  className="w-36 shrink-0"
+                >
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  Results
+                </Button>
               </div>
               {copiedField === "results" && (
                 <p className="text-xs text-green-600 font-medium">✓ Copied to clipboard</p>
@@ -488,7 +529,27 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
           </CardContent>
         </Card>
 
+        {/* Danger Zone */}
+        <Card className="border-red-200">
+          <CardHeader>
+            <CardTitle className="text-red-600">Danger Zone</CardTitle>
+            <CardDescription>
+              Permanently delete this poll and all associated data
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              variant="destructive"
+              onClick={handleDeletePoll}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Poll
+            </Button>
+          </CardContent>
+        </Card>
+
       </div>
+      <ConfirmDialog />
     </div>
   );
 }
