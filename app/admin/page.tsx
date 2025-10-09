@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useMutation } from "convex/react";
+import { useRouter } from "next/navigation";
 import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,7 @@ interface SavedPoll {
 }
 
 export default function AdminPage() {
+  const router = useRouter();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [topics, setTopics] = useState("");
@@ -132,11 +134,11 @@ export default function AdminPage() {
                   />
                   <Button
                     variant="outline"
-                    onClick={() => window.open(studentUrl, "_blank")}
+                    onClick={() => window.open(`${studentUrl}?preview=true`, "_blank")}
                     className="w-36 shrink-0"
                   >
                     <ExternalLink className="mr-2 h-4 w-4" />
-                    Take Poll
+                    Preview
                   </Button>
                 </div>
                 {copiedField === "student" && (
@@ -179,9 +181,7 @@ export default function AdminPage() {
                 <Button
                   variant="default"
                   className="w-full"
-                  onClick={() =>
-                    window.open(adminUrl, "_blank")
-                  }
+                  onClick={() => router.push(adminUrl)}
                 >
                   Go to Admin Panel
                 </Button>
@@ -324,7 +324,7 @@ export default function AdminPage() {
                         <Button
                           variant="default"
                           size="sm"
-                          onClick={() => window.open(adminUrl, "_blank")}
+                          onClick={() => router.push(adminUrl)}
                         >
                           Open Admin Panel
                         </Button>

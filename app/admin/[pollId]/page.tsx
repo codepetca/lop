@@ -30,7 +30,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   const topics = useQuery(api.topics.list, { pollId });
   const exportResults = useQuery(
     api.polls.exportResults,
-    isAuthenticated && adminToken ? { pollId, adminToken } : "skip"
+    isAuthenticated && adminToken && poll ? { pollId, adminToken } : "skip"
   );
 
   const toggleOpen = useMutation(api.polls.toggleOpen);
@@ -148,7 +148,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   const handleDeleteTopic = async (topicId: Id<"topics">) => {
     const confirmed = await confirm({
       title: "Delete Topic",
-      description: "Delete this topic? If claimed, the student's submission will also be removed.",
+      description: "Delete this topic? If claimed, the participant's submission will also be removed.",
       actionLabel: "Delete",
       destructive: true,
     });
@@ -226,7 +226,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   const handleClearAllClaims = async () => {
     const confirmed = await confirm({
       title: "Clear All Claims",
-      description: "Are you sure you want to clear all topic claims? This will remove all student selections.",
+      description: "Remove all participant selections? This will not delete the topics.",
       actionLabel: "Clear All",
       destructive: true,
     });
@@ -276,7 +276,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
 
     try {
       await deletePoll({ pollId, adminToken });
-      router.push("/admin");
+      router.push("/");
     } catch (error) {
       alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
@@ -348,7 +348,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   }
 
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
-  const studentUrl = `${baseUrl}/p/${pollId}`;
+  const participantUrl = `${baseUrl}/p/${pollId}`;
   const resultsUrl = `${baseUrl}/r/${pollId}`;
 
   const claimedCount = topics.filter((t) => t.selectedByGroupId).length;
@@ -415,32 +415,6 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                 {poll.description || "Click to add description"}
               </CardDescription>
             )}
-            <div className="flex gap-4 mt-4">
-              <div className="text-sm">
-                <span className="font-semibold">Status:</span>{" "}
-                <span
-                  className={
-                    poll.isOpen
-                      ? "text-green-600 font-semibold"
-                      : "text-red-600 font-semibold"
-                  }
-                >
-                  {poll.isOpen ? "Open" : "Closed"}
-                </span>
-              </div>
-              <div className="text-sm">
-                <span className="font-semibold">Results:</span>{" "}
-                <span
-                  className={
-                    (poll.resultsVisible ?? true)
-                      ? "text-green-600 font-semibold"
-                      : "text-gray-600 font-semibold"
-                  }
-                >
-                  {(poll.resultsVisible ?? true) ? "Visible" : "Hidden"}
-                </span>
-              </div>
-            </div>
           </CardHeader>
         </Card>
 
@@ -456,9 +430,9 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
               </p>
               <div className="flex gap-2">
                 <Input
-                  value={studentUrl}
+                  value={participantUrl}
                   readOnly
-                  onClick={() => copyToClipboard(studentUrl, "student")}
+                  onClick={() => copyToClipboard(participantUrl, "student")}
                   className={`font-mono text-sm cursor-pointer transition-colors ${
                     copiedField === "student"
                       ? "border-green-500 bg-green-50"
@@ -468,26 +442,28 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                 />
                 <Button
                   variant="outline"
-                  onClick={() => window.open(`${studentUrl}?preview=true`, "_blank")}
-                  className="w-32 shrink-0"
+                  onClick={() => window.open(`${participantUrl}?preview=true`, "_blank")}
+                  className="w-36 shrink-0"
+                  title="Preview poll as a participant"
                 >
                   <ExternalLink className="mr-2 h-4 w-4" />
-                  Preview Poll
+                  Preview
                 </Button>
                 <Button
-                  variant={poll.isOpen ? "destructive" : "default"}
+                  variant="default"
                   onClick={handleToggleOpen}
-                  className="w-40 shrink-0"
+                  className={poll.isOpen ? "bg-green-600 hover:bg-green-700 w-44 shrink-0" : "bg-yellow-500 hover:bg-yellow-600 w-44 shrink-0"}
+                  title={poll.isOpen ? "Click to close poll" : "Click to open poll"}
                 >
                   {poll.isOpen ? (
                     <>
-                      <Lock className="mr-2 h-4 w-4" />
-                      Close Poll
+                      <Unlock className="mr-2 h-4 w-4" />
+                      Poll is Open
                     </>
                   ) : (
                     <>
-                      <Unlock className="mr-2 h-4 w-4" />
-                      Open Poll
+                      <Lock className="mr-2 h-4 w-4" />
+                      Poll is Closed
                     </>
                   )}
                 </Button>
@@ -515,25 +491,27 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                 <Button
                   variant="outline"
                   onClick={() => window.open(resultsUrl, "_blank")}
-                  className="w-32 shrink-0"
+                  className="w-36 shrink-0"
+                  title="View results board"
                 >
                   <ExternalLink className="mr-2 h-4 w-4" />
                   Results
                 </Button>
                 <Button
-                  variant={(poll.resultsVisible ?? true) ? "destructive" : "default"}
+                  variant="default"
                   onClick={handleToggleResultsVisible}
-                  className="w-40 shrink-0"
+                  className={(poll.resultsVisible ?? true) ? "bg-green-600 hover:bg-green-700 w-44 shrink-0" : "bg-yellow-500 hover:bg-yellow-600 w-44 shrink-0"}
+                  title={(poll.resultsVisible ?? true) ? "Click to hide results" : "Click to show results"}
                 >
                   {(poll.resultsVisible ?? true) ? (
                     <>
-                      <Lock className="mr-2 h-4 w-4" />
-                      Hide Results
+                      <Unlock className="mr-2 h-4 w-4" />
+                      Results Visible
                     </>
                   ) : (
                     <>
-                      <Unlock className="mr-2 h-4 w-4" />
-                      Show Results
+                      <Lock className="mr-2 h-4 w-4" />
+                      Results Hidden
                     </>
                   )}
                 </Button>
@@ -543,7 +521,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
               )}
             </div>
             <div className="pt-2">
-              <Button onClick={handleExportCSV} disabled={!exportResults}>
+              <Button onClick={handleExportCSV} disabled={!exportResults} title="Export results as CSV">
                 <Download className="mr-2 h-4 w-4" />
                 Download CSV
               </Button>
@@ -555,20 +533,21 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
+              <CardTitle>Edit Topics</CardTitle>
               <div className="flex items-center gap-4">
-                <CardTitle>Edit Topics</CardTitle>
                 <div className="text-sm text-muted-foreground">
                   {claimedCount} / {totalCount} topics claimed
                 </div>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleClearAllClaims}
+                  title="Unclaim all topics"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Clear All Claims
+                </Button>
               </div>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleClearAllClaims}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Clear All Claims
-              </Button>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -593,6 +572,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                         : "bg-gray-50 border-gray-300"
                     }`}
                     style={{ transition: "all 0.3s ease-in-out" }}
+                    title="Drag to reorder topics"
                   >
                     <GripVertical className="h-5 w-5 text-gray-400 flex-shrink-0" />
                     <div className="flex-1">
@@ -614,6 +594,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                         handleDeleteTopic(topic._id);
                       }}
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      title="Delete this topic"
                     >
                       Delete
                     </Button>
@@ -631,8 +612,9 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                   placeholder="Add New Topics"
                   rows={4}
                   className="font-mono"
+                  title="Enter topics, one per line"
                 />
-                <Button type="submit" disabled={isAddingTopics}>
+                <Button type="submit" disabled={isAddingTopics} title="Add new topics (one per line)">
                   {isAddingTopics ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -662,6 +644,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
             <Button
               variant="destructive"
               onClick={handleDeletePoll}
+              title="Permanently delete this poll and all data"
             >
               <Trash2 className="mr-2 h-4 w-4" />
               Delete Poll

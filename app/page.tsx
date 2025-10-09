@@ -61,9 +61,9 @@ export default function Home() {
         <CardHeader className="text-center">
           <CardTitle className="text-4xl font-bold mb-2">Claims Poll!</CardTitle>
           <CardDescription className="text-base">
-            First-come first-served
-            <br />
             No repeat topics
+            <br />
+            First-come first-served
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
