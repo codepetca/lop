@@ -7,6 +7,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { RecentPolls } from "@/components/RecentPolls";
 
 interface SavedPoll {
   pollId: string;
@@ -57,55 +58,33 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <Card className="w-full max-w-2xl">
-        <CardHeader className="text-center">
-          <CardTitle className="text-4xl font-bold mb-2">Claims Poll!</CardTitle>
-          <CardDescription className="text-base">
-            No repeat topics
-            <br />
-            First-come first-served
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Create New Poll Button */}
-          <div className="text-center">
-            <Button
-              size="lg"
-              onClick={() => router.push("/admin")}
-              className="w-full"
-            >
-              Create New Poll
-            </Button>
-          </div>
-
-          {/* My Recent Polls */}
-          {savedPolls.length > 0 && (
-            <div className="border-t pt-6">
-              <h3 className="font-semibold text-lg mb-4">My Recent Polls</h3>
-              <div className="space-y-3">
-                {savedPolls.map((poll) => {
-                  const adminUrl = `/admin/${poll.pollId}?token=${poll.adminToken}`;
-
-                  return (
-                    <div
-                      key={poll.pollId}
-                      onClick={() => router.push(adminUrl)}
-                      className="p-4 border rounded-lg hover:bg-gray-50 hover:border-blue-500 transition-colors cursor-pointer"
-                    >
-                      <div>
-                        <h4 className="font-semibold">{poll.title}</h4>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Created {new Date(poll.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+      <div className="w-full max-w-2xl space-y-4">
+        <Card>
+          <CardHeader className="text-center">
+            <CardTitle className="text-4xl font-bold mb-2">Claims Poll!</CardTitle>
+            <CardDescription className="text-base">
+              No repeat topics
+              <br />
+              First-come first-served
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {/* Create New Poll Button */}
+            <div className="text-center">
+              <Button
+                size="lg"
+                onClick={() => router.push("/admin")}
+                className="w-full"
+              >
+                Create New Poll
+              </Button>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        {/* My Recent Polls */}
+        <RecentPolls polls={savedPolls} />
+      </div>
     </div>
   );
 }

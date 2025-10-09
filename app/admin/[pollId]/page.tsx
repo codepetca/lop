@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Copy, Check, Lock, Unlock, Plus, Download, ExternalLink, GripVertical, Trash2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/use-confirm";
+import { ShareLinks } from "@/components/ShareLinks";
 
 export default function AdminManagePage({ params }: { params: Promise<{ pollId: string }> }) {
   const { pollId: pollIdParam } = use(params);
@@ -419,115 +420,21 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
         </Card>
 
         {/* Share */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Share</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Give this link to participants
-              </p>
-              <div className="flex gap-2">
-                <Input
-                  value={participantUrl}
-                  readOnly
-                  onClick={() => copyToClipboard(participantUrl, "student")}
-                  className={`font-mono text-sm cursor-pointer transition-colors ${
-                    copiedField === "student"
-                      ? "border-green-500 bg-green-50"
-                      : "hover:border-blue-500"
-                  }`}
-                  title="Click to copy"
-                />
-                <Button
-                  variant="outline"
-                  onClick={() => window.open(`${participantUrl}?preview=true`, "_blank")}
-                  className="w-36 shrink-0"
-                  title="Preview poll as a participant"
-                >
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  Preview
-                </Button>
-                <Button
-                  variant="default"
-                  onClick={handleToggleOpen}
-                  className={poll.isOpen ? "bg-green-600 hover:bg-green-700 w-44 shrink-0" : "bg-yellow-500 hover:bg-yellow-600 w-44 shrink-0"}
-                  title={poll.isOpen ? "Click to close poll" : "Click to open poll"}
-                >
-                  {poll.isOpen ? (
-                    <>
-                      <Unlock className="mr-2 h-4 w-4" />
-                      Poll is Open
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="mr-2 h-4 w-4" />
-                      Poll is Closed
-                    </>
-                  )}
-                </Button>
-              </div>
-              {copiedField === "student" && (
-                <p className="text-xs text-green-600 font-medium">✓ Copied to clipboard</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                View the realtime results
-              </p>
-              <div className="flex gap-2">
-                <Input
-                  value={resultsUrl}
-                  readOnly
-                  onClick={() => copyToClipboard(resultsUrl, "results")}
-                  className={`font-mono text-sm cursor-pointer transition-colors ${
-                    copiedField === "results"
-                      ? "border-green-500 bg-green-50"
-                      : "hover:border-blue-500"
-                  }`}
-                  title="Click to copy"
-                />
-                <Button
-                  variant="outline"
-                  onClick={() => window.open(resultsUrl, "_blank")}
-                  className="w-36 shrink-0"
-                  title="View results board"
-                >
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  Results
-                </Button>
-                <Button
-                  variant="default"
-                  onClick={handleToggleResultsVisible}
-                  className={(poll.resultsVisible ?? true) ? "bg-green-600 hover:bg-green-700 w-44 shrink-0" : "bg-yellow-500 hover:bg-yellow-600 w-44 shrink-0"}
-                  title={(poll.resultsVisible ?? true) ? "Click to hide results" : "Click to show results"}
-                >
-                  {(poll.resultsVisible ?? true) ? (
-                    <>
-                      <Unlock className="mr-2 h-4 w-4" />
-                      Results Visible
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="mr-2 h-4 w-4" />
-                      Results Hidden
-                    </>
-                  )}
-                </Button>
-              </div>
-              {copiedField === "results" && (
-                <p className="text-xs text-green-600 font-medium">✓ Copied to clipboard</p>
-              )}
-            </div>
-            <div className="pt-2">
-              <Button onClick={handleExportCSV} disabled={!exportResults} title="Export results as CSV">
-                <Download className="mr-2 h-4 w-4" />
-                Download CSV
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <ShareLinks
+          participantUrl={participantUrl}
+          resultsUrl={resultsUrl}
+          copiedField={copiedField}
+          onCopy={copyToClipboard}
+          showControls={true}
+          poll={{
+            isOpen: poll.isOpen,
+            resultsVisible: poll.resultsVisible,
+          }}
+          onToggleOpen={handleToggleOpen}
+          onToggleResultsVisible={handleToggleResultsVisible}
+          onExportCSV={handleExportCSV}
+          exportDisabled={!exportResults}
+        />
 
         {/* Edit Topics */}
         <Card>
