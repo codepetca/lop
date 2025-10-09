@@ -126,6 +126,40 @@ export const toggleResultsVisible = mutation({
   },
 });
 
+// Update poll title and description (admin only)
+export const updatePollDetails = mutation({
+  args: {
+    pollId: v.id("polls"),
+    adminToken: v.string(),
+    title: v.optional(v.string()),
+    description: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const poll = await ctx.db.get(args.pollId);
+    if (!poll) throw new Error("Poll not found");
+    if (poll.adminToken !== args.adminToken) {
+      throw new Error("Invalid admin token");
+    }
+
+    const updates: { title?: string; description?: string } = {};
+
+    if (args.title !== undefined) {
+      if (args.title.trim() === "") {
+        throw new Error("Title cannot be empty");
+      }
+      updates.title = args.title.trim();
+    }
+
+    if (args.description !== undefined) {
+      updates.description = args.description.trim() || undefined;
+    }
+
+    await ctx.db.patch(args.pollId, updates);
+
+    return { success: true };
+  },
+});
+
 // Add topics to poll (admin only)
 export const addTopics = mutation({
   args: {

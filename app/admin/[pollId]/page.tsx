@@ -35,6 +35,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
 
   const toggleOpen = useMutation(api.polls.toggleOpen);
   const toggleResultsVisible = useMutation(api.polls.toggleResultsVisible);
+  const updatePollDetails = useMutation(api.polls.updatePollDetails);
   const addTopics = useMutation(api.polls.addTopics);
   const deleteTopic = useMutation(api.topics.deleteTopic);
   const reorderTopics = useMutation(api.topics.reorderTopics);
@@ -44,6 +45,11 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   const [draggedTopicId, setDraggedTopicId] = useState<Id<"topics"> | null>(null);
   const [previewTopics, setPreviewTopics] = useState<typeof topics | null>(null);
   const [optimisticOrder, setOptimisticOrder] = useState<Id<"topics">[] | null>(null);
+
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [tempTitle, setTempTitle] = useState("");
+  const [tempDescription, setTempDescription] = useState("");
 
   const { confirm, ConfirmDialog } = useConfirm();
 
@@ -76,6 +82,36 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
       await toggleResultsVisible({ pollId, adminToken });
     } catch (error) {
       alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+    }
+  };
+
+  const handleSaveTitle = async () => {
+    if (!tempTitle.trim() || tempTitle === poll?.title) {
+      setIsEditingTitle(false);
+      return;
+    }
+
+    try {
+      await updatePollDetails({ pollId, adminToken, title: tempTitle });
+      setIsEditingTitle(false);
+    } catch (error) {
+      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      setTempTitle(poll?.title || "");
+    }
+  };
+
+  const handleSaveDescription = async () => {
+    if (tempDescription === (poll?.description || "")) {
+      setIsEditingDescription(false);
+      return;
+    }
+
+    try {
+      await updatePollDetails({ pollId, adminToken, description: tempDescription });
+      setIsEditingDescription(false);
+    } catch (error) {
+      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      setTempDescription(poll?.description || "");
     }
   };
 
@@ -324,10 +360,59 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
         {/* Header */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">{poll.title}</CardTitle>
-            {poll.description && (
-              <CardDescription className="text-base mt-2">
-                {poll.description}
+            {isEditingTitle ? (
+              <Input
+                value={tempTitle}
+                onChange={(e) => setTempTitle(e.target.value)}
+                onBlur={handleSaveTitle}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSaveTitle();
+                  if (e.key === "Escape") {
+                    setTempTitle(poll.title);
+                    setIsEditingTitle(false);
+                  }
+                }}
+                autoFocus
+                className="text-2xl font-bold"
+              />
+            ) : (
+              <CardTitle
+                className="text-2xl cursor-pointer hover:text-blue-600 transition-colors"
+                onClick={() => {
+                  setTempTitle(poll.title);
+                  setIsEditingTitle(true);
+                }}
+                title="Click to edit"
+              >
+                {poll.title}
+              </CardTitle>
+            )}
+            {isEditingDescription ? (
+              <Input
+                value={tempDescription}
+                onChange={(e) => setTempDescription(e.target.value)}
+                onBlur={handleSaveDescription}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSaveDescription();
+                  if (e.key === "Escape") {
+                    setTempDescription(poll.description || "");
+                    setIsEditingDescription(false);
+                  }
+                }}
+                autoFocus
+                placeholder="Add a description..."
+                className="text-base mt-2"
+              />
+            ) : (
+              <CardDescription
+                className="text-base mt-2 cursor-pointer hover:text-blue-600 transition-colors"
+                onClick={() => {
+                  setTempDescription(poll.description || "");
+                  setIsEditingDescription(true);
+                }}
+                title="Click to edit"
+              >
+                {poll.description || "Click to add description"}
               </CardDescription>
             )}
             <div className="flex gap-4 mt-4">
@@ -354,9 +439,6 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                 >
                   {(poll.resultsVisible ?? true) ? "Visible" : "Hidden"}
                 </span>
-              </div>
-              <div className="text-sm">
-                {claimedCount} / {totalCount} topics claimed
               </div>
             </div>
           </CardHeader>
@@ -473,7 +555,12 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Edit Topics</CardTitle>
+              <div className="flex items-center gap-4">
+                <CardTitle>Edit Topics</CardTitle>
+                <div className="text-sm text-muted-foreground">
+                  {claimedCount} / {totalCount} topics claimed
+                </div>
+              </div>
               <Button
                 variant="destructive"
                 size="sm"
