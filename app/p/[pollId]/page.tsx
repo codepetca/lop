@@ -23,7 +23,6 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
   const [members, setMembers] = useState<Member[]>([{ firstName: "", lastName: "" }]);
   const [groupId, setGroupId] = useState<Id<"groups"> | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [recoveryCode, setRecoveryCode] = useState<string>("");
 
   const { confirm, ConfirmDialog } = useConfirm();
 
@@ -46,7 +45,6 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
       if (group) {
         setGroupId(savedGroupId as Id<"groups">);
         setMembers(group.members);
-        setRecoveryCode(savedGroupId.slice(-8).toUpperCase());
       } else {
         // Group was deleted, clear localStorage
         localStorage.removeItem(storageKey);
@@ -112,8 +110,6 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
       const storageKey = `poll_${pollId}_groupId`;
       localStorage.setItem(storageKey, newGroupId);
 
-      // Set recovery code (last 8 chars of group ID)
-      setRecoveryCode(newGroupId.slice(-8).toUpperCase());
       setGroupId(newGroupId);
     } catch (error) {
       alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
@@ -269,17 +265,7 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
             {/* Group Info */}
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Participant</CardTitle>
-                  {recoveryCode && (
-                    <div className="text-sm">
-                      <span className="text-muted-foreground">Code</span>{" "}
-                      <code className="bg-gray-100 px-2 py-1 rounded font-mono font-semibold">
-                        {recoveryCode}
-                      </code>
-                    </div>
-                  )}
-                </div>
+                <CardTitle>Participant</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-1">

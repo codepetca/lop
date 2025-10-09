@@ -49,6 +49,20 @@ export default function ResultsPage({ params }: { params: Promise<{ pollId: stri
     );
   }
 
+  // Check if results are hidden
+  if (poll.resultsVisible === false) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white p-4">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-4">Results Hidden</h1>
+          <p className="text-xl text-gray-400">
+            The results for this poll are currently hidden.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   // Separate claimed and unclaimed topics
   const claimedTopics = topics.filter((t) => t.selectedByGroupId);
   const unclaimedTopics = topics.filter((t) => !t.selectedByGroupId);

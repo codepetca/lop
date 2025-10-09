@@ -34,6 +34,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   );
 
   const toggleOpen = useMutation(api.polls.toggleOpen);
+  const toggleResultsVisible = useMutation(api.polls.toggleResultsVisible);
   const addTopics = useMutation(api.polls.addTopics);
   const deleteTopic = useMutation(api.topics.deleteTopic);
   const reorderTopics = useMutation(api.topics.reorderTopics);
@@ -65,6 +66,14 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   const handleToggleOpen = async () => {
     try {
       await toggleOpen({ pollId, adminToken });
+    } catch (error) {
+      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+    }
+  };
+
+  const handleToggleResultsVisible = async () => {
+    try {
+      await toggleResultsVisible({ pollId, adminToken });
     } catch (error) {
       alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
@@ -315,32 +324,12 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
         {/* Header */}
         <Card>
           <CardHeader>
-            <div className="flex items-start justify-between">
-              <div>
-                <CardTitle className="text-2xl">{poll.title}</CardTitle>
-                {poll.description && (
-                  <CardDescription className="text-base mt-2">
-                    {poll.description}
-                  </CardDescription>
-                )}
-              </div>
-              <Button
-                variant={poll.isOpen ? "destructive" : "default"}
-                onClick={handleToggleOpen}
-              >
-                {poll.isOpen ? (
-                  <>
-                    <Lock className="mr-2 h-4 w-4" />
-                    Close Poll
-                  </>
-                ) : (
-                  <>
-                    <Unlock className="mr-2 h-4 w-4" />
-                    Open Poll
-                  </>
-                )}
-              </Button>
-            </div>
+            <CardTitle className="text-2xl">{poll.title}</CardTitle>
+            {poll.description && (
+              <CardDescription className="text-base mt-2">
+                {poll.description}
+              </CardDescription>
+            )}
             <div className="flex gap-4 mt-4">
               <div className="text-sm">
                 <span className="font-semibold">Status:</span>{" "}
@@ -355,8 +344,19 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                 </span>
               </div>
               <div className="text-sm">
-                <span className="font-semibold">Progress:</span> {claimedCount} /{" "}
-                {totalCount} topics claimed
+                <span className="font-semibold">Results:</span>{" "}
+                <span
+                  className={
+                    (poll.resultsVisible ?? true)
+                      ? "text-green-600 font-semibold"
+                      : "text-gray-600 font-semibold"
+                  }
+                >
+                  {(poll.resultsVisible ?? true) ? "Visible" : "Hidden"}
+                </span>
+              </div>
+              <div className="text-sm">
+                {claimedCount} / {totalCount} topics claimed
               </div>
             </div>
           </CardHeader>
@@ -387,10 +387,27 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                 <Button
                   variant="outline"
                   onClick={() => window.open(studentUrl, "_blank")}
-                  className="w-36 shrink-0"
+                  className="w-32 shrink-0"
                 >
                   <ExternalLink className="mr-2 h-4 w-4" />
                   Take Poll
+                </Button>
+                <Button
+                  variant={poll.isOpen ? "destructive" : "default"}
+                  onClick={handleToggleOpen}
+                  className="w-32 shrink-0"
+                >
+                  {poll.isOpen ? (
+                    <>
+                      <Lock className="mr-2 h-4 w-4" />
+                      Close
+                    </>
+                  ) : (
+                    <>
+                      <Unlock className="mr-2 h-4 w-4" />
+                      Open
+                    </>
+                  )}
                 </Button>
               </div>
               {copiedField === "student" && (
@@ -416,10 +433,27 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                 <Button
                   variant="outline"
                   onClick={() => window.open(resultsUrl, "_blank")}
-                  className="w-36 shrink-0"
+                  className="w-32 shrink-0"
                 >
                   <ExternalLink className="mr-2 h-4 w-4" />
                   Results
+                </Button>
+                <Button
+                  variant={(poll.resultsVisible ?? true) ? "destructive" : "default"}
+                  onClick={handleToggleResultsVisible}
+                  className="w-32 shrink-0"
+                >
+                  {(poll.resultsVisible ?? true) ? (
+                    <>
+                      <Lock className="mr-2 h-4 w-4" />
+                      Hide
+                    </>
+                  ) : (
+                    <>
+                      <Unlock className="mr-2 h-4 w-4" />
+                      Show
+                    </>
+                  )}
                 </Button>
               </div>
               {copiedField === "results" && (

@@ -30,6 +30,7 @@ export const create = mutation({
       title: args.title,
       description: args.description,
       isOpen: true,
+      resultsVisible: true,
       adminToken,
       membersPerGroup,
       createdAt: Date.now(),
@@ -100,6 +101,28 @@ export const toggleOpen = mutation({
     });
 
     return { isOpen: !poll.isOpen };
+  },
+});
+
+// Toggle results visibility (admin only)
+export const toggleResultsVisible = mutation({
+  args: {
+    pollId: v.id("polls"),
+    adminToken: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const poll = await ctx.db.get(args.pollId);
+    if (!poll) throw new Error("Poll not found");
+    if (poll.adminToken !== args.adminToken) {
+      throw new Error("Invalid admin token");
+    }
+
+    const newValue = !(poll.resultsVisible ?? true);
+    await ctx.db.patch(args.pollId, {
+      resultsVisible: newValue,
+    });
+
+    return { resultsVisible: newValue };
   },
 });
 

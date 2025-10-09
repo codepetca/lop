@@ -6,6 +6,7 @@ export default defineSchema({
     title: v.string(),
     description: v.optional(v.string()),
     isOpen: v.boolean(),
+    resultsVisible: v.optional(v.boolean()), // Whether results page is publicly visible (defaults to true)
     adminToken: v.string(),
     membersPerGroup: v.optional(v.number()), // 1-10, how many members required per group (defaults to 1)
     createdAt: v.number(), // Date.now()
