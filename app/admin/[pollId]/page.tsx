@@ -27,9 +27,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   const poll = useQuery(api.polls.get, { pollId });
   const topics = useQuery(api.topics.list, { pollId });
   const exportResults = useQuery(
-    isAuthenticated && adminToken
-      ? api.polls.exportResults
-      : "skip",
+    api.polls.exportResults,
     isAuthenticated && adminToken ? { pollId, adminToken } : "skip"
   );
 
