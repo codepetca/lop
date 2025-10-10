@@ -11,6 +11,15 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { SavedPoll } from "@/types/poll";
 
+export const metadata = {
+  title: "Home",
+  description: "Create or join a real-time poll where participants claim topics on a first-come, first-served basis",
+  openGraph: {
+    title: "Claims Poll – Real-Time Topic Selection",
+    description: "Create or join a poll where participants claim topics on a first-come, first-served basis",
+  },
+};
+
 export default function Home() {
   const router = useRouter();
   const [savedPolls, setSavedPolls] = useLocalStorage<SavedPoll[]>("myPolls", []);
