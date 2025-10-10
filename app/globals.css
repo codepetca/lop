@@ -51,12 +51,12 @@
     --card-foreground: 40 15% 92%;     /* Warm off-white */
     --popover: 240 6% 16%;
     --popover-foreground: 40 15% 92%;
-    --primary: 237 25% 65%;            /* Lighter muted indigo */
-    --primary-foreground: 240 8% 12%;
+    --primary: 237 25% 45%;            /* Darker muted indigo for buttons */
+    --primary-foreground: 0 0% 100%;   /* White text */
     --secondary: 240 6% 20%;           /* Subtle elevated surface */
     --secondary-foreground: 40 15% 92%;
     --muted: 240 6% 20%;               /* Subtle elevated surface */
-    --muted-foreground: 240 6% 60%;    /* Medium gray */
+    --muted-foreground: 240 6% 70%;    /* Lighter gray for better readability */
     --accent: 237 15% 25%;             /* Dark indigo accent */
     --accent-foreground: 237 25% 75%;
     --destructive: 0 55% 50%;          /* Muted red */
@@ -71,14 +71,14 @@
     --chart-5: 340 45% 65%;
 
     /* Semantic Status Colors - Dark Mode */
-    --success: 142 69% 50%;            /* Brighter green for dark bg */
-    --success-foreground: 240 8% 12%;
+    --success: 142 60% 40%;            /* Darker green for buttons */
+    --success-foreground: 0 0% 100%;   /* White text */
     --success-subtle: 142 40% 20%;     /* Dark green background */
-    --warning: 38 90% 55%;             /* Brighter amber for dark bg */
-    --warning-foreground: 240 8% 12%;
+    --warning: 38 85% 45%;             /* Darker amber for buttons */
+    --warning-foreground: 0 0% 100%;   /* White text */
     --warning-subtle: 38 50% 25%;      /* Dark yellow background */
-    --info: 199 89% 55%;               /* Brighter blue for dark bg */
-    --info-foreground: 240 8% 12%;
+    --info: 199 80% 42%;               /* Darker blue for buttons */
+    --info-foreground: 0 0% 100%;      /* White text */
     --info-subtle: 199 50% 25%;        /* Dark blue background */
   }
 }
@@ -86,6 +86,9 @@
 @layer base {
   * {
     @apply border-border;
+  }
+  html {
+    font-size: 14px; /* Reduce from default 16px for proportional scaling */
   }
   body {
     @apply bg-background text-foreground;
