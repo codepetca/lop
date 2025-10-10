@@ -48,9 +48,55 @@ export function ShareLinks({
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground">
-            Give this link to participants
+            Share this link with participants
           </p>
-          <div className="flex gap-2">
+          {/* Mobile Layout */}
+          <div className="md:hidden space-y-2">
+            <Input
+              value={participantUrl}
+              readOnly
+              onClick={() => onCopy(participantUrl, "student")}
+              className={`font-mono text-sm cursor-pointer transition-colors ${
+                copiedField === "student"
+                  ? "border-green-500 bg-green-50"
+                  : "hover:border-blue-500"
+              }`}
+              title="Click to copy"
+            />
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => window.open(`${participantUrl}?preview=true`, "_blank")}
+                className="flex-1"
+                title="Preview poll as a participant"
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Preview
+              </Button>
+              {showControls && poll && onToggleOpen && (
+                <Button
+                  variant="default"
+                  onClick={onToggleOpen}
+                  className={poll.isOpen ? "bg-green-600 hover:bg-green-700 flex-1" : "bg-yellow-500 hover:bg-yellow-600 flex-1"}
+                  title={poll.isOpen ? "Click to close poll" : "Click to open poll"}
+                >
+                  {poll.isOpen ? (
+                    <>
+                      <Unlock className="mr-2 h-4 w-4" />
+                      Poll is Open
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="mr-2 h-4 w-4" />
+                      Poll is Closed
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+          </div>
+          {/* Desktop Layout */}
+          <div className="hidden md:flex gap-2">
             <Input
               value={participantUrl}
               readOnly
@@ -98,9 +144,55 @@ export function ShareLinks({
         </div>
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground">
-            View the realtime results
+            Share the realtime results
           </p>
-          <div className="flex gap-2">
+          {/* Mobile Layout */}
+          <div className="md:hidden space-y-2">
+            <Input
+              value={resultsUrl}
+              readOnly
+              onClick={() => onCopy(resultsUrl, "results")}
+              className={`font-mono text-sm cursor-pointer transition-colors ${
+                copiedField === "results"
+                  ? "border-green-500 bg-green-50"
+                  : "hover:border-blue-500"
+              }`}
+              title="Click to copy"
+            />
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => window.open(resultsUrl, "_blank")}
+                className="flex-1"
+                title="View results board"
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Results
+              </Button>
+              {showControls && poll && onToggleResultsVisible && (
+                <Button
+                  variant="default"
+                  onClick={onToggleResultsVisible}
+                  className={(poll.resultsVisible ?? true) ? "bg-green-600 hover:bg-green-700 flex-1" : "bg-yellow-500 hover:bg-yellow-600 flex-1"}
+                  title={(poll.resultsVisible ?? true) ? "Click to hide results" : "Click to show results"}
+                >
+                  {(poll.resultsVisible ?? true) ? (
+                    <>
+                      <Unlock className="mr-2 h-4 w-4" />
+                      Results Visible
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="mr-2 h-4 w-4" />
+                      Results Hidden
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+          </div>
+          {/* Desktop Layout */}
+          <div className="hidden md:flex gap-2">
             <Input
               value={resultsUrl}
               readOnly

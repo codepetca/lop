@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Copy, Check, Lock, Unlock, Plus, Download, ExternalLink, GripVertical, Trash2 } from "lucide-react";
+import { Loader2, Copy, Check, Lock, Unlock, Plus, Download, ExternalLink, GripVertical, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 import { useConfirm } from "@/components/ui/use-confirm";
 import { ShareLinks } from "@/components/ShareLinks";
 import { NavBar } from "@/components/NavBar";
@@ -261,6 +261,52 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
     }
   };
 
+  const handleMoveUp = async (topicId: Id<"topics">) => {
+    if (!topics) return;
+    const currentIndex = topics.findIndex((t) => t._id === topicId);
+    if (currentIndex <= 0) return; // Already at top
+
+    const reordered = [...topics];
+    [reordered[currentIndex - 1], reordered[currentIndex]] = [reordered[currentIndex], reordered[currentIndex - 1]];
+    const finalOrderIds = reordered.map((t) => t._id);
+
+    setOptimisticOrder(finalOrderIds);
+
+    try {
+      await reorderTopics({
+        pollId,
+        adminToken,
+        topicIds: finalOrderIds,
+      });
+    } catch (error) {
+      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      setOptimisticOrder(null);
+    }
+  };
+
+  const handleMoveDown = async (topicId: Id<"topics">) => {
+    if (!topics) return;
+    const currentIndex = topics.findIndex((t) => t._id === topicId);
+    if (currentIndex < 0 || currentIndex >= topics.length - 1) return; // Already at bottom
+
+    const reordered = [...topics];
+    [reordered[currentIndex], reordered[currentIndex + 1]] = [reordered[currentIndex + 1], reordered[currentIndex]];
+    const finalOrderIds = reordered.map((t) => t._id);
+
+    setOptimisticOrder(finalOrderIds);
+
+    try {
+      await reorderTopics({
+        pollId,
+        adminToken,
+        topicIds: finalOrderIds,
+      });
+    } catch (error) {
+      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      setOptimisticOrder(null);
+    }
+  };
+
   const handleExportCSV = () => {
     if (!exportResults) return;
 
@@ -493,7 +539,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                     onDragOver={(e) => handleDragOver(e, topic._id)}
                     onDragEnd={handleDragEnd}
                     onDrop={() => handleDrop(topic._id)}
-                    className={`flex items-center gap-2 p-3 rounded-lg border cursor-move transition-[opacity,transform,background-color] duration-300 ease-in-out ${
+                    className={`flex items-center gap-2 p-3 rounded-lg border md:cursor-move transition-[opacity,transform,background-color] duration-300 ease-in-out ${
                       draggedTopicId === topic._id
                         ? "opacity-40 bg-gray-200"
                         : "bg-gray-50 border-gray-300"
@@ -501,7 +547,37 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                     style={{ transition: "all 0.3s ease-in-out" }}
                     title="Drag to reorder topics"
                   >
-                    <GripVertical className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                    {/* Mobile reorder buttons */}
+                    <div className="flex flex-col gap-1 md:hidden">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleMoveUp(topic._id);
+                        }}
+                        className="p-0 h-4 w-4"
+                        disabled={topics.findIndex((t) => t._id === topic._id) === 0}
+                      >
+                        <ChevronUp className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleMoveDown(topic._id);
+                        }}
+                        className="p-0 h-4 w-4"
+                        disabled={topics.findIndex((t) => t._id === topic._id) === topics.length - 1}
+                      >
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    {/* Desktop drag handle */}
+                    <GripVertical className="h-5 w-5 text-gray-400 flex-shrink-0 hidden md:block" />
+
                     <div className="flex-1">
                       <p className="font-medium">{topic.label}</p>
                       {topic.selectedBy && (
