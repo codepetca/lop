@@ -8,6 +8,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RecentPolls } from "@/components/RecentPolls";
+import { NavBar } from "@/components/NavBar";
 
 interface SavedPoll {
   pollId: string;
@@ -57,8 +58,10 @@ export default function Home() {
   }, [existingPollIds, savedPolls]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="w-full max-w-2xl space-y-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <NavBar />
+      <div className="flex items-center justify-center p-4 pt-8">
+        <div className="w-full max-w-2xl space-y-4">
         <Card>
           <CardHeader className="text-center">
             <CardTitle className="text-4xl font-bold mb-2">Claims Poll!</CardTitle>
@@ -84,6 +87,7 @@ export default function Home() {
 
         {/* My Recent Polls */}
         <RecentPolls polls={savedPolls} />
+        </div>
       </div>
     </div>
   );

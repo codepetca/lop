@@ -86,6 +86,34 @@ export const deleteTopic = mutation({
   },
 });
 
+// Unclaim a specific topic (admin only)
+export const unclaimTopic = mutation({
+  args: {
+    topicId: v.id("topics"),
+    adminToken: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const topic = await ctx.db.get(args.topicId);
+    if (!topic) throw new Error("Topic not found");
+
+    const poll = await ctx.db.get(topic.pollId);
+    if (!poll) throw new Error("Poll not found");
+    if (poll.adminToken !== args.adminToken) {
+      throw new Error("Invalid admin token");
+    }
+
+    // Clear the claim
+    if (topic.selectedByGroupId) {
+      await ctx.db.patch(args.topicId, {
+        selectedByGroupId: undefined,
+        selectedAt: undefined,
+      });
+    }
+
+    return { success: true };
+  },
+});
+
 // Clear all claims (admin only)
 export const clearAllClaims = mutation({
   args: {

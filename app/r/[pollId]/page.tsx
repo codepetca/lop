@@ -5,6 +5,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Loader2, Grid3x3, List } from "lucide-react";
+import { NavBar } from "@/components/NavBar";
 
 export default function ResultsPage({ params }: { params: Promise<{ pollId: string }> }) {
   const { pollId: pollIdParam } = use(params);
@@ -68,8 +69,9 @@ export default function ResultsPage({ params }: { params: Promise<{ pollId: stri
   const unclaimedTopics = topics.filter((t) => !t.selectedByGroupId);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white">
+      <NavBar />
+      <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-start justify-between mb-4">

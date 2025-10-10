@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Slider } from "@/components/ui/slider";
 import { Loader2, Copy, Check, ExternalLink } from "lucide-react";
 import { ShareLinks } from "@/components/ShareLinks";
+import { NavBar } from "@/components/NavBar";
 
 interface SavedPoll {
   pollId: string;
@@ -108,8 +109,9 @@ export default function AdminPage() {
     const resultsUrl = `${baseUrl}/r/${createdPoll.pollId}`;
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 py-8">
-        <div className="max-w-3xl mx-auto space-y-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <NavBar showHomeButton />
+        <div className="max-w-3xl mx-auto space-y-4 p-4 py-8">
           <ShareLinks
             participantUrl={studentUrl}
             resultsUrl={resultsUrl}
@@ -147,8 +149,9 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 py-8">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <NavBar showHomeButton />
+      <div className="max-w-2xl mx-auto p-4 py-8">
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl">Create New Claims Poll</CardTitle>

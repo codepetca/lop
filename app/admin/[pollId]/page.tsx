@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Loader2, Copy, Check, Lock, Unlock, Plus, Download, ExternalLink, GripVertical, Trash2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/use-confirm";
 import { ShareLinks } from "@/components/ShareLinks";
+import { NavBar } from "@/components/NavBar";
 
 export default function AdminManagePage({ params }: { params: Promise<{ pollId: string }> }) {
   const { pollId: pollIdParam } = use(params);
@@ -41,6 +42,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   const deleteTopic = useMutation(api.topics.deleteTopic);
   const reorderTopics = useMutation(api.topics.reorderTopics);
   const clearAllClaims = useMutation(api.topics.clearAllClaims);
+  const unclaimTopic = useMutation(api.topics.unclaimTopic);
   const deletePoll = useMutation(api.polls.deletePoll);
 
   const [draggedTopicId, setDraggedTopicId] = useState<Id<"topics"> | null>(null);
@@ -242,6 +244,23 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
     }
   };
 
+  const handleUnclaimTopic = async (topicId: Id<"topics">, topicLabel: string) => {
+    const confirmed = await confirm({
+      title: "Unclaim Topic",
+      description: `Remove participant selection from "${topicLabel}"?`,
+      actionLabel: "Unclaim",
+      destructive: true,
+    });
+
+    if (!confirmed) return;
+
+    try {
+      await unclaimTopic({ topicId, adminToken });
+    } catch (error) {
+      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+    }
+  };
+
   const handleExportCSV = () => {
     if (!exportResults) return;
 
@@ -356,8 +375,9 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   const totalCount = topics.length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 py-8">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <NavBar showHomeButton />
+      <div className="max-w-6xl mx-auto space-y-6 p-4 py-8">
         {/* Header */}
         <Card>
           <CardHeader>
@@ -485,12 +505,23 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                     <div className="flex-1">
                       <p className="font-medium">{topic.label}</p>
                       {topic.selectedBy && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Claimed by:{" "}
-                          {topic.selectedBy
-                            .map((m) => `${m.firstName} ${m.lastName}`)
-                            .join(", ")}
-                        </p>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {topic.selectedBy.map((m, idx) => (
+                            <span key={idx}>
+                              {idx > 0 && ", "}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUnclaimTopic(topic._id, topic.label);
+                                }}
+                                className="hover:text-red-600 hover:underline cursor-pointer"
+                                title="Click to unclaim"
+                              >
+                                {m.firstName} {m.lastName}
+                              </button>
+                            </span>
+                          ))}
+                        </div>
                       )}
                     </div>
                     <Button
