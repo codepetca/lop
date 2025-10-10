@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
+import { validateAdminAccess } from "./lib/validators";
 
 // Generate a random admin token
 function generateAdminToken(): string {
@@ -90,11 +91,7 @@ export const toggleOpen = mutation({
     adminToken: v.string(),
   },
   handler: async (ctx, args) => {
-    const poll = await ctx.db.get(args.pollId);
-    if (!poll) throw new Error("Poll not found");
-    if (poll.adminToken !== args.adminToken) {
-      throw new Error("Invalid admin token");
-    }
+    const poll = await validateAdminAccess(ctx, args.pollId, args.adminToken);
 
     await ctx.db.patch(args.pollId, {
       isOpen: !poll.isOpen,
@@ -111,11 +108,7 @@ export const toggleResultsVisible = mutation({
     adminToken: v.string(),
   },
   handler: async (ctx, args) => {
-    const poll = await ctx.db.get(args.pollId);
-    if (!poll) throw new Error("Poll not found");
-    if (poll.adminToken !== args.adminToken) {
-      throw new Error("Invalid admin token");
-    }
+    const poll = await validateAdminAccess(ctx, args.pollId, args.adminToken);
 
     const newValue = !(poll.resultsVisible ?? true);
     await ctx.db.patch(args.pollId, {
@@ -135,11 +128,7 @@ export const updatePollDetails = mutation({
     description: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const poll = await ctx.db.get(args.pollId);
-    if (!poll) throw new Error("Poll not found");
-    if (poll.adminToken !== args.adminToken) {
-      throw new Error("Invalid admin token");
-    }
+    await validateAdminAccess(ctx, args.pollId, args.adminToken);
 
     const updates: { title?: string; description?: string } = {};
 
@@ -168,11 +157,7 @@ export const addTopics = mutation({
     topicLabels: v.array(v.string()),
   },
   handler: async (ctx, args) => {
-    const poll = await ctx.db.get(args.pollId);
-    if (!poll) throw new Error("Poll not found");
-    if (poll.adminToken !== args.adminToken) {
-      throw new Error("Invalid admin token");
-    }
+    await validateAdminAccess(ctx, args.pollId, args.adminToken);
 
     // Get current max order
     const existingTopics = await ctx.db
@@ -208,11 +193,7 @@ export const exportResults = query({
     adminToken: v.string(),
   },
   handler: async (ctx, args) => {
-    const poll = await ctx.db.get(args.pollId);
-    if (!poll) throw new Error("Poll not found");
-    if (poll.adminToken !== args.adminToken) {
-      throw new Error("Invalid admin token");
-    }
+    await validateAdminAccess(ctx, args.pollId, args.adminToken);
 
     const topics = await ctx.db
       .query("topics")
@@ -255,11 +236,7 @@ export const deletePoll = mutation({
     adminToken: v.string(),
   },
   handler: async (ctx, args) => {
-    const poll = await ctx.db.get(args.pollId);
-    if (!poll) throw new Error("Poll not found");
-    if (poll.adminToken !== args.adminToken) {
-      throw new Error("Invalid admin token");
-    }
+    await validateAdminAccess(ctx, args.pollId, args.adminToken);
 
     // Delete all topics for this poll
     const topics = await ctx.db

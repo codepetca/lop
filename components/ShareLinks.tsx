@@ -1,8 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CopyableInput } from "@/components/shared/CopyableInput";
 import { ExternalLink, Download, Lock, Unlock } from "lucide-react";
 
 interface ShareLinksProps {
@@ -40,7 +40,7 @@ export function ShareLinks({
       <CardHeader>
         <CardTitle>Share</CardTitle>
         {successMessage && (
-          <CardDescription className="text-green-600 font-medium">
+          <CardDescription className="text-success font-medium">
             {successMessage}
           </CardDescription>
         )}
@@ -52,16 +52,10 @@ export function ShareLinks({
           </p>
           {/* Mobile Layout */}
           <div className="md:hidden space-y-2">
-            <Input
+            <CopyableInput
               value={participantUrl}
-              readOnly
-              onClick={() => onCopy(participantUrl, "student")}
-              className={`font-mono text-sm cursor-pointer transition-colors ${
-                copiedField === "student"
-                  ? "border-green-500 bg-green-50"
-                  : "hover:border-blue-500"
-              }`}
-              title="Click to copy"
+              onCopy={() => onCopy(participantUrl, "student")}
+              isCopied={copiedField === "student"}
             />
             <div className="flex gap-2">
               <Button
@@ -75,9 +69,9 @@ export function ShareLinks({
               </Button>
               {showControls && poll && onToggleOpen && (
                 <Button
-                  variant="default"
+                  variant={poll.isOpen ? "success" : "warning"}
                   onClick={onToggleOpen}
-                  className={poll.isOpen ? "bg-green-600 hover:bg-green-700 flex-1" : "bg-yellow-500 hover:bg-yellow-600 flex-1"}
+                  className="flex-1"
                   title={poll.isOpen ? "Click to close poll" : "Click to open poll"}
                 >
                   {poll.isOpen ? (
@@ -97,16 +91,10 @@ export function ShareLinks({
           </div>
           {/* Desktop Layout */}
           <div className="hidden md:flex gap-2">
-            <Input
+            <CopyableInput
               value={participantUrl}
-              readOnly
-              onClick={() => onCopy(participantUrl, "student")}
-              className={`font-mono text-sm cursor-pointer transition-colors ${
-                copiedField === "student"
-                  ? "border-green-500 bg-green-50"
-                  : "hover:border-blue-500"
-              }`}
-              title="Click to copy"
+              onCopy={() => onCopy(participantUrl, "student")}
+              isCopied={copiedField === "student"}
             />
             <Button
               variant="outline"
@@ -119,9 +107,9 @@ export function ShareLinks({
             </Button>
             {showControls && poll && onToggleOpen && (
               <Button
-                variant="default"
+                variant={poll.isOpen ? "success" : "warning"}
                 onClick={onToggleOpen}
-                className={poll.isOpen ? "bg-green-600 hover:bg-green-700 w-44 shrink-0" : "bg-yellow-500 hover:bg-yellow-600 w-44 shrink-0"}
+                className="w-44 shrink-0"
                 title={poll.isOpen ? "Click to close poll" : "Click to open poll"}
               >
                 {poll.isOpen ? (
@@ -139,7 +127,7 @@ export function ShareLinks({
             )}
           </div>
           {copiedField === "student" && (
-            <p className="text-xs text-green-600 font-medium">✓ Copied to clipboard</p>
+            <p className="text-xs text-success font-medium">✓ Copied to clipboard</p>
           )}
         </div>
         <div className="space-y-2">
@@ -148,16 +136,10 @@ export function ShareLinks({
           </p>
           {/* Mobile Layout */}
           <div className="md:hidden space-y-2">
-            <Input
+            <CopyableInput
               value={resultsUrl}
-              readOnly
-              onClick={() => onCopy(resultsUrl, "results")}
-              className={`font-mono text-sm cursor-pointer transition-colors ${
-                copiedField === "results"
-                  ? "border-green-500 bg-green-50"
-                  : "hover:border-blue-500"
-              }`}
-              title="Click to copy"
+              onCopy={() => onCopy(resultsUrl, "results")}
+              isCopied={copiedField === "results"}
             />
             <div className="flex gap-2">
               <Button
@@ -171,9 +153,9 @@ export function ShareLinks({
               </Button>
               {showControls && poll && onToggleResultsVisible && (
                 <Button
-                  variant="default"
+                  variant={(poll.resultsVisible ?? true) ? "success" : "warning"}
                   onClick={onToggleResultsVisible}
-                  className={(poll.resultsVisible ?? true) ? "bg-green-600 hover:bg-green-700 flex-1" : "bg-yellow-500 hover:bg-yellow-600 flex-1"}
+                  className="flex-1"
                   title={(poll.resultsVisible ?? true) ? "Click to hide results" : "Click to show results"}
                 >
                   {(poll.resultsVisible ?? true) ? (
@@ -193,16 +175,10 @@ export function ShareLinks({
           </div>
           {/* Desktop Layout */}
           <div className="hidden md:flex gap-2">
-            <Input
+            <CopyableInput
               value={resultsUrl}
-              readOnly
-              onClick={() => onCopy(resultsUrl, "results")}
-              className={`font-mono text-sm cursor-pointer transition-colors ${
-                copiedField === "results"
-                  ? "border-green-500 bg-green-50"
-                  : "hover:border-blue-500"
-              }`}
-              title="Click to copy"
+              onCopy={() => onCopy(resultsUrl, "results")}
+              isCopied={copiedField === "results"}
             />
             <Button
               variant="outline"
@@ -215,9 +191,9 @@ export function ShareLinks({
             </Button>
             {showControls && poll && onToggleResultsVisible && (
               <Button
-                variant="default"
+                variant={(poll.resultsVisible ?? true) ? "success" : "warning"}
                 onClick={onToggleResultsVisible}
-                className={(poll.resultsVisible ?? true) ? "bg-green-600 hover:bg-green-700 w-44 shrink-0" : "bg-yellow-500 hover:bg-yellow-600 w-44 shrink-0"}
+                className="w-44 shrink-0"
                 title={(poll.resultsVisible ?? true) ? "Click to hide results" : "Click to show results"}
               >
                 {(poll.resultsVisible ?? true) ? (
@@ -235,7 +211,7 @@ export function ShareLinks({
             )}
           </div>
           {copiedField === "results" && (
-            <p className="text-xs text-green-600 font-medium">✓ Copied to clipboard</p>
+            <p className="text-xs text-success font-medium">✓ Copied to clipboard</p>
           )}
         </div>
         {showControls && onExportCSV && (

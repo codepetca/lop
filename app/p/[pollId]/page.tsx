@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -8,17 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/use-confirm";
-
-interface Member {
-  firstName: string;
-  lastName: string;
-}
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { TopicCard } from "@/components/shared/TopicCard";
+import { usePollId } from "@/hooks/usePollParams";
+import { Member } from "@/types/member";
 
 export default function PollPage({ params }: { params: Promise<{ pollId: string }> }) {
-  const { pollId: pollIdParam } = use(params);
-  const pollId = pollIdParam as Id<"polls">;
+  const pollId = usePollId(params);
 
   // Check if in preview mode
   const [isPreviewMode, setIsPreviewMode] = useState(false);
@@ -198,48 +196,36 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
   if (poll === undefined || topics === undefined) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
 
   if (poll === null) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Poll Not Found</CardTitle>
-            <CardDescription>
-              The poll you&apos;re looking for doesn&apos;t exist.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
+      <EmptyState
+        title="Poll Not Found"
+        description="The poll you're looking for doesn't exist."
+      />
     );
   }
 
   if (!poll.isOpen) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Poll Closed</CardTitle>
-            <CardDescription>
-              This poll is no longer accepting selections.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
+      <EmptyState
+        title="Poll Closed"
+        description="This poll is not accepting responses."
+      />
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 py-8">
+    <div className="min-h-screen bg-background p-4 py-8">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Preview Mode Banner */}
         {isPreviewMode && (
-          <div className="bg-yellow-100 border-2 border-yellow-500 rounded-lg p-4 text-center">
-            <p className="text-yellow-900 font-semibold">
+          <div className="bg-warning/20 border-2 border-warning rounded-lg p-4 text-center">
+            <p className="text-warning font-semibold">
               Preview Mode - No data will be saved
             </p>
           </div>
@@ -343,41 +329,21 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
                       ? previewSelectedTopicId === topic._id
                       : topic.selectedByGroupId === groupId;
 
+                    const state = isYours
+                      ? "selected"
+                      : isTaken && !isPreviewMode
+                      ? "taken"
+                      : "available";
+
                     return (
-                      <button
+                      <TopicCard
                         key={topic._id}
+                        label={topic.label}
+                        state={state}
+                        selectedBy={!isPreviewMode && topic.selectedBy ? topic.selectedBy : null}
                         onClick={() => handleClaimTopic(topic._id)}
                         disabled={!isPreviewMode && isTaken}
-                        className={`
-                          p-4 rounded-lg border-2 text-left transition-all
-                          ${
-                            isYours
-                              ? "border-green-500 bg-green-50 cursor-pointer"
-                              : isTaken && !isPreviewMode
-                              ? "border-gray-300 bg-gray-100 cursor-not-allowed opacity-60"
-                              : "border-gray-300 hover:border-blue-500 hover:bg-blue-50 cursor-pointer"
-                          }
-                        `}
-                      >
-                        <div className="font-medium">{topic.label}</div>
-                        {isYours && (
-                          <div className="text-sm text-muted-foreground mt-1">
-                            <span className="text-green-600 font-semibold">
-                              ✓ Your selection
-                            </span>
-                          </div>
-                        )}
-                        {!isPreviewMode && topic.selectedBy && !isYours && (
-                          <div className="text-sm text-muted-foreground mt-1">
-                            <span>
-                              Taken by{" "}
-                              {topic.selectedBy
-                                .map((m) => `${m.firstName} ${m.lastName}`)
-                                .join(", ")}
-                            </span>
-                          </div>
-                        )}
-                      </button>
+                      />
                     );
                   })}
                 </div>

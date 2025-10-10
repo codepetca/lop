@@ -4,36 +4,24 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RecentPolls } from "@/components/RecentPolls";
-
-interface SavedPoll {
-  pollId: string;
-  adminToken: string;
-  title: string;
-  createdAt: number;
-}
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { SavedPoll } from "@/types/poll";
 
 export default function Home() {
   const router = useRouter();
-  const [savedPolls, setSavedPolls] = useState<SavedPoll[]>([]);
+  const [savedPolls, setSavedPolls] = useLocalStorage<SavedPoll[]>("myPolls", []);
   const [pollIdsToCheck, setPollIdsToCheck] = useState<string[]>([]);
 
-  // Load saved polls from localStorage
+  // Extract poll IDs when savedPolls loads
   useEffect(() => {
-    const saved = localStorage.getItem("myPolls");
-    if (saved) {
-      try {
-        const polls = JSON.parse(saved);
-        setSavedPolls(polls);
-        setPollIdsToCheck(polls.map((p: SavedPoll) => p.pollId));
-      } catch (e) {
-        console.error("Failed to load saved polls", e);
-      }
+    if (savedPolls.length > 0) {
+      setPollIdsToCheck(savedPolls.map((p) => p.pollId));
     }
-  }, []);
+  }, [savedPolls]);
 
   // Validate which polls still exist
   const existingPollIds = useQuery(
@@ -50,18 +38,20 @@ export default function Home() {
     );
 
     if (validPolls.length !== savedPolls.length) {
-      // Some polls were deleted, update localStorage and state
+      // Some polls were deleted, update state (useLocalStorage handles persistence)
       setSavedPolls(validPolls);
-      localStorage.setItem("myPolls", JSON.stringify(validPolls));
     }
   }, [existingPollIds, savedPolls]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="fixed top-4 right-4 z-50">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-2xl space-y-4">
         <Card>
           <CardHeader className="text-center">
-            <CardTitle className="text-4xl font-bold mb-2">Claims Poll!</CardTitle>
+            <CardTitle className="text-4xl font-display font-bold mb-2">Claims Poll!</CardTitle>
             <CardDescription className="text-base">
               No repeat topics
               <br />

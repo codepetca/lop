@@ -1,5 +1,7 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
+import { validateAdminAccess } from "./lib/validators";
+import { enrichTopicsWithGroups } from "./lib/enrichers";
 
 // Get all topics for a poll with their selection status
 export const list = query({
@@ -14,20 +16,7 @@ export const list = query({
     topics.sort((a, b) => a.order - b.order);
 
     // Enrich with group information
-    const enriched = await Promise.all(
-      topics.map(async (topic) => {
-        if (topic.selectedByGroupId) {
-          const group = await ctx.db.get(topic.selectedByGroupId);
-          return {
-            ...topic,
-            selectedBy: group ? group.members : null,
-          };
-        }
-        return { ...topic, selectedBy: null };
-      })
-    );
-
-    return enriched;
+    return await enrichTopicsWithGroups(ctx, topics);
   },
 });
 
@@ -39,11 +28,7 @@ export const reorderTopics = mutation({
     topicIds: v.array(v.id("topics")),
   },
   handler: async (ctx, args) => {
-    const poll = await ctx.db.get(args.pollId);
-    if (!poll) throw new Error("Poll not found");
-    if (poll.adminToken !== args.adminToken) {
-      throw new Error("Invalid admin token");
-    }
+    await validateAdminAccess(ctx, args.pollId, args.adminToken);
 
     // Update the order for each topic
     for (let i = 0; i < args.topicIds.length; i++) {
@@ -69,11 +54,7 @@ export const deleteTopic = mutation({
     const topic = await ctx.db.get(args.topicId);
     if (!topic) throw new Error("Topic not found");
 
-    const poll = await ctx.db.get(topic.pollId);
-    if (!poll) throw new Error("Poll not found");
-    if (poll.adminToken !== args.adminToken) {
-      throw new Error("Invalid admin token");
-    }
+    await validateAdminAccess(ctx, topic.pollId, args.adminToken);
 
     // If topic is claimed, delete the group as well
     if (topic.selectedByGroupId) {
@@ -96,11 +77,7 @@ export const unclaimTopic = mutation({
     const topic = await ctx.db.get(args.topicId);
     if (!topic) throw new Error("Topic not found");
 
-    const poll = await ctx.db.get(topic.pollId);
-    if (!poll) throw new Error("Poll not found");
-    if (poll.adminToken !== args.adminToken) {
-      throw new Error("Invalid admin token");
-    }
+    await validateAdminAccess(ctx, topic.pollId, args.adminToken);
 
     // Clear the claim
     if (topic.selectedByGroupId) {
@@ -121,11 +98,7 @@ export const clearAllClaims = mutation({
     adminToken: v.string(),
   },
   handler: async (ctx, args) => {
-    const poll = await ctx.db.get(args.pollId);
-    if (!poll) throw new Error("Poll not found");
-    if (poll.adminToken !== args.adminToken) {
-      throw new Error("Invalid admin token");
-    }
+    await validateAdminAccess(ctx, args.pollId, args.adminToken);
 
     // Find all topics for this poll
     const topics = await ctx.db

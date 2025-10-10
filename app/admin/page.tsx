@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useMutation } from "convex/react";
 import { useRouter } from "next/navigation";
 import { api } from "@/convex/_generated/api";
@@ -10,15 +10,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
-import { Loader2, Copy, Check, ExternalLink } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { ShareLinks } from "@/components/ShareLinks";
-
-interface SavedPoll {
-  pollId: string;
-  adminToken: string;
-  title: string;
-  createdAt: number;
-}
+import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
+import { SavedPoll } from "@/types/poll";
+import { MAX_SAVED_POLLS } from "@/lib/constants";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -31,23 +28,12 @@ export default function AdminPage() {
     pollId: string;
     adminToken: string;
   } | null>(null);
-  const [copiedField, setCopiedField] = useState<string | null>(null);
-  const [savedPolls, setSavedPolls] = useState<SavedPoll[]>([]);
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
 
-  const createPoll = useMutation(api.polls.create);
+  const [savedPolls, setSavedPolls] = useLocalStorage<SavedPoll[]>("myPolls", []);
+  const { copiedId: copiedField, copyToClipboard } = useCopyToClipboard();
 
-  // Load saved polls from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem("myPolls");
-    if (saved) {
-      try {
-        setSavedPolls(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to load saved polls", e);
-      }
-    }
-  }, []);
+  const createPoll = useMutation(api.polls.create);
 
   const savePollToLocalStorage = (pollId: string, adminToken: string, pollTitle: string) => {
     const newPoll: SavedPoll = {
@@ -58,10 +44,9 @@ export default function AdminPage() {
     };
 
     const existing = savedPolls.filter((p) => p.pollId !== pollId);
-    const updated = [newPoll, ...existing].slice(0, 10); // Keep last 10
+    const updated = [newPoll, ...existing].slice(0, MAX_SAVED_POLLS);
 
     setSavedPolls(updated);
-    localStorage.setItem("myPolls", JSON.stringify(updated));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -91,15 +76,6 @@ export default function AdminPage() {
     }
   };
 
-  const copyToClipboard = async (text: string, field: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedField(field);
-      setTimeout(() => setCopiedField(null), 2000);
-    } catch (error) {
-      alert("Failed to copy to clipboard");
-    }
-  };
 
   if (createdPoll) {
     const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
@@ -108,13 +84,13 @@ export default function AdminPage() {
     const resultsUrl = `${baseUrl}/r/${createdPoll.pollId}`;
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 py-8">
+      <div className="min-h-screen bg-background p-4 py-8">
         <div className="max-w-3xl mx-auto space-y-4">
           <ShareLinks
             participantUrl={studentUrl}
             resultsUrl={resultsUrl}
             copiedField={copiedField}
-            onCopy={copyToClipboard}
+            onCopy={(text, id) => copyToClipboard(text, id)}
             successMessage="Poll Created Successfully!"
           />
 
@@ -147,7 +123,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 py-8">
+    <div className="min-h-screen bg-background p-4 py-8">
       <div className="max-w-2xl mx-auto">
         <Card>
           <CardHeader>

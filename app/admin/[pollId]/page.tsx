@@ -1,8 +1,8 @@
 "use client";
 
-import { use, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
@@ -10,22 +10,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Copy, Check, Lock, Unlock, Plus, Download, ExternalLink, GripVertical, Trash2, ChevronUp, ChevronDown } from "lucide-react";
+import { Loader2, Plus, Download, GripVertical, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 import { useConfirm } from "@/components/ui/use-confirm";
 import { ShareLinks } from "@/components/ShareLinks";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { usePollId, useAdminToken } from "@/hooks/usePollParams";
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
+import { useInlineEdit } from "@/hooks/useInlineEdit";
 
 export default function AdminManagePage({ params }: { params: Promise<{ pollId: string }> }) {
-  const { pollId: pollIdParam } = use(params);
-  const pollId = pollIdParam as Id<"polls">;
-  const searchParams = useSearchParams();
-  const tokenParam = searchParams.get("token");
+  const pollId = usePollId(params);
+  const tokenParam = useAdminToken();
   const router = useRouter();
 
   const [adminToken, setAdminToken] = useState(tokenParam || "");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [newTopics, setNewTopics] = useState("");
   const [isAddingTopics, setIsAddingTopics] = useState(false);
-  const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  const { copiedId: copiedField, copyToClipboard } = useCopyToClipboard();
 
   const poll = useQuery(api.polls.get, { pollId });
   const topics = useQuery(api.topics.list, { pollId });
@@ -48,10 +52,6 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   const [previewTopics, setPreviewTopics] = useState<typeof topics | null>(null);
   const [optimisticOrder, setOptimisticOrder] = useState<Id<"topics">[] | null>(null);
 
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [isEditingDescription, setIsEditingDescription] = useState(false);
-  const [tempTitle, setTempTitle] = useState("");
-  const [tempDescription, setTempDescription] = useState("");
 
   const { confirm, ConfirmDialog } = useConfirm();
 
@@ -87,35 +87,13 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
     }
   };
 
-  const handleSaveTitle = async () => {
-    if (!tempTitle.trim() || tempTitle === poll?.title) {
-      setIsEditingTitle(false);
-      return;
-    }
+  const titleEdit = useInlineEdit(poll?.title || "", async (value) => {
+    await updatePollDetails({ pollId, adminToken, title: value });
+  });
 
-    try {
-      await updatePollDetails({ pollId, adminToken, title: tempTitle });
-      setIsEditingTitle(false);
-    } catch (error) {
-      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
-      setTempTitle(poll?.title || "");
-    }
-  };
-
-  const handleSaveDescription = async () => {
-    if (tempDescription === (poll?.description || "")) {
-      setIsEditingDescription(false);
-      return;
-    }
-
-    try {
-      await updatePollDetails({ pollId, adminToken, description: tempDescription });
-      setIsEditingDescription(false);
-    } catch (error) {
-      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
-      setTempDescription(poll?.description || "");
-    }
-  };
+  const descriptionEdit = useInlineEdit(poll?.description || "", async (value) => {
+    await updatePollDetails({ pollId, adminToken, description: value });
+  });
 
   const handleAddTopics = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,15 +115,6 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
     }
   };
 
-  const copyToClipboard = async (text: string, field: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedField(field);
-      setTimeout(() => setCopiedField(null), 2000);
-    } catch (error) {
-      alert("Failed to copy to clipboard");
-    }
-  };
 
   const handleDeleteTopic = async (topicId: Id<"topics">) => {
     const confirmed = await confirm({
@@ -350,23 +319,17 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   if (poll === undefined || topics === undefined) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
 
   if (poll === null) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Poll Not Found</CardTitle>
-            <CardDescription>
-              The poll you&apos;re looking for doesn&apos;t exist.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
+      <EmptyState
+        title="Poll Not Found"
+        description="The poll you're looking for doesn't exist."
+      />
     );
   }
 
@@ -420,49 +383,40 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   const totalCount = topics.length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 py-8">
+    <div className="min-h-screen bg-background p-4 py-8">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <Card>
           <CardHeader>
-            {isEditingTitle ? (
+            {titleEdit.isEditing ? (
               <Input
-                value={tempTitle}
-                onChange={(e) => setTempTitle(e.target.value)}
-                onBlur={handleSaveTitle}
+                value={titleEdit.tempValue}
+                onChange={(e) => titleEdit.setTempValue(e.target.value)}
+                onBlur={titleEdit.save}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") handleSaveTitle();
-                  if (e.key === "Escape") {
-                    setTempTitle(poll.title);
-                    setIsEditingTitle(false);
-                  }
+                  if (e.key === "Enter") titleEdit.save();
+                  if (e.key === "Escape") titleEdit.cancel();
                 }}
                 autoFocus
                 className="text-2xl font-bold"
               />
             ) : (
               <CardTitle
-                className="text-2xl cursor-pointer hover:text-blue-600 transition-colors"
-                onClick={() => {
-                  setTempTitle(poll.title);
-                  setIsEditingTitle(true);
-                }}
+                className="text-2xl cursor-pointer hover:text-info transition-colors"
+                onClick={titleEdit.startEditing}
                 title="Click to edit"
               >
                 {poll.title}
               </CardTitle>
             )}
-            {isEditingDescription ? (
+            {descriptionEdit.isEditing ? (
               <Input
-                value={tempDescription}
-                onChange={(e) => setTempDescription(e.target.value)}
-                onBlur={handleSaveDescription}
+                value={descriptionEdit.tempValue}
+                onChange={(e) => descriptionEdit.setTempValue(e.target.value)}
+                onBlur={descriptionEdit.save}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") handleSaveDescription();
-                  if (e.key === "Escape") {
-                    setTempDescription(poll.description || "");
-                    setIsEditingDescription(false);
-                  }
+                  if (e.key === "Enter") descriptionEdit.save();
+                  if (e.key === "Escape") descriptionEdit.cancel();
                 }}
                 autoFocus
                 placeholder="Add a description..."
@@ -470,11 +424,8 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
               />
             ) : (
               <CardDescription
-                className="text-base mt-2 cursor-pointer hover:text-blue-600 transition-colors"
-                onClick={() => {
-                  setTempDescription(poll.description || "");
-                  setIsEditingDescription(true);
-                }}
+                className="text-base mt-2 cursor-pointer hover:text-info transition-colors"
+                onClick={descriptionEdit.startEditing}
                 title="Click to edit"
               >
                 {poll.description || "Click to add description"}
@@ -488,7 +439,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
           participantUrl={participantUrl}
           resultsUrl={resultsUrl}
           copiedField={copiedField}
-          onCopy={copyToClipboard}
+          onCopy={(text, id) => copyToClipboard(text, id)}
           showControls={true}
           poll={{
             isOpen: poll.isOpen,
@@ -539,8 +490,8 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                     onDrop={() => handleDrop(topic._id)}
                     className={`flex items-center gap-2 p-3 rounded-lg border md:cursor-move transition-[opacity,transform,background-color] duration-300 ease-in-out ${
                       draggedTopicId === topic._id
-                        ? "opacity-40 bg-gray-200"
-                        : "bg-gray-50 border-gray-300"
+                        ? "opacity-40 bg-muted"
+                        : "bg-accent border-border"
                     }`}
                     style={{ transition: "all 0.3s ease-in-out" }}
                     title="Drag to reorder topics"

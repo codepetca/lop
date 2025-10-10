@@ -2,13 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-interface SavedPoll {
-  pollId: string;
-  adminToken: string;
-  title: string;
-  createdAt: number;
-}
+import { SavedPoll } from "@/types/poll";
 
 interface RecentPollsProps {
   polls: SavedPoll[];
@@ -33,7 +27,7 @@ export function RecentPolls({ polls }: RecentPollsProps) {
               <div
                 key={poll.pollId}
                 onClick={() => router.push(adminUrl)}
-                className="p-4 border rounded-lg hover:bg-gray-50 hover:border-blue-500 transition-colors cursor-pointer"
+                className="p-4 border rounded-lg hover:bg-accent hover:border-info transition-colors cursor-pointer"
               >
                 <div>
                   <h4 className="font-semibold">{poll.title}</h4>

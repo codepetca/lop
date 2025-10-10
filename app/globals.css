@@ -4,58 +4,82 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* Light Mode - Soft Neutrals */
+    --background: 40 20% 97%;          /* Warm off-white */
+    --foreground: 240 10% 20%;         /* Soft dark gray text */
+    --card: 0 0% 100%;                 /* Subtle white cards */
+    --card-foreground: 240 10% 20%;    /* Soft dark gray */
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --popover-foreground: 240 10% 20%;
+    --primary: 237 15% 45%;            /* Muted indigo */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 40 15% 94%;           /* Warm light gray */
+    --secondary-foreground: 240 10% 20%;
+    --muted: 40 15% 94%;               /* Warm light gray */
+    --muted-foreground: 240 8% 50%;    /* Medium gray */
+    --accent: 237 20% 92%;             /* Very light indigo */
+    --accent-foreground: 237 15% 30%;
+    --destructive: 0 65% 55%;          /* Soft red */
+    --destructive-foreground: 0 0% 100%;
+    --border: 40 12% 88%;              /* Subtle warm border */
+    --input: 40 12% 88%;
+    --ring: 237 15% 45%;
     --radius: 0.5rem;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --chart-1: 237 15% 45%;
+    --chart-2: 173 40% 50%;
+    --chart-3: 30 60% 60%;
+    --chart-4: 280 40% 55%;
+    --chart-5: 340 50% 60%;
+
+    /* Semantic Status Colors - Light Mode */
+    --success: 142 71% 45%;            /* Green */
+    --success-foreground: 0 0% 100%;
+    --success-subtle: 142 76% 94%;     /* Light green background */
+    --warning: 38 92% 50%;             /* Amber/Yellow */
+    --warning-foreground: 0 0% 100%;
+    --warning-subtle: 48 96% 89%;      /* Light yellow background */
+    --info: 199 89% 48%;               /* Blue */
+    --info-foreground: 0 0% 100%;
+    --info-subtle: 204 94% 94%;        /* Light blue background */
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    /* Dark Mode - Soft Charcoal */
+    --background: 240 8% 12%;          /* Soft dark gray, not black */
+    --foreground: 40 15% 92%;          /* Warm off-white text */
+    --card: 240 6% 16%;                /* Slightly lighter cards */
+    --card-foreground: 40 15% 92%;     /* Warm off-white */
+    --popover: 240 6% 16%;
+    --popover-foreground: 40 15% 92%;
+    --primary: 237 25% 65%;            /* Lighter muted indigo */
+    --primary-foreground: 240 8% 12%;
+    --secondary: 240 6% 20%;           /* Subtle elevated surface */
+    --secondary-foreground: 40 15% 92%;
+    --muted: 240 6% 20%;               /* Subtle elevated surface */
+    --muted-foreground: 240 6% 60%;    /* Medium gray */
+    --accent: 237 15% 25%;             /* Dark indigo accent */
+    --accent-foreground: 237 25% 75%;
+    --destructive: 0 55% 50%;          /* Muted red */
+    --destructive-foreground: 40 15% 92%;
+    --border: 240 6% 22%;              /* Subtle border */
+    --input: 240 6% 22%;
+    --ring: 237 25% 65%;
+    --chart-1: 237 25% 65%;
+    --chart-2: 173 35% 55%;
+    --chart-3: 30 55% 65%;
+    --chart-4: 280 35% 60%;
+    --chart-5: 340 45% 65%;
+
+    /* Semantic Status Colors - Dark Mode */
+    --success: 142 69% 50%;            /* Brighter green for dark bg */
+    --success-foreground: 240 8% 12%;
+    --success-subtle: 142 40% 20%;     /* Dark green background */
+    --warning: 38 90% 55%;             /* Brighter amber for dark bg */
+    --warning-foreground: 240 8% 12%;
+    --warning-subtle: 38 50% 25%;      /* Dark yellow background */
+    --info: 199 89% 55%;               /* Brighter blue for dark bg */
+    --info-foreground: 240 8% 12%;
+    --info-subtle: 199 50% 25%;        /* Dark blue background */
   }
 }
 

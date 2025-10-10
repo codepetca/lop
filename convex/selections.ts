@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { validatePollOpen } from "./lib/validators";
 
 // Claim a topic (atomic operation)
 export const claim = mutation({
@@ -12,7 +13,8 @@ export const claim = mutation({
     // 1. Validate poll is open
     const poll = await ctx.db.get(args.pollId);
     if (!poll) throw new Error("Poll not found");
-    if (!poll.isOpen) throw new Error("Poll is closed");
+
+    validatePollOpen(poll);
 
     // 2. Check if group has a previous pick and unassign it
     const allTopics = await ctx.db
@@ -66,7 +68,8 @@ export const unclaim = mutation({
     // Validate poll is open
     const poll = await ctx.db.get(args.pollId);
     if (!poll) throw new Error("Poll not found");
-    if (!poll.isOpen) throw new Error("Poll is closed");
+
+    validatePollOpen(poll);
 
     // Find the topic claimed by this group
     const allTopics = await ctx.db
@@ -89,19 +92,3 @@ export const unclaim = mutation({
   },
 });
 
-// Get the current selection for a group
-export const getCurrentSelection = query({
-  args: {
-    pollId: v.id("polls"),
-    groupId: v.id("groups"),
-  },
-  handler: async (ctx, args) => {
-    const topics = await ctx.db
-      .query("topics")
-      .withIndex("by_poll", (q) => q.eq("pollId", args.pollId))
-      .collect();
-
-    const selected = topics.find((t) => t.selectedByGroupId === args.groupId);
-    return selected || null;
-  },
-});
