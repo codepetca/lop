@@ -13,7 +13,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Loader2, Copy, Check, Lock, Unlock, Plus, Download, ExternalLink, GripVertical, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 import { useConfirm } from "@/components/ui/use-confirm";
 import { ShareLinks } from "@/components/ShareLinks";
-import { NavBar } from "@/components/NavBar";
 
 export default function AdminManagePage({ params }: { params: Promise<{ pollId: string }> }) {
   const { pollId: pollIdParam } = use(params);
@@ -421,9 +420,8 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   const totalCount = topics.length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <NavBar showHomeButton />
-      <div className="max-w-6xl mx-auto space-y-6 p-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 py-8">
+      <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <Card>
           <CardHeader>

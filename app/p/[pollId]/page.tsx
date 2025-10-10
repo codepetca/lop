@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { useConfirm } from "@/components/ui/use-confirm";
-import { NavBar } from "@/components/NavBar";
 
 interface Member {
   firstName: string;
@@ -235,9 +234,8 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <NavBar />
-      <div className="max-w-4xl mx-auto space-y-6 p-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 py-8">
+      <div className="max-w-4xl mx-auto space-y-6">
         {/* Preview Mode Banner */}
         {isPreviewMode && (
           <div className="bg-yellow-100 border-2 border-yellow-500 rounded-lg p-4 text-center">
