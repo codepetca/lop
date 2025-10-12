@@ -59,7 +59,6 @@ export function ShareLinks({
             />
             <div className="flex gap-2">
               <Button
-                variant="outline"
                 onClick={() => window.open(`${participantUrl}?preview=true`, "_blank")}
                 className="flex-1"
                 title="Preview poll as a participant"
@@ -97,7 +96,6 @@ export function ShareLinks({
               isCopied={copiedField === "student"}
             />
             <Button
-              variant="outline"
               onClick={() => window.open(`${participantUrl}?preview=true`, "_blank")}
               className="w-36 shrink-0"
               title="Preview poll as a participant"
@@ -143,7 +141,6 @@ export function ShareLinks({
             />
             <div className="flex gap-2">
               <Button
-                variant="outline"
                 onClick={() => window.open(resultsUrl, "_blank")}
                 className="flex-1"
                 title="View results board"
@@ -181,7 +178,6 @@ export function ShareLinks({
               isCopied={copiedField === "results"}
             />
             <Button
-              variant="outline"
               onClick={() => window.open(resultsUrl, "_blank")}
               className="w-36 shrink-0"
               title="View results board"
@@ -216,7 +212,7 @@ export function ShareLinks({
         </div>
         {showControls && onExportCSV && (
           <div className="pt-2">
-            <Button onClick={onExportCSV} disabled={exportDisabled} title="Export results as CSV">
+            <Button variant="outline" onClick={onExportCSV} disabled={exportDisabled} title="Export results as CSV">
               <Download className="mr-2 h-4 w-4" />
               Download CSV
             </Button>

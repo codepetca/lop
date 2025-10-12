@@ -7,6 +7,9 @@ import { enrichTopicsWithGroups } from "./lib/enrichers";
 export const list = query({
   args: { pollId: v.id("polls") },
   handler: async (ctx, args) => {
+    const poll = await ctx.db.get(args.pollId);
+    if (!poll) throw new Error("Poll not found");
+
     const topics = await ctx.db
       .query("topics")
       .withIndex("by_poll", (q) => q.eq("pollId", args.pollId))
@@ -15,7 +18,36 @@ export const list = query({
     // Sort by order
     topics.sort((a, b) => a.order - b.order);
 
-    // Enrich with group information
+    const requireNames = poll.requireParticipantNames ?? true;
+
+    // For standard polls, enrich with vote counts
+    if (poll.pollType === "standard") {
+      return await Promise.all(
+        topics.map(async (topic) => {
+          const votes = await ctx.db
+            .query("votes")
+            .withIndex("by_poll_topic", (q) =>
+              q.eq("pollId", args.pollId).eq("topicId", topic._id)
+            )
+            .collect();
+
+          return {
+            ...topic,
+            voteCount: votes.length,
+            selectedBy: null, // Not used for standard polls
+          };
+        })
+      );
+    }
+
+    // For claims polls, enrich with group information (or hide if anonymous)
+    if (!requireNames) {
+      return topics.map((topic) => ({
+        ...topic,
+        selectedBy: null, // Hide names for anonymous polls
+      }));
+    }
+
     return await enrichTopicsWithGroups(ctx, topics);
   },
 });

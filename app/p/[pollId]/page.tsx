@@ -14,6 +14,7 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { TopicCard } from "@/components/shared/TopicCard";
 import { usePollId } from "@/hooks/usePollParams";
 import { Member } from "@/types/member";
+import { Loader2 } from "lucide-react";
 
 export default function PollPage({ params }: { params: Promise<{ pollId: string }> }) {
   const pollId = usePollId(params);
@@ -38,10 +39,16 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
   const poll = useQuery(api.polls.get, { pollId });
   const topics = useQuery(api.topics.list, { pollId });
   const groups = useQuery(api.groups.list, { pollId });
+  const currentVotedTopicId = useQuery(
+    api.selections.getCurrentVote,
+    groupId && !isPreviewMode && poll?.pollType === "standard" ? { pollId, groupId } : "skip"
+  );
   const createGroup = useMutation(api.groups.findOrCreate);
   const updateGroup = useMutation(api.groups.update);
   const claimTopic = useMutation(api.selections.claim);
   const unclaimTopic = useMutation(api.selections.unclaim);
+  const voteTopic = useMutation(api.selections.vote);
+  const unvoteTopic = useMutation(api.selections.unvote);
 
   // Check localStorage for saved group ID on mount (skip in preview mode)
   useEffect(() => {
@@ -63,17 +70,60 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
     }
   }, [pollId, groups, isPreviewMode]);
 
-  // Get current selection for this group
+  // Auto-create group for anonymous polls
+  useEffect(() => {
+    if (!poll) return;
+    if (groupId) return; // Already have a group
+    if (poll.requireParticipantNames !== false) return; // Not anonymous
+
+    // In preview mode, just set a fake group ID
+    if (isPreviewMode) {
+      setGroupId("preview-mode" as Id<"groups">);
+      return;
+    }
+
+    // Automatically create a group for anonymous polls
+    const autoJoin = async () => {
+      setIsSubmitting(true);
+      try {
+        const newGroupId = await createGroup({
+          pollId,
+          members: [{ firstName: "Anonymous", lastName: "User" }],
+        });
+
+        // Save to localStorage
+        const storageKey = `poll_${pollId}_groupId`;
+        localStorage.setItem(storageKey, newGroupId);
+
+        setGroupId(newGroupId);
+      } catch (error) {
+        console.error("Failed to auto-join anonymous poll:", error);
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
+
+    autoJoin();
+  }, [poll, groupId, isPreviewMode, pollId, createGroup]);
+
+  // Get current selection/vote for this group
   const currentSelection = useMemo(() => {
-    if (!topics || !groupId) return null;
+    if (!topics || !groupId || !poll) return null;
 
     // In preview mode, use local state
     if (isPreviewMode && previewSelectedTopicId) {
       return topics.find((t) => t._id === previewSelectedTopicId) || null;
     }
 
+    // For standard polls, use the currentVotedTopicId
+    if (poll.pollType === "standard") {
+      if (!currentVotedTopicId) return null;
+      return topics.find((t) => t._id === currentVotedTopicId) || null;
+    }
+
+    // For claims polls, check selectedByGroupId
     return topics.find((t) => t.selectedByGroupId === groupId);
-  }, [topics, groupId, isPreviewMode, previewSelectedTopicId]);
+  }, [topics, groupId, poll, isPreviewMode, previewSelectedTopicId, currentVotedTopicId]);
 
   // Initialize members array based on poll requirement
   useMemo(() => {
@@ -142,7 +192,7 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
   };
 
   const handleClaimTopic = async (topicId: Id<"topics">) => {
-    if (!groupId) return;
+    if (!groupId || !poll) return;
 
     // In preview mode, just update local state
     if (isPreviewMode) {
@@ -155,11 +205,53 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
       return;
     }
 
+    // Handle standard polls (voting)
+    if (poll.pollType === "standard") {
+      // Check if clicking on currently voted topic (to unvote)
+      if (currentSelection && currentSelection._id === topicId) {
+        const confirmed = await confirm({
+          title: "Remove Vote",
+          description: `Are you sure you want to deselect "${currentSelection.label}"?`,
+          actionLabel: "Remove",
+          destructive: true,
+        });
+
+        if (!confirmed) return;
+
+        try {
+          await unvoteTopic({ pollId, groupId });
+        } catch (error) {
+          alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+        }
+        return;
+      }
+
+      // Check if already has a vote (changing to different topic)
+      if (currentSelection) {
+        const newTopic = topics?.find((t) => t._id === topicId);
+        const confirmed = await confirm({
+          title: "Change Vote",
+          description: `Change vote from "${currentSelection.label}" to "${newTopic?.label}"?`,
+          actionLabel: "Change",
+        });
+
+        if (!confirmed) return;
+      }
+
+      try {
+        await voteTopic({ pollId, groupId, topicId });
+      } catch (error) {
+        alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      }
+      return;
+    }
+
+    // Handle claims polls (exclusive selection)
     // Check if clicking on currently selected topic (to unclaim)
     if (currentSelection && currentSelection._id === topicId) {
       const confirmed = await confirm({
         title: "Remove Selection",
-        description: `Are you sure you want to remove "${currentSelection.label}" from your selection?`,
+        description: `Are you sure you want to deselect "${currentSelection.label}"?`,
         actionLabel: "Remove",
         destructive: true,
       });
@@ -233,10 +325,12 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
 
         {/* Poll Header */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">{poll.title}</CardTitle>
+          <CardHeader className="text-center">
+            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              {poll.title}
+            </CardTitle>
             {poll.description && (
-              <CardDescription className="text-base">
+              <CardDescription className="text-base mt-2">
                 {poll.description}
               </CardDescription>
             )}
@@ -294,32 +388,71 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
         ) : (
           <>
             {/* Group Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Participant</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-1">
-                  {members.map((m, i) => (
-                    <div key={i}>
-                      {m.firstName} {m.lastName}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            {poll.requireParticipantNames !== false && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Participant</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-1">
+                    {members.map((m, i) => (
+                      <div key={i}>
+                        {m.firstName} {m.lastName}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Topics Grid */}
             <Card>
               <CardHeader>
-                <CardTitle>Available Topics</CardTitle>
+                <CardTitle>
+                  {poll.pollType === "standard" ? "Topics" : "Available Topics"}
+                </CardTitle>
                 <CardDescription>
-                  Click on a topic to claim it
+                  {poll.pollType === "standard"
+                    ? "Vote on a topic"
+                    : "Choose a topic to claim it"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid gap-3">
                   {topics.map((topic) => {
+                    // For standard polls
+                    if (poll.pollType === "standard") {
+                      const voteCount = "voteCount" in topic ? (topic.voteCount as number) : 0;
+                      const isYours = isPreviewMode
+                        ? previewSelectedTopicId === topic._id
+                        : currentVotedTopicId === topic._id;
+
+                      return (
+                        <button
+                          key={topic._id}
+                          onClick={() => handleClaimTopic(topic._id)}
+                          className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
+                            isYours
+                              ? "border-success bg-success-subtle cursor-pointer"
+                              : "border-border hover:border-info hover:bg-info-subtle cursor-pointer"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="font-medium">{topic.label}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {voteCount} {voteCount === 1 ? "vote" : "votes"}
+                            </div>
+                          </div>
+                          {isYours && (
+                            <div className="text-sm text-muted-foreground mt-1">
+                              <span className="text-success font-semibold">✓ Your selection</span>
+                            </div>
+                          )}
+                        </button>
+                      );
+                    }
+
+                    // For claims polls
                     const isTaken =
                       topic.selectedByGroupId &&
                       topic.selectedByGroupId !== groupId;

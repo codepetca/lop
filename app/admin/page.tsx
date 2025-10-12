@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
-import { Loader2 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Loader2, CircleHelp } from "lucide-react";
 import { ShareLinks } from "@/components/ShareLinks";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
@@ -23,6 +24,8 @@ export default function AdminPage() {
   const [description, setDescription] = useState("");
   const [topics, setTopics] = useState("");
   const [membersPerGroup, setMembersPerGroup] = useState(1);
+  const [pollType, setPollType] = useState<"claims" | "standard">("claims");
+  const [requireName, setRequireName] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [createdPoll, setCreatedPoll] = useState<{
     pollId: string;
@@ -64,7 +67,9 @@ export default function AdminPage() {
         title: title.trim(),
         description: description.trim() || undefined,
         topicLabels,
-        membersPerGroup,
+        membersPerGroup: requireName ? membersPerGroup : 1,
+        pollType,
+        requireParticipantNames: requireName,
       });
 
       setCreatedPoll(result);
@@ -127,10 +132,7 @@ export default function AdminPage() {
       <div className="max-w-2xl mx-auto">
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Create New Claims Poll</CardTitle>
-            <CardDescription>
-              Topics are claimed on a first-come basis and removed once selected
-            </CardDescription>
+            <CardTitle className="text-2xl">Create New Poll</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -159,6 +161,53 @@ export default function AdminPage() {
               {showAdvancedOptions && (
                 <div className="space-y-4">
                   <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Label>Poll Type</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button type="button" className="outline-none">
+                            <CircleHelp className="h-4 w-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent side="right" className="w-80">
+                          <div className="space-y-3">
+                            <div>
+                              <p className="font-semibold mb-1">Claims Poll</p>
+                              <p className="text-sm text-muted-foreground">
+                                Topics are claimed on a first-come basis. Each topic can only be selected by one participant.
+                              </p>
+                            </div>
+                            <div>
+                              <p className="font-semibold mb-1">Standard Poll</p>
+                              <p className="text-sm text-muted-foreground">
+                                Multiple participants can vote for the same option. Results show vote counts.
+                              </p>
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant={pollType === "claims" ? "default" : "outline"}
+                        className="flex-1"
+                        onClick={() => setPollType("claims")}
+                      >
+                        Claims
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={pollType === "standard" ? "default" : "outline"}
+                        className="flex-1"
+                        onClick={() => setPollType("standard")}
+                      >
+                        Standard
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="description">
                       Description
                     </Label>
@@ -170,38 +219,69 @@ export default function AdminPage() {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="membersPerGroup">Participants per Topic</Label>
-                    <div className="flex items-center gap-4">
-                      <Input
-                        type="number"
-                        min={1}
-                        max={10}
-                        value={membersPerGroup}
-                        onChange={(e) => setMembersPerGroup(parseInt(e.target.value) || 1)}
-                        className="w-20 text-center"
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="requireName"
+                        checked={requireName}
+                        onChange={(e) => setRequireName(e.target.checked)}
+                        className="w-4 h-4 rounded border-gray-300"
                       />
-                      <Slider
-                        id="membersPerGroup"
-                        min={1}
-                        max={10}
-                        step={1}
-                        value={[membersPerGroup]}
-                        onValueChange={(value) => setMembersPerGroup(value[0])}
-                        className="flex-1"
-                      />
+                      <Label htmlFor="requireName" className="cursor-pointer">
+                        Require name
+                      </Label>
                     </div>
+
+                    {requireName && (
+                      <div className="space-y-2 pl-6">
+                        <Label htmlFor="membersPerGroup" className="text-sm text-muted-foreground">
+                          Number of participants per topic
+                        </Label>
+                        <div className="flex items-center gap-4">
+                          <Input
+                            type="number"
+                            min={1}
+                            max={10}
+                            value={membersPerGroup}
+                            onChange={(e) => setMembersPerGroup(parseInt(e.target.value) || 1)}
+                            className="w-20 text-center"
+                          />
+                          <Slider
+                            id="membersPerGroup"
+                            min={1}
+                            max={10}
+                            step={1}
+                            value={[membersPerGroup]}
+                            onValueChange={(value) => setMembersPerGroup(value[0])}
+                            className="flex-1"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="topics">Topics</Label>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="topics">Topics</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button type="button" className="outline-none">
+                        <CircleHelp className="h-4 w-4 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent side="right" className="w-80">
+                      <p className="text-sm">Type or paste topics one per line</p>
+                    </PopoverContent>
+                  </Popover>
+                </div>
                 <Textarea
                   id="topics"
                   value={topics}
                   onChange={(e) => setTopics(e.target.value)}
-                  placeholder="Type or paste topics one per line"
+                  placeholder=""
                   rows={10}
                   required
                   className="font-mono"

@@ -21,7 +21,8 @@ export const findOrCreate = mutation({
     validatePollOpen(poll);
 
     const requiredMembers = poll.membersPerGroup ?? 1;
-    validateMembers(args.members, requiredMembers);
+    const requireNames = poll.requireParticipantNames ?? true;
+    validateMembers(args.members, requiredMembers, requireNames);
 
     // Always create a new group (no lookup by name)
     const groupId = await ctx.db.insert("groups", {
@@ -55,7 +56,8 @@ export const update = mutation({
     validatePollOpen(poll);
 
     const requiredMembers = poll.membersPerGroup ?? 1;
-    validateMembers(args.members, requiredMembers);
+    const requireNames = poll.requireParticipantNames ?? true;
+    validateMembers(args.members, requiredMembers, requireNames);
 
     await ctx.db.patch(args.groupId, { members: args.members });
     return args.groupId;

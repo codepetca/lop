@@ -402,7 +402,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
               />
             ) : (
               <CardTitle
-                className="text-2xl cursor-pointer hover:text-info transition-colors"
+                className="text-2xl cursor-pointer hover:text-info transition-colors bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent hover:from-info hover:to-info/70"
                 onClick={titleEdit.startEditing}
                 title="Click to edit"
               >

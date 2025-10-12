@@ -14,6 +14,8 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as groups from "../groups.js";
+import type * as lib_enrichers from "../lib/enrichers.js";
+import type * as lib_validators from "../lib/validators.js";
 import type * as polls from "../polls.js";
 import type * as selections from "../selections.js";
 import type * as topics from "../topics.js";
@@ -28,6 +30,8 @@ import type * as topics from "../topics.js";
  */
 declare const fullApi: ApiFromModules<{
   groups: typeof groups;
+  "lib/enrichers": typeof lib_enrichers;
+  "lib/validators": typeof lib_validators;
   polls: typeof polls;
   selections: typeof selections;
   topics: typeof topics;

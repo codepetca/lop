@@ -16,10 +16,14 @@ export const create = mutation({
     description: v.optional(v.string()),
     topicLabels: v.array(v.string()),
     membersPerGroup: v.optional(v.number()),
+    pollType: v.optional(v.union(v.literal("claims"), v.literal("standard"))),
+    requireParticipantNames: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const adminToken = generateAdminToken();
     const membersPerGroup = args.membersPerGroup ?? 1;
+    const pollType = args.pollType ?? "claims";
+    const requireParticipantNames = args.requireParticipantNames ?? true;
 
     // Validate membersPerGroup is between 1 and 10
     if (membersPerGroup < 1 || membersPerGroup > 10) {
@@ -34,6 +38,8 @@ export const create = mutation({
       resultsVisible: true,
       adminToken,
       membersPerGroup,
+      pollType,
+      requireParticipantNames,
       createdAt: Date.now(),
     });
 

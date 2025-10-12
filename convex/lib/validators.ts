@@ -43,8 +43,14 @@ export function validatePollOpen(poll: { isOpen: boolean }) {
  */
 export function validateMembers(
   members: Array<{ firstName: string; lastName: string }>,
-  requiredCount: number
+  requiredCount: number,
+  requireNames = true
 ) {
+  // If names not required, allow empty names
+  if (!requireNames) {
+    return; // Skip validation
+  }
+
   if (members.length !== requiredCount) {
     throw new Error(
       `This poll requires exactly ${requiredCount} member${

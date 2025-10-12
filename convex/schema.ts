@@ -9,6 +9,8 @@ export default defineSchema({
     resultsVisible: v.optional(v.boolean()), // Whether results page is publicly visible (defaults to true)
     adminToken: v.string(),
     membersPerGroup: v.optional(v.number()), // 1-10, how many members required per group (defaults to 1)
+    pollType: v.optional(v.union(v.literal("claims"), v.literal("standard"))), // Type of poll: "claims" (exclusive) or "standard" (voting)
+    requireParticipantNames: v.optional(v.boolean()), // Whether to require participant names (defaults to true)
     createdAt: v.number(), // Date.now()
   }),
   topics: defineTable({
@@ -31,4 +33,13 @@ export default defineSchema({
     ),
     createdAt: v.number(),
   }).index("by_poll", ["pollId"]),
+  votes: defineTable({
+    pollId: v.id("polls"),
+    topicId: v.id("topics"),
+    groupId: v.id("groups"),
+    votedAt: v.number(),
+  })
+    .index("by_poll", ["pollId"])
+    .index("by_poll_topic", ["pollId", "topicId"])
+    .index("by_poll_group", ["pollId", "groupId"]),
 });
