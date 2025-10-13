@@ -18,6 +18,8 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { usePollId, useAdminToken } from "@/hooks/usePollParams";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { useInlineEdit } from "@/hooks/useInlineEdit";
+import { ErrorMessage } from "@/components/shared/ErrorMessage";
+import { getErrorMessage } from "@/lib/errors";
 
 export default function AdminManagePage({ params }: { params: Promise<{ pollId: string }> }) {
   const pollId = usePollId(params);
@@ -28,14 +30,17 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [newTopics, setNewTopics] = useState("");
   const [isAddingTopics, setIsAddingTopics] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   const { copiedId: copiedField, copyToClipboard } = useCopyToClipboard();
 
-  const poll = useQuery(api.polls.get, { pollId });
-  const topics = useQuery(api.topics.list, { pollId });
+  const poll = useQuery(api.polls.get, isDeleting ? "skip" : { pollId });
+  const topics = useQuery(api.topics.list, isDeleting ? "skip" : { pollId });
   const exportResults = useQuery(
     api.polls.exportResults,
-    isAuthenticated && adminToken && poll ? { pollId, adminToken } : "skip"
+    isAuthenticated && adminToken && poll && !isDeleting ? { pollId, adminToken } : "skip"
   );
 
   const toggleOpen = useMutation(api.polls.toggleOpen);
@@ -72,18 +77,20 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   }, [optimisticOrder, topics]);
 
   const handleToggleOpen = async () => {
+    setError(null);
     try {
       await toggleOpen({ pollId, adminToken });
     } catch (error) {
-      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      setError(getErrorMessage(error));
     }
   };
 
   const handleToggleResultsVisible = async () => {
+    setError(null);
     try {
       await toggleResultsVisible({ pollId, adminToken });
     } catch (error) {
-      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      setError(getErrorMessage(error));
     }
   };
 
@@ -99,6 +106,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
     e.preventDefault();
     if (!newTopics.trim()) return;
 
+    setError(null);
     setIsAddingTopics(true);
     try {
       const topicLabels = newTopics
@@ -109,7 +117,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
       await addTopics({ pollId, adminToken, topicLabels });
       setNewTopics("");
     } catch (error) {
-      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      setError(getErrorMessage(error));
     } finally {
       setIsAddingTopics(false);
     }
@@ -126,10 +134,11 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
 
     if (!confirmed) return;
 
+    setError(null);
     try {
       await deleteTopic({ topicId, adminToken });
     } catch (error) {
-      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      setError(getErrorMessage(error));
     }
   };
 
@@ -189,7 +198,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
       });
       // optimisticOrder will be cleared by useEffect when server confirms
     } catch (error) {
-      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      setError(getErrorMessage(error));
       setOptimisticOrder(null);
     }
   };
@@ -204,11 +213,11 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
 
     if (!confirmed) return;
 
+    setError(null);
     try {
-      const result = await clearAllClaims({ pollId, adminToken });
-      alert(`Successfully cleared ${result.clearedCount} claim${result.clearedCount !== 1 ? 's' : ''}`);
+      await clearAllClaims({ pollId, adminToken });
     } catch (error) {
-      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      setError(getErrorMessage(error));
     }
   };
 
@@ -222,10 +231,11 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
 
     if (!confirmed) return;
 
+    setError(null);
     try {
       await unclaimTopic({ topicId, adminToken });
     } catch (error) {
-      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      setError(getErrorMessage(error));
     }
   };
 
@@ -247,7 +257,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
         topicIds: finalOrderIds,
       });
     } catch (error) {
-      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      setError(getErrorMessage(error));
       setOptimisticOrder(null);
     }
   };
@@ -270,7 +280,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
         topicIds: finalOrderIds,
       });
     } catch (error) {
-      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      setError(getErrorMessage(error));
       setOptimisticOrder(null);
     }
   };
@@ -308,11 +318,14 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
 
     if (!confirmed) return;
 
+    setIsDeleting(true);
+    setError(null);
     try {
       await deletePoll({ pollId, adminToken });
       router.push("/");
     } catch (error) {
-      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      setIsDeleting(false);
+      setError(getErrorMessage(error));
     }
   };
 
@@ -348,20 +361,29 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
               onSubmit={(e) => {
                 e.preventDefault();
                 if (poll.adminToken !== adminToken) {
-                  alert("Invalid admin token");
+                  setAuthError("Invalid admin token");
                 } else {
+                  setAuthError(null);
                   setIsAuthenticated(true);
                 }
               }}
               className="space-y-4"
             >
+              {authError && (
+                <div className="bg-destructive/10 border border-destructive rounded-lg p-3 text-sm text-destructive">
+                  {authError}
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="token">Admin Token</Label>
                 <Input
                   id="token"
                   type="password"
                   value={adminToken}
-                  onChange={(e) => setAdminToken(e.target.value)}
+                  onChange={(e) => {
+                    setAdminToken(e.target.value);
+                    setAuthError(null);
+                  }}
                   required
                 />
               </div>
@@ -385,6 +407,9 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   return (
     <div className="min-h-screen bg-background p-4 py-8">
       <div className="max-w-6xl mx-auto space-y-6">
+        {/* Error Message */}
+        <ErrorMessage message={error} onDismiss={() => setError(null)} />
+
         {/* Header */}
         <Card>
           <CardHeader>

@@ -8,7 +8,7 @@ export const list = query({
   args: { pollId: v.id("polls") },
   handler: async (ctx, args) => {
     const poll = await ctx.db.get(args.pollId);
-    if (!poll) throw new Error("Poll not found");
+    if (!poll) return [];
 
     const topics = await ctx.db
       .query("topics")

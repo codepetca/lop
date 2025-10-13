@@ -17,6 +17,8 @@ import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { SavedPoll } from "@/types/poll";
 import { MAX_SAVED_POLLS } from "@/lib/constants";
+import { ErrorMessage } from "@/components/shared/ErrorMessage";
+import { getErrorMessage } from "@/lib/errors";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -27,6 +29,7 @@ export default function AdminPage() {
   const [pollType, setPollType] = useState<"claims" | "standard">("claims");
   const [requireName, setRequireName] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [createdPoll, setCreatedPoll] = useState<{
     pollId: string;
     adminToken: string;
@@ -56,6 +59,7 @@ export default function AdminPage() {
     e.preventDefault();
     if (!title.trim() || !topics.trim()) return;
 
+    setError(null);
     setIsCreating(true);
     try {
       const topicLabels = topics
@@ -75,7 +79,7 @@ export default function AdminPage() {
       setCreatedPoll(result);
       savePollToLocalStorage(result.pollId, result.adminToken, title.trim());
     } catch (error) {
-      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      setError(getErrorMessage(error));
     } finally {
       setIsCreating(false);
     }
@@ -136,6 +140,7 @@ export default function AdminPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <ErrorMessage message={error} onDismiss={() => setError(null)} />
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="title">Poll Title</Label>

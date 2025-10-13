@@ -15,6 +15,8 @@ import { TopicCard } from "@/components/shared/TopicCard";
 import { usePollId } from "@/hooks/usePollParams";
 import { Member } from "@/types/member";
 import { Loader2 } from "lucide-react";
+import { ErrorMessage } from "@/components/shared/ErrorMessage";
+import { getErrorMessage } from "@/lib/errors";
 
 export default function PollPage({ params }: { params: Promise<{ pollId: string }> }) {
   const pollId = usePollId(params);
@@ -32,6 +34,7 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
   const [members, setMembers] = useState<Member[]>([{ firstName: "", lastName: "" }]);
   const [groupId, setGroupId] = useState<Id<"groups"> | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [previewSelectedTopicId, setPreviewSelectedTopicId] = useState<Id<"topics"> | null>(null);
 
   const { confirm, ConfirmDialog } = useConfirm();
@@ -45,6 +48,7 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
   );
   const createGroup = useMutation(api.groups.findOrCreate);
   const updateGroup = useMutation(api.groups.update);
+  const selfDeleteGroup = useMutation(api.groups.selfDelete);
   const claimTopic = useMutation(api.selections.claim);
   const unclaimTopic = useMutation(api.selections.unclaim);
   const voteTopic = useMutation(api.selections.vote);
@@ -185,7 +189,7 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
 
       setGroupId(newGroupId);
     } catch (error) {
-      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      setError(getErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
@@ -218,10 +222,11 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
 
         if (!confirmed) return;
 
+        setError(null);
         try {
           await unvoteTopic({ pollId, groupId });
         } catch (error) {
-          alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+          setError(getErrorMessage(error));
         }
         return;
       }
@@ -238,10 +243,11 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
         if (!confirmed) return;
       }
 
+      setError(null);
       try {
         await voteTopic({ pollId, groupId, topicId });
       } catch (error) {
-        alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+        setError(getErrorMessage(error));
       }
       return;
     }
@@ -258,10 +264,11 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
 
       if (!confirmed) return;
 
+      setError(null);
       try {
         await unclaimTopic({ pollId, groupId });
       } catch (error) {
-        alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+        setError(getErrorMessage(error));
       }
       return;
     }
@@ -278,10 +285,67 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
       if (!confirmed) return;
     }
 
+    setError(null);
     try {
       await claimTopic({ pollId, groupId, topicId });
     } catch (error) {
-      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      setError(getErrorMessage(error));
+    }
+  };
+
+  const handleStartOver = async () => {
+    if (!groupId) return;
+
+    // In preview mode, just reset local state
+    if (isPreviewMode) {
+      setGroupId(null);
+      setPreviewSelectedTopicId(null);
+      if (poll) {
+        const requiredMembers = poll.membersPerGroup ?? 1;
+        setMembers(
+          Array.from({ length: requiredMembers }, () => ({
+            firstName: "",
+            lastName: "",
+          }))
+        );
+      }
+      return;
+    }
+
+    const confirmed = await confirm({
+      title: "Start Over",
+      description: "This will remove your current selection and require you to re-enter your name. Continue?",
+      actionLabel: "Start Over",
+      destructive: true,
+    });
+
+    if (!confirmed) return;
+
+    setError(null);
+    setIsSubmitting(true);
+    try {
+      // Delete the group (also removes any selections)
+      await selfDeleteGroup({ pollId, groupId });
+
+      // Clear localStorage
+      const storageKey = `poll_${pollId}_groupId`;
+      localStorage.removeItem(storageKey);
+
+      // Reset state
+      setGroupId(null);
+      if (poll) {
+        const requiredMembers = poll.membersPerGroup ?? 1;
+        setMembers(
+          Array.from({ length: requiredMembers }, () => ({
+            firstName: "",
+            lastName: "",
+          }))
+        );
+      }
+    } catch (error) {
+      setError(getErrorMessage(error));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -322,6 +386,9 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
             </p>
           </div>
         )}
+
+        {/* Error Message */}
+        <ErrorMessage message={error} onDismiss={() => setError(null)} />
 
         {/* Poll Header */}
         <Card>
@@ -390,8 +457,17 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
             {/* Group Info */}
             {poll.requireParticipantNames !== false && (
               <Card>
-                <CardHeader>
-                  <CardTitle>Participant</CardTitle>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle>{members.length > 1 ? "Participants" : "Participant"}</CardTitle>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleStartOver}
+                    disabled={isSubmitting}
+                    className="text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/20"
+                  >
+                    Edit
+                  </Button>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-1">
