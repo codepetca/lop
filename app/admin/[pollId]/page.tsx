@@ -49,6 +49,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   const addTopics = useMutation(api.polls.addTopics);
   const deleteTopic = useMutation(api.topics.deleteTopic);
   const reorderTopics = useMutation(api.topics.reorderTopics);
+  const renameTopic = useMutation(api.topics.renameTopic);
   const clearAllClaims = useMutation(api.topics.clearAllClaims);
   const unclaimTopic = useMutation(api.topics.unclaimTopic);
   const deletePoll = useMutation(api.polls.deletePoll);
@@ -56,6 +57,8 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   const [draggedTopicId, setDraggedTopicId] = useState<Id<"topics"> | null>(null);
   const [previewTopics, setPreviewTopics] = useState<typeof topics | null>(null);
   const [optimisticOrder, setOptimisticOrder] = useState<Id<"topics">[] | null>(null);
+  const [editingTopicId, setEditingTopicId] = useState<Id<"topics"> | null>(null);
+  const [editingTopicLabel, setEditingTopicLabel] = useState("");
 
 
   const { confirm, ConfirmDialog } = useConfirm();
@@ -329,6 +332,32 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
     }
   };
 
+  const handleStartEditingTopic = (topicId: Id<"topics">, currentLabel: string) => {
+    setEditingTopicId(topicId);
+    setEditingTopicLabel(currentLabel);
+  };
+
+  const handleCancelEditingTopic = () => {
+    setEditingTopicId(null);
+    setEditingTopicLabel("");
+  };
+
+  const handleSaveTopicLabel = async (topicId: Id<"topics">) => {
+    if (!editingTopicLabel.trim()) {
+      setError("Topic label cannot be empty");
+      return;
+    }
+
+    setError(null);
+    try {
+      await renameTopic({ topicId, adminToken, label: editingTopicLabel });
+      setEditingTopicId(null);
+      setEditingTopicLabel("");
+    } catch (error) {
+      setError(getErrorMessage(error));
+    }
+  };
+
   if (poll === undefined || topics === undefined) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -553,7 +582,35 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                     <GripVertical className="h-5 w-5 text-gray-400 flex-shrink-0 hidden md:block" />
 
                     <div className="flex-1">
-                      <p className="font-medium">{topic.label}</p>
+                      {editingTopicId === topic._id ? (
+                        <Input
+                          value={editingTopicLabel}
+                          onChange={(e) => setEditingTopicLabel(e.target.value)}
+                          onBlur={() => handleSaveTopicLabel(topic._id)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              handleSaveTopicLabel(topic._id);
+                            }
+                            if (e.key === "Escape") {
+                              handleCancelEditingTopic();
+                            }
+                          }}
+                          autoFocus
+                          className="font-medium"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      ) : (
+                        <p
+                          className="font-medium cursor-pointer hover:text-info transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleStartEditingTopic(topic._id, topic.label);
+                          }}
+                          title="Click to edit topic label"
+                        >
+                          {topic.label}
+                        </p>
+                      )}
                       {topic.selectedBy && (
                         <div className="text-xs text-muted-foreground mt-1">
                           {topic.selectedBy.map((m, idx) => (
