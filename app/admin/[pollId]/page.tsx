@@ -343,11 +343,6 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   };
 
   const handleSaveTopicLabel = async (topicId: Id<"topics">) => {
-    if (!editingTopicLabel.trim()) {
-      setError("Topic label cannot be empty");
-      return;
-    }
-
     setError(null);
     try {
       await renameTopic({ topicId, adminToken, label: editingTopicLabel });
