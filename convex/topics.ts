@@ -123,6 +123,34 @@ export const unclaimTopic = mutation({
   },
 });
 
+// Rename a topic (admin only)
+export const renameTopic = mutation({
+  args: {
+    topicId: v.id("topics"),
+    adminToken: v.string(),
+    label: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const topic = await ctx.db.get(args.topicId);
+    if (!topic) throw new Error("Topic not found");
+
+    await validateAdminAccess(ctx, topic.pollId, args.adminToken);
+
+    // Validate label is not empty
+    const trimmedLabel = args.label.trim();
+    if (!trimmedLabel) {
+      throw new Error("Topic label cannot be empty");
+    }
+
+    // Update the topic label
+    await ctx.db.patch(args.topicId, {
+      label: trimmedLabel,
+    });
+
+    return { success: true };
+  },
+});
+
 // Clear all claims (admin only)
 export const clearAllClaims = mutation({
   args: {
