@@ -3,10 +3,9 @@ import { mutation, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { validateAdminAccess } from "./lib/validators";
 
-// Generate a random admin token
+// Generate a cryptographically secure admin token
 function generateAdminToken(): string {
-  return Math.random().toString(36).substring(2, 15) +
-         Math.random().toString(36).substring(2, 15);
+  return crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
 }
 
 // Create a new poll
@@ -199,19 +198,44 @@ export const exportResults = query({
     adminToken: v.string(),
   },
   handler: async (ctx, args) => {
-    await validateAdminAccess(ctx, args.pollId, args.adminToken);
+    const poll = await validateAdminAccess(ctx, args.pollId, args.adminToken);
 
     const topics = await ctx.db
       .query("topics")
       .withIndex("by_poll", (q) => q.eq("pollId", args.pollId))
       .collect();
 
+    topics.sort((a, b) => a.order - b.order);
+
+    // Standard poll: aggregate vote counts in a single pass
+    if (poll.pollType === "standard") {
+      const allVotes = await ctx.db
+        .query("votes")
+        .withIndex("by_poll", (q) => q.eq("pollId", args.pollId))
+        .collect();
+
+      const voteCountByTopic = new Map<string, number>();
+      for (const vote of allVotes) {
+        voteCountByTopic.set(
+          vote.topicId,
+          (voteCountByTopic.get(vote.topicId) ?? 0) + 1
+        );
+      }
+
+      return topics.map((topic) => ({
+        topic: topic.label,
+        members: "",
+        selectedAt: "",
+        votes: voteCountByTopic.get(topic._id) ?? 0,
+      }));
+    }
+
+    // Claims poll: include the claiming group's member names
     const results = [];
     for (const topic of topics) {
       if (topic.selectedByGroupId) {
         const group = await ctx.db.get(topic.selectedByGroupId);
         if (group) {
-          // Create a row for the group
           const memberNames = group.members
             .map((m) => `${m.firstName} ${m.lastName}`)
             .join("; ");
@@ -220,6 +244,7 @@ export const exportResults = query({
             topic: topic.label,
             members: memberNames,
             selectedAt: new Date(topic.selectedAt || 0).toISOString(),
+            votes: null,
           });
         }
       } else {
@@ -227,6 +252,7 @@ export const exportResults = query({
           topic: topic.label,
           members: "",
           selectedAt: "",
+          votes: null,
         });
       }
     }
@@ -262,6 +288,16 @@ export const deletePoll = mutation({
 
     for (const group of groups) {
       await ctx.db.delete(group._id);
+    }
+
+    // Delete all votes for this poll (standard polls)
+    const votes = await ctx.db
+      .query("votes")
+      .withIndex("by_poll", (q) => q.eq("pollId", args.pollId))
+      .collect();
+
+    for (const vote of votes) {
+      await ctx.db.delete(vote._id);
     }
 
     // Delete the poll itself

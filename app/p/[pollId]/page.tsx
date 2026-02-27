@@ -46,7 +46,7 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
     api.selections.getCurrentVote,
     groupId && !isPreviewMode && poll?.pollType === "standard" ? { pollId, groupId } : "skip"
   );
-  const createGroup = useMutation(api.groups.findOrCreate);
+  const createGroup = useMutation(api.groups.createGroup);
   const updateGroup = useMutation(api.groups.update);
   const selfDeleteGroup = useMutation(api.groups.selfDelete);
   const claimTopic = useMutation(api.selections.claim);
@@ -54,11 +54,12 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
   const voteTopic = useMutation(api.selections.vote);
   const unvoteTopic = useMutation(api.selections.unvote);
 
+  const storageKey = `poll_${pollId}_groupId`;
+
   // Check localStorage for saved group ID on mount (skip in preview mode)
   useEffect(() => {
     if (isPreviewMode) return;
 
-    const storageKey = `poll_${pollId}_groupId`;
     const savedGroupId = localStorage.getItem(storageKey);
 
     if (savedGroupId && groups) {
@@ -96,7 +97,6 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
         });
 
         // Save to localStorage
-        const storageKey = `poll_${pollId}_groupId`;
         localStorage.setItem(storageKey, newGroupId);
 
         setGroupId(newGroupId);
@@ -130,7 +130,7 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
   }, [topics, groupId, poll, isPreviewMode, previewSelectedTopicId, currentVotedTopicId]);
 
   // Initialize members array based on poll requirement
-  useMemo(() => {
+  useEffect(() => {
     if (poll) {
       const requiredMembers = poll.membersPerGroup ?? 1;
       if (members.length !== requiredMembers) {
@@ -142,7 +142,10 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
         );
       }
     }
-  }, [poll, members.length]);
+  // members.length intentionally omitted — we only want this to run when
+  // the poll's required count changes, not every time the user types a name.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [poll?.membersPerGroup]);
 
   const updateMember = (index: number, field: "firstName" | "lastName", value: string) => {
     const updated = [...members];
@@ -184,7 +187,6 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
       }
 
       // Save to localStorage
-      const storageKey = `poll_${pollId}_groupId`;
       localStorage.setItem(storageKey, newGroupId);
 
       setGroupId(newGroupId);
@@ -328,7 +330,6 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
       await selfDeleteGroup({ pollId, groupId });
 
       // Clear localStorage
-      const storageKey = `poll_${pollId}_groupId`;
       localStorage.removeItem(storageKey);
 
       // Reset state
@@ -466,7 +467,7 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
                     disabled={isSubmitting}
                     className="text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/20"
                   >
-                    Edit
+                    Start Over
                   </Button>
                 </CardHeader>
                 <CardContent>

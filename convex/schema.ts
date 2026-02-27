@@ -22,7 +22,8 @@ export default defineSchema({
   })
     .index("by_poll", ["pollId"])
     .index("by_poll_order", ["pollId", "order"])
-    .index("by_poll_label", ["pollId", "label"]),
+    .index("by_poll_label", ["pollId", "label"])
+    .index("by_poll_group", ["pollId", "selectedByGroupId"]),
   groups: defineTable({
     pollId: v.id("polls"),
     members: v.array(
