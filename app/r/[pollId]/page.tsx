@@ -5,6 +5,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { usePollId } from "@/hooks/usePollParams";
 import { Grid3x3, List, AlignJustify } from "lucide-react";
@@ -43,28 +44,20 @@ export default function ResultsPage({ params }: { params: Promise<{ pollId: stri
 
   if (poll === null) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4">Poll Not Found</h1>
-          <p className="text-xl text-muted-foreground">
-            The poll you're looking for doesn't exist.
-          </p>
-        </div>
-      </div>
+      <EmptyState
+        title="Poll Not Found"
+        description="The poll you're looking for doesn't exist."
+      />
     );
   }
 
   // Check if results are hidden
   if (poll.resultsVisible === false) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4">Results Hidden</h1>
-          <p className="text-xl text-muted-foreground">
-            The results for this poll are currently hidden.
-          </p>
-        </div>
-      </div>
+      <EmptyState
+        title="Results Hidden"
+        description="The results for this poll are currently hidden."
+      />
     );
   }
 
@@ -199,10 +192,14 @@ export default function ResultsPage({ params }: { params: Promise<{ pollId: stri
             ) : (
               /* Vertical Bar Graph View */
               <div className="flex items-end justify-center gap-4 px-4">
-                {topics.map((topic) => {
+                {(() => {
+                  const maxVotes = Math.max(
+                    ...topics.map((t) => ("voteCount" in t ? (t.voteCount as number) : 0)),
+                    1
+                  );
+                  return topics.map((topic) => {
                   const voteCount = "voteCount" in topic ? (topic.voteCount as number) : 0;
                   const percentage = totalVotes > 0 ? (voteCount / totalVotes) * 100 : 0;
-                  const maxVotes = Math.max(...topics.map(t => "voteCount" in t ? (t.voteCount as number) : 0), 1);
                   const barHeightPercent = maxVotes > 0 ? (voteCount / maxVotes) * 100 : 0;
 
                   return (
@@ -236,7 +233,8 @@ export default function ResultsPage({ params }: { params: Promise<{ pollId: stri
                       </div>
                     </div>
                   );
-                })}
+                });
+                })()}
               </div>
             )}
             {topics.length === 0 && (

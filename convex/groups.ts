@@ -2,8 +2,8 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { validateAdminAccess, validatePollOpen, validateMembers } from "./lib/validators";
 
-// Find or create a group for a poll
-export const findOrCreate = mutation({
+// Create a new group for a poll
+export const createGroup = mutation({
   args: {
     pollId: v.id("polls"),
     members: v.array(
@@ -24,7 +24,7 @@ export const findOrCreate = mutation({
     const requireNames = poll.requireParticipantNames ?? true;
     validateMembers(args.members, requiredMembers, requireNames);
 
-    // Always create a new group (no lookup by name)
+    // Always create a new group
     const groupId = await ctx.db.insert("groups", {
       pollId: args.pollId,
       members: args.members,
@@ -74,20 +74,35 @@ export const deleteGroup = mutation({
     const group = await ctx.db.get(args.groupId);
     if (!group) throw new Error("Group not found");
 
-    await validateAdminAccess(ctx, group.pollId, args.adminToken);
+    const poll = await validateAdminAccess(ctx, group.pollId, args.adminToken);
 
-    // Find and unclaim any topic this group selected
-    const topics = await ctx.db
-      .query("topics")
-      .withIndex("by_poll", (q) => q.eq("pollId", group.pollId))
-      .collect();
+    if (poll.pollType === "standard") {
+      // Delete any votes this group cast
+      const vote = await ctx.db
+        .query("votes")
+        .withIndex("by_poll_group", (q) =>
+          q.eq("pollId", group.pollId).eq("groupId", args.groupId)
+        )
+        .first();
 
-    const selectedTopic = topics.find((t) => t.selectedByGroupId === args.groupId);
-    if (selectedTopic) {
-      await ctx.db.patch(selectedTopic._id, {
-        selectedByGroupId: undefined,
-        selectedAt: undefined,
-      });
+      if (vote) {
+        await ctx.db.delete(vote._id);
+      }
+    } else {
+      // Claims poll: unclaim any topic this group selected
+      const selectedTopic = await ctx.db
+        .query("topics")
+        .withIndex("by_poll_group", (q) =>
+          q.eq("pollId", group.pollId).eq("selectedByGroupId", args.groupId)
+        )
+        .first();
+
+      if (selectedTopic) {
+        await ctx.db.patch(selectedTopic._id, {
+          selectedByGroupId: undefined,
+          selectedAt: undefined,
+        });
+      }
     }
 
     // Delete the group
@@ -142,12 +157,13 @@ export const selfDelete = mutation({
       }
     } else {
       // For claims polls, unclaim any topic selected by this group
-      const topics = await ctx.db
+      const selectedTopic = await ctx.db
         .query("topics")
-        .withIndex("by_poll", (q) => q.eq("pollId", args.pollId))
-        .collect();
+        .withIndex("by_poll_group", (q) =>
+          q.eq("pollId", args.pollId).eq("selectedByGroupId", args.groupId)
+        )
+        .first();
 
-      const selectedTopic = topics.find((t) => t.selectedByGroupId === args.groupId);
       if (selectedTopic) {
         await ctx.db.patch(selectedTopic._id, {
           selectedByGroupId: undefined,
