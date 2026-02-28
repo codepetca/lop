@@ -142,6 +142,17 @@ export const renameTopic = mutation({
       throw new Error("Topic label cannot be empty");
     }
 
+    // Reject duplicate labels within the same poll (by_poll_label index invariant)
+    const duplicate = await ctx.db
+      .query("topics")
+      .withIndex("by_poll_label", (q) =>
+        q.eq("pollId", topic.pollId).eq("label", trimmedLabel)
+      )
+      .first();
+    if (duplicate && duplicate._id !== args.topicId) {
+      throw new Error("A topic with that label already exists in this poll");
+    }
+
     // Update the topic label
     await ctx.db.patch(args.topicId, {
       label: trimmedLabel,
