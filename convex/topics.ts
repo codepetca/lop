@@ -20,24 +20,26 @@ export const list = query({
 
     const requireNames = poll.requireParticipantNames ?? true;
 
-    // For standard polls, enrich with vote counts
+    // For standard polls, enrich with vote counts (single query, no N+1)
     if (poll.pollType === "standard") {
-      return await Promise.all(
-        topics.map(async (topic) => {
-          const votes = await ctx.db
-            .query("votes")
-            .withIndex("by_poll_topic", (q) =>
-              q.eq("pollId", args.pollId).eq("topicId", topic._id)
-            )
-            .collect();
+      const allVotes = await ctx.db
+        .query("votes")
+        .withIndex("by_poll", (q) => q.eq("pollId", args.pollId))
+        .collect();
 
-          return {
-            ...topic,
-            voteCount: votes.length,
-            selectedBy: null, // Not used for standard polls
-          };
-        })
-      );
+      const voteCountByTopic = new Map<string, number>();
+      for (const vote of allVotes) {
+        voteCountByTopic.set(
+          vote.topicId,
+          (voteCountByTopic.get(vote.topicId) ?? 0) + 1
+        );
+      }
+
+      return topics.map((topic) => ({
+        ...topic,
+        voteCount: voteCountByTopic.get(topic._id) ?? 0,
+        selectedBy: null, // Not used for standard polls
+      }));
     }
 
     // For claims polls, enrich with group information (or hide if anonymous)
@@ -86,11 +88,25 @@ export const deleteTopic = mutation({
     const topic = await ctx.db.get(args.topicId);
     if (!topic) throw new Error("Topic not found");
 
-    await validateAdminAccess(ctx, topic.pollId, args.adminToken);
+    const poll = await validateAdminAccess(ctx, topic.pollId, args.adminToken);
 
-    // If topic is claimed, delete the group as well
-    if (topic.selectedByGroupId) {
-      await ctx.db.delete(topic.selectedByGroupId);
+    if (poll.pollType === "standard") {
+      // Delete all votes for this topic
+      const votes = await ctx.db
+        .query("votes")
+        .withIndex("by_poll_topic", (q) =>
+          q.eq("pollId", topic.pollId).eq("topicId", args.topicId)
+        )
+        .collect();
+
+      for (const vote of votes) {
+        await ctx.db.delete(vote._id);
+      }
+    } else {
+      // Claims poll: if topic is claimed, delete the claiming group
+      if (topic.selectedByGroupId) {
+        await ctx.db.delete(topic.selectedByGroupId);
+      }
     }
 
     // Delete the topic
@@ -162,22 +178,35 @@ export const renameTopic = mutation({
   },
 });
 
-// Clear all claims (admin only)
+// Clear all claims/votes (admin only)
 export const clearAllClaims = mutation({
   args: {
     pollId: v.id("polls"),
     adminToken: v.string(),
   },
   handler: async (ctx, args) => {
-    await validateAdminAccess(ctx, args.pollId, args.adminToken);
+    const poll = await validateAdminAccess(ctx, args.pollId, args.adminToken);
 
-    // Find all topics for this poll
+    if (poll.pollType === "standard") {
+      // For standard polls, delete all votes
+      const votes = await ctx.db
+        .query("votes")
+        .withIndex("by_poll", (q) => q.eq("pollId", args.pollId))
+        .collect();
+
+      for (const vote of votes) {
+        await ctx.db.delete(vote._id);
+      }
+
+      return { success: true, clearedCount: votes.length };
+    }
+
+    // For claims polls, clear selectedByGroupId from all topics
     const topics = await ctx.db
       .query("topics")
       .withIndex("by_poll", (q) => q.eq("pollId", args.pollId))
       .collect();
 
-    // Clear claims from all topics
     let clearedCount = 0;
     for (const topic of topics) {
       if (topic.selectedByGroupId) {

@@ -293,12 +293,15 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   const handleExportCSV = () => {
     if (!exportResults) return;
 
-    const headers = ["Topic", "Members", "Selected At"];
-    const rows = exportResults.map((r) => [
-      r.topic,
-      r.members,
-      r.selectedAt,
-    ]);
+    const isStandard = poll?.pollType === "standard";
+    const headers = isStandard
+      ? ["Topic", "Votes"]
+      : ["Topic", "Members", "Selected At"];
+    const rows = exportResults.map((r) =>
+      isStandard
+        ? [r.topic, String(r.votes ?? 0)]
+        : [r.topic, r.members, r.selectedAt]
+    );
 
     const csv = [headers, ...rows]
       .map((row) => row.map((cell) => `"${cell}"`).join(","))

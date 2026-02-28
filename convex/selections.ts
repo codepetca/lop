@@ -35,14 +35,12 @@ export const claim = mutation({
     validatePollOpen(poll);
 
     // 2. Check if group has a previous pick and unassign it
-    const allTopics = await ctx.db
+    const previousPick = await ctx.db
       .query("topics")
-      .withIndex("by_poll", (q) => q.eq("pollId", args.pollId))
-      .collect();
-
-    const previousPick = allTopics.find(
-      (t) => t.selectedByGroupId === args.groupId
-    );
+      .withIndex("by_poll_group", (q) =>
+        q.eq("pollId", args.pollId).eq("selectedByGroupId", args.groupId)
+      )
+      .first();
 
     if (previousPick && previousPick._id !== args.topicId) {
       await ctx.db.patch(previousPick._id, {
@@ -90,14 +88,12 @@ export const unclaim = mutation({
     validatePollOpen(poll);
 
     // Find the topic claimed by this group
-    const allTopics = await ctx.db
+    const claimedTopic = await ctx.db
       .query("topics")
-      .withIndex("by_poll", (q) => q.eq("pollId", args.pollId))
-      .collect();
-
-    const claimedTopic = allTopics.find(
-      (t) => t.selectedByGroupId === args.groupId
-    );
+      .withIndex("by_poll_group", (q) =>
+        q.eq("pollId", args.pollId).eq("selectedByGroupId", args.groupId)
+      )
+      .first();
 
     if (claimedTopic) {
       await ctx.db.patch(claimedTopic._id, {
