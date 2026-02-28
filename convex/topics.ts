@@ -139,6 +139,45 @@ export const unclaimTopic = mutation({
   },
 });
 
+// Rename a topic (admin only)
+export const renameTopic = mutation({
+  args: {
+    topicId: v.id("topics"),
+    adminToken: v.string(),
+    label: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const topic = await ctx.db.get(args.topicId);
+    if (!topic) throw new Error("Topic not found");
+
+    await validateAdminAccess(ctx, topic.pollId, args.adminToken);
+
+    // Validate label is not empty
+    const trimmedLabel = args.label.trim();
+    if (!trimmedLabel) {
+      throw new Error("Topic label cannot be empty");
+    }
+
+    // Reject duplicate labels within the same poll (by_poll_label index invariant)
+    const duplicate = await ctx.db
+      .query("topics")
+      .withIndex("by_poll_label", (q) =>
+        q.eq("pollId", topic.pollId).eq("label", trimmedLabel)
+      )
+      .first();
+    if (duplicate && duplicate._id !== args.topicId) {
+      throw new Error("A topic with that label already exists in this poll");
+    }
+
+    // Update the topic label
+    await ctx.db.patch(args.topicId, {
+      label: trimmedLabel,
+    });
+
+    return { success: true };
+  },
+});
+
 // Clear all claims/votes (admin only)
 export const clearAllClaims = mutation({
   args: {

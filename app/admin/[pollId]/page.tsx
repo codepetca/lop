@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { useRouter } from "next/navigation";
 import { api } from "@/convex/_generated/api";
@@ -49,6 +49,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   const addTopics = useMutation(api.polls.addTopics);
   const deleteTopic = useMutation(api.topics.deleteTopic);
   const reorderTopics = useMutation(api.topics.reorderTopics);
+  const renameTopic = useMutation(api.topics.renameTopic);
   const clearAllClaims = useMutation(api.topics.clearAllClaims);
   const unclaimTopic = useMutation(api.topics.unclaimTopic);
   const deletePoll = useMutation(api.polls.deletePoll);
@@ -56,6 +57,10 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   const [draggedTopicId, setDraggedTopicId] = useState<Id<"topics"> | null>(null);
   const [previewTopics, setPreviewTopics] = useState<typeof topics | null>(null);
   const [optimisticOrder, setOptimisticOrder] = useState<Id<"topics">[] | null>(null);
+  const [editingTopicId, setEditingTopicId] = useState<Id<"topics"> | null>(null);
+  const [editingTopicLabel, setEditingTopicLabel] = useState("");
+  const editingCancelledRef = useRef(false);
+  const isSavingTopicRef = useRef(false);
 
 
   const { confirm, ConfirmDialog } = useConfirm();
@@ -332,6 +337,43 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
     }
   };
 
+  const handleStartEditingTopic = (topicId: Id<"topics">, currentLabel: string) => {
+    editingCancelledRef.current = false;
+    isSavingTopicRef.current = false;
+    setEditingTopicId(topicId);
+    setEditingTopicLabel(currentLabel);
+  };
+
+  const handleCancelEditingTopic = () => {
+    // Set the ref before state update so the onBlur-triggered save sees it
+    // before React re-renders and unmounts the input.
+    editingCancelledRef.current = true;
+    setEditingTopicId(null);
+    setEditingTopicLabel("");
+  };
+
+  const handleSaveTopicLabel = async (topicId: Id<"topics">) => {
+    // Bail if this call was triggered by onBlur after a cancel (Escape key).
+    if (editingCancelledRef.current) {
+      editingCancelledRef.current = false;
+      return;
+    }
+    // Bail if a save is already in flight (prevents double-save when Enter
+    // triggers handleSaveTopicLabel and onBlur fires as the input unmounts).
+    if (isSavingTopicRef.current) return;
+    isSavingTopicRef.current = true;
+    setError(null);
+    try {
+      await renameTopic({ topicId, adminToken, label: editingTopicLabel });
+      setEditingTopicId(null);
+      setEditingTopicLabel("");
+    } catch (error) {
+      setError(getErrorMessage(error));
+    } finally {
+      isSavingTopicRef.current = false;
+    }
+  };
+
   if (poll === undefined || topics === undefined) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -556,7 +598,35 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                     <GripVertical className="h-5 w-5 text-gray-400 flex-shrink-0 hidden md:block" />
 
                     <div className="flex-1">
-                      <p className="font-medium">{topic.label}</p>
+                      {editingTopicId === topic._id ? (
+                        <Input
+                          value={editingTopicLabel}
+                          onChange={(e) => setEditingTopicLabel(e.target.value)}
+                          onBlur={() => handleSaveTopicLabel(topic._id)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              handleSaveTopicLabel(topic._id);
+                            }
+                            if (e.key === "Escape") {
+                              handleCancelEditingTopic();
+                            }
+                          }}
+                          autoFocus
+                          className="font-medium"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      ) : (
+                        <p
+                          className="font-medium cursor-pointer hover:text-info transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleStartEditingTopic(topic._id, topic.label);
+                          }}
+                          title="Click to edit topic label"
+                        >
+                          {topic.label}
+                        </p>
+                      )}
                       {topic.selectedBy && (
                         <div className="text-xs text-muted-foreground mt-1">
                           {topic.selectedBy.map((m, idx) => (
