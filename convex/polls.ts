@@ -13,6 +13,16 @@ const TIER_POLL_LIMITS = {
 
 type Tier = keyof typeof TIER_POLL_LIMITS;
 
+// Max topics per poll (module-level so it's parsed once)
+const MAX_TOPICS_PER_POLL = parseInt(process.env.MAX_TOPICS_PER_POLL ?? "") || 100;
+
+// Resolve a user document to their effective Tier
+function resolveTier(user: { tier?: string | null; isAnonymous?: boolean | null } | null): Tier {
+  if (!user) return "anonymous";
+  const isAnonymous = user.isAnonymous === true;
+  return (user.tier as Tier) ?? (isAnonymous ? "anonymous" : "free");
+}
+
 // Generate a cryptographically secure admin token
 function generateAdminToken(): string {
   return crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
@@ -39,10 +49,9 @@ export const create = mutation({
     }
 
     // Validate topic count
-    const maxTopicsPerPoll = parseInt(process.env.MAX_TOPICS_PER_POLL ?? "100");
     const validTopics = args.topicLabels.filter((l) => l.trim());
-    if (validTopics.length > maxTopicsPerPoll) {
-      throw new Error(`Too many topics (max ${maxTopicsPerPoll} per poll).`);
+    if (validTopics.length > MAX_TOPICS_PER_POLL) {
+      throw new Error(`Too many topics (max ${MAX_TOPICS_PER_POLL} per poll).`);
     }
 
     // Get authenticated user and their tier
@@ -50,8 +59,7 @@ export const create = mutation({
     let tier: Tier = "anonymous";
     if (userId) {
       const user = await ctx.db.get(userId);
-      const isAnonymous = user?.isAnonymous === true;
-      tier = (user?.tier as Tier) ?? (isAnonymous ? "anonymous" : "free");
+      tier = resolveTier(user);
     }
 
     // Enforce tier-based poll limit
@@ -77,7 +85,7 @@ export const create = mutation({
     }
 
     // Global total cap (DB size backstop)
-    const maxTotalPolls = parseInt(process.env.MAX_TOTAL_POLLS ?? "500");
+    const maxTotalPolls = parseInt(process.env.MAX_TOTAL_POLLS ?? "") || 500;
     const existingPolls = await ctx.db.query("polls").take(maxTotalPolls + 1);
     if (existingPolls.length > maxTotalPolls) {
       throw new Error(
@@ -147,14 +155,13 @@ export const myPollUsage = query({
     if (!userId) return { used: 0, limit: TIER_POLL_LIMITS.anonymous, tier: "anonymous" as Tier };
 
     const user = await ctx.db.get(userId);
-    const isAnonymous = user?.isAnonymous === true;
-    const tier: Tier = (user?.tier as Tier) ?? (isAnonymous ? "anonymous" : "free");
+    const tier = resolveTier(user);
     const limit = TIER_POLL_LIMITS[tier];
 
     const polls = await ctx.db
       .query("polls")
       .withIndex("by_user", (q) => q.eq("userId", userId))
-      .collect();
+      .take(limit + 1);
 
     return { used: polls.length, limit, tier };
   },
@@ -258,10 +265,9 @@ export const addTopics = mutation({
       .withIndex("by_poll", (q) => q.eq("pollId", args.pollId))
       .collect();
 
-    const maxTopicsPerPoll = parseInt(process.env.MAX_TOPICS_PER_POLL ?? "100");
     const incomingCount = args.topicLabels.filter((l) => l.trim()).length;
-    if (existingTopics.length + incomingCount > maxTopicsPerPoll) {
-      throw new Error(`Topic limit reached (max ${maxTopicsPerPoll} per poll).`);
+    if (existingTopics.length + incomingCount > MAX_TOPICS_PER_POLL) {
+      throw new Error(`Topic limit reached (max ${MAX_TOPICS_PER_POLL} per poll).`);
     }
 
     let maxOrder = existingTopics.length > 0
@@ -383,48 +389,29 @@ export const deletePoll = mutation({
 export const cleanupOldPolls = internalMutation({
   args: {},
   handler: async (ctx) => {
-    const maxAnonDays = parseInt(process.env.POLL_MAX_AGE_DAYS_ANONYMOUS ?? "30");
-    const maxFreeDays = parseInt(process.env.POLL_MAX_AGE_DAYS_FREE ?? "180");
+    const maxAnonDays = parseInt(process.env.POLL_MAX_AGE_DAYS_ANONYMOUS ?? "") || 30;
+    const maxFreeDays = parseInt(process.env.POLL_MAX_AGE_DAYS_FREE ?? "") || 180;
 
     const now = Date.now();
     const anonCutoff = now - maxAnonDays * 24 * 60 * 60 * 1000;
-    // Use the longer of the two for the initial filter (no need to load pro polls)
     const freeCutoff = now - maxFreeDays * 24 * 60 * 60 * 1000;
 
-    // Fetch all polls older than the free cutoff (pros are never expired so we don't need to load them)
+    // Fetch all polls older than the anonymous cutoff (the shorter window).
+    // Pro polls are skipped inside the loop; free polls are only deleted if older than freeCutoff.
     const candidates = await ctx.db
       .query("polls")
-      .withIndex("by_createdAt", (q) => q.lt("createdAt", freeCutoff))
-      .collect();
-
-    // Also fetch anonymous/legacy polls older than anonCutoff that were missed above
-    const anonCandidates = await ctx.db
-      .query("polls")
-      .withIndex("by_createdAt", (q) =>
-        q.gte("createdAt", freeCutoff).lt("createdAt", anonCutoff > freeCutoff ? anonCutoff : freeCutoff)
-      )
+      .withIndex("by_createdAt", (q) => q.lt("createdAt", anonCutoff))
       .collect();
 
     const toDelete = new Set<Id<"polls">>();
 
-    // All polls older than free cutoff are eligible (check tier below)
     for (const poll of candidates) {
       const owner = poll.userId ? await ctx.db.get(poll.userId) : null;
-      const isAnonymous = owner?.isAnonymous === true;
-      const tier: Tier = (owner?.tier as Tier) ?? (isAnonymous ? "anonymous" : "free");
+      const tier = resolveTier(owner);
 
       if (tier === "pro") continue; // pro polls never expire
+      if (tier === "free" && poll.createdAt >= freeCutoff) continue; // free poll not old enough
       toDelete.add(poll._id);
-    }
-
-    // Polls between anonCutoff and freeCutoff: only delete if anonymous/legacy
-    for (const poll of anonCandidates) {
-      if (poll.createdAt >= anonCutoff) continue; // not old enough for anonymous expiry
-      const owner = poll.userId ? await ctx.db.get(poll.userId) : null;
-      const isAnonymous = owner?.isAnonymous === true;
-      const tier: Tier = (owner?.tier as Tier) ?? (isAnonymous ? "anonymous" : "free");
-
-      if (tier === "anonymous") toDelete.add(poll._id);
     }
 
     let deleted = 0;

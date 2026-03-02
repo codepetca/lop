@@ -50,9 +50,11 @@ export function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleGoogleSignIn = () => {
+    setIsGoogleLoading(true);
     void signIn("google");
   };
 
@@ -82,6 +84,7 @@ export function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
       setEmail("");
       setPassword("");
       setError(null);
+      setIsGoogleLoading(false);
     }
     onOpenChange(newOpen);
   };
@@ -101,8 +104,13 @@ export function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
             variant="outline"
             className="w-full gap-3"
             onClick={handleGoogleSignIn}
+            disabled={isGoogleLoading}
           >
-            <GoogleLogo />
+            {isGoogleLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <GoogleLogo />
+            )}
             Sign in with Google
           </Button>
 

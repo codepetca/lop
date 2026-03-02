@@ -48,7 +48,7 @@ export function NavBar({ showHomeButton = false }: NavBarProps) {
             ) : (
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full h-6 w-6 p-0 overflow-hidden">
+                  <Button variant="ghost" size="icon" className="rounded-full h-6 w-6 p-0 overflow-hidden" aria-label={name ?? email ?? "User menu"}>
                     {image ? (
                       <img src={image} alt={name ?? email ?? "User"} className="h-6 w-6 rounded-full object-cover" />
                     ) : (
