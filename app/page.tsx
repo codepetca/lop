@@ -7,51 +7,66 @@ import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RecentPolls } from "@/components/RecentPolls";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { SavedPoll } from "@/types/poll";
 
 export default function Home() {
   const router = useRouter();
+  const { isAnonymous, isLoading: userLoading, tier } = useCurrentUser();
+
+  // Server-side polls for signed-in (non-anonymous) users
+  const serverPolls = useQuery(
+    api.polls.myPolls,
+    !userLoading && !isAnonymous ? {} : "skip"
+  );
+
+  // localStorage fallback for anonymous users
   const [savedPolls, setSavedPolls] = useLocalStorage<SavedPoll[]>("myPolls", []);
   const [pollIdsToCheck, setPollIdsToCheck] = useState<string[]>([]);
 
-  // Extract poll IDs when savedPolls loads
   useEffect(() => {
-    if (savedPolls.length > 0) {
+    if (isAnonymous && savedPolls.length > 0) {
       setPollIdsToCheck(savedPolls.map((p) => p.pollId));
     }
-  }, [savedPolls]);
+  }, [isAnonymous, savedPolls]);
 
-  // Validate which polls still exist
   const existingPollIds = useQuery(
     api.polls.validatePolls,
-    pollIdsToCheck.length > 0 ? { pollIds: pollIdsToCheck } : "skip"
+    isAnonymous && pollIdsToCheck.length > 0 ? { pollIds: pollIdsToCheck } : "skip"
   );
 
-  // Clean up non-existent polls
   useEffect(() => {
     if (!existingPollIds || savedPolls.length === 0) return;
-
-    const validPolls = savedPolls.filter((poll) =>
-      existingPollIds.includes(poll.pollId)
-    );
-
-    if (validPolls.length !== savedPolls.length) {
-      // Some polls were deleted, update state (useLocalStorage handles persistence)
-      setSavedPolls(validPolls);
-    }
+    const validPolls = savedPolls.filter((poll) => existingPollIds.includes(poll.pollId));
+    if (validPolls.length !== savedPolls.length) setSavedPolls(validPolls);
   }, [existingPollIds, savedPolls]);
 
+  // Build display list: server-side for signed-in users, localStorage for anonymous
+  const displayPolls: SavedPoll[] = isAnonymous
+    ? savedPolls
+    : (serverPolls ?? []).map((p) => ({
+        pollId: p.pollId,
+        title: p.title,
+        adminToken: p.adminToken,
+        createdAt: p.createdAt,
+      }));
+
+  const tierLabel = tier === "pro" ? "Pro" : tier === "free" ? "Free" : null;
+
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="fixed top-4 right-4 z-50">
-        <ThemeToggle />
-      </div>
-      <div className="w-full max-w-2xl space-y-4">
+    <div className="min-h-screen bg-background p-4">
+      <div className="w-full max-w-2xl mx-auto space-y-2">
         <Card>
           <CardHeader className="text-center">
-            <CardTitle className="text-4xl font-display font-bold mb-2">Claims Poll!</CardTitle>
+            <CardTitle className="text-4xl font-display font-bold mb-2">
+              Claims Poll
+              {tierLabel && (
+                <span className="ml-2 text-sm font-sans font-normal text-muted-foreground align-middle">
+                  {tierLabel}
+                </span>
+          )}
+            </CardTitle>
             <CardDescription className="text-base">
               No repeat topics
               <br />
@@ -59,21 +74,17 @@ export default function Home() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {/* Create New Poll Button */}
-            <div className="text-center">
-              <Button
-                size="lg"
-                onClick={() => router.push("/admin")}
-                className="w-full"
-              >
-                Create New Poll
-              </Button>
-            </div>
+            <Button
+              size="lg"
+              onClick={() => router.push("/admin")}
+              className="w-full"
+            >
+              Create New Poll
+            </Button>
           </CardContent>
         </Card>
 
-        {/* My Recent Polls */}
-        <RecentPolls polls={savedPolls} />
+        <RecentPolls polls={displayPolls} />
       </div>
     </div>
   );

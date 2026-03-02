@@ -450,8 +450,8 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   const totalCount = topics.length;
 
   return (
-    <div className="min-h-screen bg-background p-4 py-8">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-background p-4 py-4">
+      <div className="max-w-6xl mx-auto space-y-3">
         {/* Error Message */}
         <ErrorMessage message={error} onDismiss={() => setError(null)} />
 

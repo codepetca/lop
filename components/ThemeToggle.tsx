@@ -15,17 +15,17 @@ export function ThemeToggle() {
   }, []);
 
   if (!mounted) {
-    return <Button variant="outline" size="icon" className="h-9 w-9" />;
+    return <Button variant="ghost" size="icon" className="h-6 w-6 border-none" />;
   }
 
   const isDark = theme === "dark";
 
   return (
     <Button
-      variant="outline"
+      variant="ghost"
       size="icon"
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="h-9 w-9"
+      className="h-6 w-6 border-none"
     >
       {isDark ? (
         <Sun className="h-4 w-4" />
