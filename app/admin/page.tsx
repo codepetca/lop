@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Loader2, CircleHelp } from "lucide-react";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { SignInDialog } from "@/components/SignInDialog";
 import { SavedPoll } from "@/types/poll";
 import { MAX_SAVED_POLLS } from "@/lib/constants";
 import { ErrorMessage } from "@/components/shared/ErrorMessage";
@@ -30,6 +31,7 @@ export default function AdminPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  const [signInOpen, setSignInOpen] = useState(false);
 
   const { isAnonymous, tier } = useCurrentUser();
   const usage = useQuery(api.polls.myPollUsage);
@@ -92,9 +94,21 @@ export default function AdminPage() {
             </div>
             {expiryDays && (
               <p className="text-xs text-muted-foreground mt-1">
-                {tier === "anonymous"
-                  ? `Polls expire after ${expiryDays} days. Sign in first to keep them for longer.`
-                  : `Polls expire after ${expiryDays} days.`}
+                {tier === "anonymous" ? (
+                  <>
+                    Polls expire after {expiryDays} days.{" "}
+                    <button
+                      type="button"
+                      onClick={() => setSignInOpen(true)}
+                      className="underline hover:text-foreground transition-colors"
+                    >
+                      Sign in
+                    </button>
+                    {" "}to keep them for longer.
+                  </>
+                ) : (
+                  `Polls expire after ${expiryDays} days.`
+                )}
               </p>
             )}
           </CardHeader>
@@ -227,17 +241,38 @@ export default function AdminPage() {
                 />
               </div>
 
-              <Button type="submit" className="w-full" disabled={isCreating}>
-                {isCreating ? (
-                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creating Poll...</>
-                ) : (
-                  "Create Poll"
-                )}
-              </Button>
+              {usage && usage.used >= usage.limit ? (
+                <div className="space-y-2">
+                  <Button type="button" className="w-full" disabled>
+                    Poll limit reached ({usage.used}/{usage.limit})
+                  </Button>
+                  {isAnonymous && (
+                    <p className="text-xs text-center text-muted-foreground">
+                      <button
+                        type="button"
+                        onClick={() => setSignInOpen(true)}
+                        className="underline hover:text-foreground transition-colors"
+                      >
+                        Sign in
+                      </button>
+                      {" "}to create more polls.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <Button type="submit" className="w-full" disabled={isCreating}>
+                  {isCreating ? (
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creating Poll...</>
+                  ) : (
+                    "Create Poll"
+                  )}
+                </Button>
+              )}
             </form>
           </CardContent>
         </Card>
       </div>
     </div>
+    <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} />
   );
 }
