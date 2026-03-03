@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Rabbit, LogOut } from "lucide-react";
+import { Home, LogOut } from "lucide-react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { SignInDialog } from "@/components/SignInDialog";
@@ -25,51 +25,52 @@ export function NavBar({ showHomeButton = false }: NavBarProps) {
   return (
     <>
       <div className="border-b bg-card">
-        <div className="max-w-7xl mx-auto px-4 py-1 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 py-1 relative flex items-center justify-center">
           <Button
             variant="ghost"
             onClick={() => router.push("/")}
-            className="p-0 h-auto w-auto hover:bg-transparent"
+            className="absolute left-4 p-0 h-auto w-auto hover:bg-transparent"
           >
-            <Rabbit className="h-5 w-5 text-info" />
+            <Home className="h-5 w-5" />
           </Button>
 
-          <div className="flex items-center gap-2">
-          <ThemeToggle />
-          {!isLoading && (
-            isAnonymous ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setSignInOpen(true)}
-              >
-                Sign in
-              </Button>
-            ) : (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full h-6 w-6 p-0 overflow-hidden" aria-label={name ?? email ?? "User menu"}>
-                    {image ? (
-                      <img src={image} alt={name ?? email ?? "User"} className="h-6 w-6 rounded-full object-cover" />
-                    ) : (
-                      <span className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-medium">
-                        {initial}
-                      </span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="end" className="w-44 p-1">
-                  <button
-                    onClick={() => void signOut()}
-                    className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-                  >
-                    <LogOut className="h-3.5 w-3.5" />
-                    Sign out
-                  </button>
-                </PopoverContent>
-              </Popover>
-            )
-          )}
+          <span className="text-sm font-semibold">Claims Poll</span>
+
+          <div className="absolute right-4 flex items-center gap-2">
+            <ThemeToggle />
+            {!isLoading && (
+              isAnonymous ? (
+                <button
+                  onClick={() => setSignInOpen(true)}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Sign in
+                </button>
+              ) : (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon" className="rounded-full h-6 w-6 p-0 overflow-hidden" aria-label={name ?? email ?? "User menu"}>
+                      {image ? (
+                        <img src={image} alt={name ?? email ?? "User"} className="h-6 w-6 rounded-full object-cover" />
+                      ) : (
+                        <span className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-medium">
+                          {initial}
+                        </span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-44 p-1">
+                    <button
+                      onClick={() => void signOut()}
+                      className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                    >
+                      <LogOut className="h-3.5 w-3.5" />
+                      Sign out
+                    </button>
+                  </PopoverContent>
+                </Popover>
+              )
+            )}
           </div>
         </div>
       </div>

@@ -12,10 +12,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Loader2, CircleHelp } from "lucide-react";
-import { ShareLinks } from "@/components/ShareLinks";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { SignInDialog } from "@/components/SignInDialog";
 import { SavedPoll } from "@/types/poll";
 import { MAX_SAVED_POLLS } from "@/lib/constants";
 import { ErrorMessage } from "@/components/shared/ErrorMessage";
@@ -31,18 +30,14 @@ export default function AdminPage() {
   const [requireName, setRequireName] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [createdPoll, setCreatedPoll] = useState<{
-    pollId: string;
-    adminToken: string;
-  } | null>(null);
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  const [signInOpen, setSignInOpen] = useState(false);
 
   const { isAnonymous, tier } = useCurrentUser();
   const usage = useQuery(api.polls.myPollUsage);
 
   // localStorage fallback for anonymous users (polls not linked to a server account)
   const [savedPolls, setSavedPolls] = useLocalStorage<SavedPoll[]>("myPolls", []);
-  const { copiedId: copiedField, copyToClipboard } = useCopyToClipboard();
 
   const createPoll = useMutation(api.polls.create);
 
@@ -70,11 +65,11 @@ export default function AdminPage() {
         requireParticipantNames: requireName,
       });
 
-      setCreatedPoll(result);
       // Keep localStorage for anonymous users so they can find the poll
       if (isAnonymous) {
         savePollToLocalStorage(result.pollId, result.adminToken, title.trim());
       }
+      router.push(`/admin/${result.pollId}?token=${result.adminToken}`);
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -82,44 +77,10 @@ export default function AdminPage() {
     }
   };
 
-  if (createdPoll) {
-    const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
-    const studentUrl = `${baseUrl}/p/${createdPoll.pollId}`;
-    const adminUrl = `${baseUrl}/admin/${createdPoll.pollId}?token=${createdPoll.adminToken}`;
-    const resultsUrl = `${baseUrl}/r/${createdPoll.pollId}`;
-
-    return (
-      <div className="min-h-screen bg-background p-4 py-4">
-        <div className="max-w-3xl mx-auto space-y-2">
-          <ShareLinks
-            participantUrl={studentUrl}
-            resultsUrl={resultsUrl}
-            copiedField={copiedField}
-            onCopy={(text, id) => copyToClipboard(text, id)}
-            successMessage="Poll Created Successfully!"
-          />
-          <Card>
-            <CardContent className="pt-6 space-y-2">
-              <Button variant="default" className="w-full" onClick={() => router.push(adminUrl)}>
-                Go to Admin Panel
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => { setCreatedPoll(null); setTitle(""); setDescription(""); setTopics(""); }}
-              >
-                Create Another Poll
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
   const expiryDays = tier === "anonymous" ? 30 : tier === "free" ? 180 : null;
 
   return (
+    <>
     <div className="min-h-screen bg-background p-4 py-4">
       <div className="max-w-2xl mx-auto">
         <Card>
@@ -134,9 +95,21 @@ export default function AdminPage() {
             </div>
             {expiryDays && (
               <p className="text-xs text-muted-foreground mt-1">
-                {tier === "anonymous"
-                  ? `Polls expire after ${expiryDays} days. Sign in first to keep them for longer.`
-                  : `Polls expire after ${expiryDays} days.`}
+                {tier === "anonymous" ? (
+                  <>
+                    Polls expire after {expiryDays} days.{" "}
+                    <button
+                      type="button"
+                      onClick={() => setSignInOpen(true)}
+                      className="underline hover:text-foreground transition-colors"
+                    >
+                      Sign in
+                    </button>
+                    {" "}to keep them for longer.
+                  </>
+                ) : (
+                  `Polls expire after ${expiryDays} days.`
+                )}
               </p>
             )}
           </CardHeader>
@@ -269,17 +242,39 @@ export default function AdminPage() {
                 />
               </div>
 
-              <Button type="submit" className="w-full" disabled={isCreating}>
-                {isCreating ? (
-                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creating Poll...</>
-                ) : (
-                  "Create Poll"
-                )}
-              </Button>
+              {usage && usage.used >= usage.limit ? (
+                <div className="space-y-2">
+                  <Button type="button" className="w-full" disabled>
+                    Poll limit reached ({usage.used}/{usage.limit})
+                  </Button>
+                  {isAnonymous && (
+                    <p className="text-xs text-center text-muted-foreground">
+                      <button
+                        type="button"
+                        onClick={() => setSignInOpen(true)}
+                        className="underline hover:text-foreground transition-colors"
+                      >
+                        Sign in
+                      </button>
+                      {" "}to create more polls.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <Button type="submit" className="w-full" disabled={isCreating}>
+                  {isCreating ? (
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creating Poll...</>
+                  ) : (
+                    "Create Poll"
+                  )}
+                </Button>
+              )}
             </form>
           </CardContent>
         </Card>
       </div>
     </div>
+    <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} />
+    </>
   );
 }
