@@ -590,7 +590,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
               >
                 {poll.isOpen || (poll.topicsVisible ?? false) ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
               </Button>
-              <Button variant={poll.isOpen ? "success" : "warning"} size="sm" onClick={handleToggleOpen} title={poll.isOpen ? "Open" : "Closed"}>
+              <Button variant={poll.isOpen ? "success" : "warning"} size="sm" onClick={handleToggleOpen} title={poll.isOpen ? "Poll opened" : "Poll closed"}>
                 {poll.isOpen ? <Unlock className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
               </Button>
             </div>

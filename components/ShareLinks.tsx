@@ -1,11 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Share2, ExternalLink, Lock, Unlock, Eye, EyeOff, Download, Check, HelpCircle, ChevronDown } from "lucide-react";
+import { Share2, ExternalLink, Lock, Unlock, Eye, EyeOff, Download, Check, ChevronDown } from "lucide-react";
 
 interface ShareLinksProps {
   participantUrl: string;
@@ -43,21 +41,9 @@ export function ShareLinks({
   exportDisabled = false,
 }: ShareLinksProps) {
   const resultsVisible = poll?.resultsVisible ?? true;
-  const [helpOpen, setHelpOpen] = useState(false);
 
   return (
-    <Card className="relative">
-      <Tooltip open={helpOpen} onOpenChange={setHelpOpen}>
-        <TooltipTrigger asChild>
-          <button
-            className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"
-            onClick={() => setHelpOpen(v => !v)}
-          >
-            <HelpCircle className="h-4 w-4" />
-          </button>
-        </TooltipTrigger>
-        <TooltipContent side="left">Share the results link. Hide the results.</TooltipContent>
-      </Tooltip>
+    <Card>
       {successMessage && (
         <CardHeader>
           <CardDescription className="text-success font-medium">
@@ -96,7 +82,7 @@ export function ShareLinks({
             </Button>
           )}
           {showControls && poll && onToggleOpen && (
-            <Button variant={poll.isOpen ? "success" : "warning"} size="sm" onClick={onToggleOpen} title={poll.isOpen ? "Open" : "Closed"}>
+            <Button variant={poll.isOpen ? "success" : "warning"} size="sm" onClick={onToggleOpen} title={poll.isOpen ? "Poll opened" : "Poll closed"}>
               {poll.isOpen ? <Unlock className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
             </Button>
           )}
