@@ -56,11 +56,11 @@ export function NavBar({ showHomeButton = false }: NavBarProps) {
               ) : (
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full h-6 w-6 p-0 overflow-hidden" aria-label={name ?? email ?? "User menu"}>
+                    <Button variant="ghost" className="rounded-full h-7 w-7 p-0 overflow-hidden" aria-label={name ?? email ?? "User menu"}>
                       {image ? (
-                        <img src={image} alt={name ?? email ?? "User"} className="h-6 w-6 rounded-full object-cover" />
+                        <img src={image} alt={name ?? email ?? "User"} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                       ) : (
-                        <span className="h-6 w-6 rounded-full flex items-center justify-center text-xs font-semibold text-white" style={{ background: avatarBg }}>
+                        <span className="w-full h-full flex items-center justify-center text-xs font-semibold text-white" style={{ background: avatarBg }}>
                           {initial}
                         </span>
                       )}
