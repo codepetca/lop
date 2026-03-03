@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Rabbit } from "lucide-react";
+import { Home } from "lucide-react";
 
 interface NavBarProps {
   showHomeButton?: boolean;
@@ -13,14 +13,15 @@ export function NavBar({ showHomeButton = false }: NavBarProps) {
 
   return (
     <div className="border-b bg-card">
-      <div className="max-w-7xl mx-auto px-4 py-2">
+      <div className="max-w-7xl mx-auto px-4 py-2 relative flex items-center justify-center">
         <Button
           variant="ghost"
           onClick={() => router.push("/")}
-          className="p-0 h-auto w-auto hover:bg-transparent"
+          className="absolute left-4 p-0 h-auto w-auto hover:bg-transparent"
         >
-          <Rabbit className="h-7 w-7 text-info" />
+          <Home className="h-5 w-5" />
         </Button>
+        <span className="text-sm font-semibold">Claims Poll</span>
       </div>
     </div>
   );

@@ -8,13 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Loader2, CircleHelp } from "lucide-react";
-import { ShareLinks } from "@/components/ShareLinks";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { SavedPoll } from "@/types/poll";
 import { MAX_SAVED_POLLS } from "@/lib/constants";
 import { ErrorMessage } from "@/components/shared/ErrorMessage";
@@ -30,14 +28,9 @@ export default function AdminPage() {
   const [requireName, setRequireName] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [createdPoll, setCreatedPoll] = useState<{
-    pollId: string;
-    adminToken: string;
-  } | null>(null);
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
 
   const [savedPolls, setSavedPolls] = useLocalStorage<SavedPoll[]>("myPolls", []);
-  const { copiedId: copiedField, copyToClipboard } = useCopyToClipboard();
 
   const createPoll = useMutation(api.polls.create);
 
@@ -76,8 +69,8 @@ export default function AdminPage() {
         requireParticipantNames: requireName,
       });
 
-      setCreatedPoll(result);
       savePollToLocalStorage(result.pollId, result.adminToken, title.trim());
+      router.push(`/admin/${result.pollId}?token=${result.adminToken}`);
     } catch (error) {
       setError(getErrorMessage(error));
     } finally {
@@ -85,51 +78,6 @@ export default function AdminPage() {
     }
   };
 
-
-  if (createdPoll) {
-    const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
-    const studentUrl = `${baseUrl}/p/${createdPoll.pollId}`;
-    const adminUrl = `${baseUrl}/admin/${createdPoll.pollId}?token=${createdPoll.adminToken}`;
-    const resultsUrl = `${baseUrl}/r/${createdPoll.pollId}`;
-
-    return (
-      <div className="min-h-screen bg-background p-4 py-8">
-        <div className="max-w-3xl mx-auto space-y-4">
-          <ShareLinks
-            participantUrl={studentUrl}
-            resultsUrl={resultsUrl}
-            copiedField={copiedField}
-            onCopy={(text, id) => copyToClipboard(text, id)}
-            successMessage="Poll Created Successfully!"
-          />
-
-          <Card>
-            <CardContent className="pt-6 space-y-2">
-              <Button
-                variant="default"
-                className="w-full"
-                onClick={() => router.push(adminUrl)}
-              >
-                Go to Admin Panel
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => {
-                  setCreatedPoll(null);
-                  setTitle("");
-                  setDescription("");
-                  setTopics("");
-                }}
-              >
-                Create Another Poll
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background p-4 py-8">
