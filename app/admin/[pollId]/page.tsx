@@ -581,9 +581,6 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-              <Button variant={poll.isOpen ? "success" : "warning"} size="sm" onClick={handleToggleOpen} title={poll.isOpen ? "Open" : "Closed"}>
-                {poll.isOpen ? <Unlock className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
-              </Button>
               <Button
                 variant={poll.isOpen || (poll.topicsVisible ?? false) ? "success" : "warning"}
                 size="sm"
@@ -592,6 +589,9 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                 title={poll.isOpen ? "Topics always visible when poll is open" : (poll.topicsVisible ?? false) ? "Topics visible to students" : "Topics hidden from students"}
               >
                 {poll.isOpen || (poll.topicsVisible ?? false) ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+              </Button>
+              <Button variant={poll.isOpen ? "success" : "warning"} size="sm" onClick={handleToggleOpen} title={poll.isOpen ? "Open" : "Closed"}>
+                {poll.isOpen ? <Unlock className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
               </Button>
             </div>
             {/* Row 2: Results Link + Visibility toggle */}

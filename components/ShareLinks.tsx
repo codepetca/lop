@@ -84,11 +84,6 @@ export function ShareLinks({
           <Button variant="outline" size="sm" onClick={() => window.open(`${participantUrl}?preview=true`, "_blank")} title="Preview">
             <ExternalLink className="h-3.5 w-3.5" />
           </Button>
-          {showControls && poll && onToggleOpen && (
-            <Button variant={poll.isOpen ? "success" : "warning"} size="sm" onClick={onToggleOpen} title={poll.isOpen ? "Open" : "Closed"}>
-              {poll.isOpen ? <Unlock className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
-            </Button>
-          )}
           {showControls && poll && onToggleTopicsVisible && (
             <Button
               variant={poll.isOpen || (poll.topicsVisible ?? false) ? "success" : "warning"}
@@ -98,6 +93,11 @@ export function ShareLinks({
               title={poll.isOpen ? "Topics always visible when poll is open" : (poll.topicsVisible ?? false) ? "Topics visible to students" : "Topics hidden from students"}
             >
               {poll.isOpen || (poll.topicsVisible ?? false) ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+            </Button>
+          )}
+          {showControls && poll && onToggleOpen && (
+            <Button variant={poll.isOpen ? "success" : "warning"} size="sm" onClick={onToggleOpen} title={poll.isOpen ? "Open" : "Closed"}>
+              {poll.isOpen ? <Unlock className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
             </Button>
           )}
         </div>}
