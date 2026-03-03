@@ -80,6 +80,7 @@ export default function AdminPage() {
   const expiryDays = tier === "anonymous" ? 30 : tier === "free" ? 180 : null;
 
   return (
+    <>
     <div className="min-h-screen bg-background p-4 py-4">
       <div className="max-w-2xl mx-auto">
         <Card>
@@ -274,5 +275,6 @@ export default function AdminPage() {
       </div>
     </div>
     <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} />
+    </>
   );
 }
