@@ -72,30 +72,39 @@ export default function Home() {
           )}
             </CardTitle>
             <CardDescription className="text-base">
-              No repeat topics
-              <br />
-              First-come first-served
+              Hop in and vote.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            {!userLoading && isAnonymous && (
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={() => setSignInOpen(true)}
-                className="w-full"
-              >
-                <UserRound className="mr-2 h-5 w-5" />
-                Sign in
-              </Button>
+            {!userLoading && (
+              isAnonymous ? (
+                <>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    onClick={() => setSignInOpen(true)}
+                    className="w-full"
+                  >
+                    <UserRound className="mr-2 h-5 w-5" />
+                    Sign in. Keep your polls.
+                  </Button>
+                  <button
+                    onClick={() => router.push("/admin")}
+                    className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors py-1"
+                  >
+                    Skip
+                  </button>
+                </>
+              ) : (
+                <Button
+                  size="lg"
+                  onClick={() => router.push("/admin")}
+                  className="w-full"
+                >
+                  Create a Poll
+                </Button>
+              )
             )}
-            <Button
-              size="lg"
-              onClick={() => router.push("/admin")}
-              className="w-full"
-            >
-              Create New Poll
-            </Button>
           </CardContent>
         </Card>
 
