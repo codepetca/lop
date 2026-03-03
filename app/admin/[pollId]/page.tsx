@@ -10,8 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Plus, Download, GripVertical, Trash2, HelpCircle, RotateCcw, Share2, Check, ExternalLink, Lock, Unlock, ChevronDown, Eye, EyeOff } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Loader2, Plus, Download, GripVertical, Trash2, RotateCcw, Share2, Check, ExternalLink, Lock, Unlock, ChevronDown, Eye, EyeOff } from "lucide-react";
+
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useConfirm } from "@/components/ui/use-confirm";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
@@ -56,7 +56,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   const unclaimTopic = useMutation(api.topics.unclaimTopic);
   const deletePoll = useMutation(api.polls.deletePoll);
 
-  const [titleHelpOpen, setTitleHelpOpen] = useState(false);
+
   const [draggedTopicId, setDraggedTopicId] = useState<Id<"topics"> | null>(null);
   const [previewTopics, setPreviewTopics] = useState<typeof topics | null>(null);
   const [optimisticOrder, setOptimisticOrder] = useState<Id<"topics">[] | null>(null);
@@ -491,18 +491,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
         <ErrorMessage message={error} onDismiss={() => setError(null)} />
 
         {/* Header */}
-        <Card className="relative">
-          <Tooltip open={titleHelpOpen} onOpenChange={setTitleHelpOpen}>
-            <TooltipTrigger asChild>
-              <button
-                className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"
-                onClick={() => setTitleHelpOpen(v => !v)}
-              >
-                <HelpCircle className="h-4 w-4" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="left">Tap on title or description to edit it. Share the poll link. Lock the poll. Preview the poll.</TooltipContent>
-          </Tooltip>
+        <Card>
           <CardHeader>
             {titleEdit.isEditing ? (
               <Input
