@@ -529,7 +529,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
               />
             ) : (
               <CardDescription
-                className="text-base mt-2 cursor-pointer text-info hover:text-info/80 transition-colors"
+                className={`text-base mt-2 cursor-pointer transition-colors ${poll.description ? "text-info hover:text-info/80" : "text-muted-foreground/50 italic hover:text-muted-foreground/70"}`}
                 onClick={descriptionEdit.startEditing}
                 title="Click to edit"
               >
