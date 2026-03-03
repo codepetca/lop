@@ -124,6 +124,24 @@ export const toggleResultsVisible = mutation({
   },
 });
 
+// Toggle topics visibility when poll is closed (admin only)
+export const toggleTopicsVisible = mutation({
+  args: {
+    pollId: v.id("polls"),
+    adminToken: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const poll = await validateAdminAccess(ctx, args.pollId, args.adminToken);
+
+    const newValue = !(poll.topicsVisible ?? false);
+    await ctx.db.patch(args.pollId, {
+      topicsVisible: newValue,
+    });
+
+    return { topicsVisible: newValue };
+  },
+});
+
 // Update poll title and description (admin only)
 export const updatePollDetails = mutation({
   args: {

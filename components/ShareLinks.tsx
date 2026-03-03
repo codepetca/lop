@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CopyableInput } from "@/components/shared/CopyableInput";
-import { ExternalLink, Download, Lock, Unlock } from "lucide-react";
+import { ExternalLink, Download, Lock, Unlock, Eye, EyeOff } from "lucide-react";
 
 interface ShareLinksProps {
   participantUrl: string;
@@ -15,8 +15,10 @@ interface ShareLinksProps {
   poll?: {
     isOpen: boolean;
     resultsVisible?: boolean;
+    topicsVisible?: boolean;
   };
   onToggleOpen?: () => void;
+  onToggleTopicsVisible?: () => void;
   onToggleResultsVisible?: () => void;
   onExportCSV?: () => void;
   exportDisabled?: boolean;
@@ -31,6 +33,7 @@ export function ShareLinks({
   showControls = false,
   poll,
   onToggleOpen,
+  onToggleTopicsVisible,
   onToggleResultsVisible,
   onExportCSV,
   exportDisabled = false,
@@ -86,6 +89,26 @@ export function ShareLinks({
                   )}
                 </Button>
               )}
+              {showControls && poll && onToggleTopicsVisible && !poll.isOpen && (
+                <Button
+                  variant={(poll.topicsVisible ?? false) ? "success" : "warning"}
+                  onClick={onToggleTopicsVisible}
+                  className="flex-1"
+                  title={(poll.topicsVisible ?? false) ? "Click to hide topics" : "Click to show topics"}
+                >
+                  {(poll.topicsVisible ?? false) ? (
+                    <>
+                      <Eye className="mr-2 h-4 w-4" />
+                      Topics Visible
+                    </>
+                  ) : (
+                    <>
+                      <EyeOff className="mr-2 h-4 w-4" />
+                      Topics Hidden
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           </div>
           {/* Desktop Layout */}
@@ -119,6 +142,26 @@ export function ShareLinks({
                   <>
                     <Lock className="mr-2 h-4 w-4" />
                     Poll is Closed
+                  </>
+                )}
+              </Button>
+            )}
+            {showControls && poll && onToggleTopicsVisible && !poll.isOpen && (
+              <Button
+                variant={(poll.topicsVisible ?? false) ? "success" : "warning"}
+                onClick={onToggleTopicsVisible}
+                className="w-44 shrink-0"
+                title={(poll.topicsVisible ?? false) ? "Click to hide topics" : "Click to show topics"}
+              >
+                {(poll.topicsVisible ?? false) ? (
+                  <>
+                    <Eye className="mr-2 h-4 w-4" />
+                    Topics Visible
+                  </>
+                ) : (
+                  <>
+                    <EyeOff className="mr-2 h-4 w-4" />
+                    Topics Hidden
                   </>
                 )}
               </Button>

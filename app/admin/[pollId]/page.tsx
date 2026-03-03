@@ -44,6 +44,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   );
 
   const toggleOpen = useMutation(api.polls.toggleOpen);
+  const toggleTopicsVisible = useMutation(api.polls.toggleTopicsVisible);
   const toggleResultsVisible = useMutation(api.polls.toggleResultsVisible);
   const updatePollDetails = useMutation(api.polls.updatePollDetails);
   const addTopics = useMutation(api.polls.addTopics);
@@ -85,6 +86,15 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
     setError(null);
     try {
       await toggleOpen({ pollId, adminToken });
+    } catch (error) {
+      setError(getErrorMessage(error));
+    }
+  };
+
+  const handleToggleTopicsVisible = async () => {
+    setError(null);
+    try {
+      await toggleTopicsVisible({ pollId, adminToken });
     } catch (error) {
       setError(getErrorMessage(error));
     }
@@ -514,8 +524,10 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
           poll={{
             isOpen: poll.isOpen,
             resultsVisible: poll.resultsVisible,
+            topicsVisible: poll.topicsVisible,
           }}
           onToggleOpen={handleToggleOpen}
+          onToggleTopicsVisible={handleToggleTopicsVisible}
           onToggleResultsVisible={handleToggleResultsVisible}
           onExportCSV={handleExportCSV}
           exportDisabled={!exportResults}
