@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Plus, Download, GripVertical, Trash2, RotateCcw, Copy, Check, ExternalLink, Lock, Unlock, ChevronDown, Eye, EyeOff } from "lucide-react";
+import { Loader2, Plus, Download, GripVertical, Trash2, RotateCcw, Copy, Check, ExternalLink, Presentation, Lock, Unlock, ChevronDown, Eye, EyeOff } from "lucide-react";
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useConfirm } from "@/components/ui/use-confirm";
@@ -563,8 +563,12 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start">
-                    <DropdownMenuItem onClick={() => window.open(`${participantUrl}?preview=true`, "_blank")}>
+                    <DropdownMenuItem onClick={() => window.open(participantUrl, "_blank")}>
                       <ExternalLink className="mr-2 h-4 w-4" />
+                      Launch Poll
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => window.open(`${participantUrl}?preview=true`, "_blank")}>
+                      <Presentation className="mr-2 h-4 w-4" />
                       Open Preview
                     </DropdownMenuItem>
                   </DropdownMenuContent>
