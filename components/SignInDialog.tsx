@@ -17,10 +17,11 @@ import { getErrorMessage } from "@/lib/errors";
 interface SignInDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialView?: "default" | "email";
 }
 
 // Inline Google logo SVG (no external CDN dependency)
-function GoogleLogo() {
+export function GoogleLogo() {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
       <path
@@ -43,9 +44,9 @@ function GoogleLogo() {
   );
 }
 
-export function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
+export function SignInDialog({ open, onOpenChange, initialView = "default" }: SignInDialogProps) {
   const { signIn } = useAuthActions();
-  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(initialView === "email");
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -79,7 +80,7 @@ export function SignInDialog({ open, onOpenChange }: SignInDialogProps) {
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
       // Reset state on close
-      setShowEmailForm(false);
+      setShowEmailForm(initialView === "email");
       setIsSignUp(false);
       setEmail("");
       setPassword("");

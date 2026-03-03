@@ -7,16 +7,25 @@ import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RecentPolls } from "@/components/RecentPolls";
-import { SignInDialog } from "@/components/SignInDialog";
+import { SignInDialog, GoogleLogo } from "@/components/SignInDialog";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { SavedPoll } from "@/types/poll";
-import { UserRound } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { useAuthActions } from "@convex-dev/auth/react";
 
 export default function Home() {
   const router = useRouter();
   const { isAnonymous, isLoading: userLoading, tier } = useCurrentUser();
+  const { signIn } = useAuthActions();
   const [signInOpen, setSignInOpen] = useState(false);
+  const [otherSignInOpen, setOtherSignInOpen] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  const handleGoogleSignIn = () => {
+    setIsGoogleLoading(true);
+    void signIn("google");
+  };
 
   // Server-side polls for signed-in (non-anonymous) users
   const serverPolls = useQuery(
@@ -82,18 +91,33 @@ export default function Home() {
                   <Button
                     size="lg"
                     variant="outline"
-                    onClick={() => setSignInOpen(true)}
-                    className="w-full"
+                    onClick={handleGoogleSignIn}
+                    disabled={isGoogleLoading}
+                    className="w-full gap-3"
                   >
-                    <UserRound className="mr-2 h-5 w-5" />
-                    Sign in. Keep your polls.
+                    {isGoogleLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <GoogleLogo />
+                    )}
+                    Sign in with Google
                   </Button>
-                  <button
-                    onClick={() => router.push("/admin")}
-                    className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors py-1"
-                  >
-                    Skip
-                  </button>
+                  <div className="text-center">
+                    <button
+                      onClick={() => setOtherSignInOpen(true)}
+                      className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+                    >
+                      Other sign-in options
+                    </button>
+                  </div>
+                  <div className="text-center">
+                    <button
+                      onClick={() => router.push("/admin")}
+                      className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+                    >
+                      Skip
+                    </button>
+                  </div>
                 </>
               ) : (
                 <Button
@@ -112,6 +136,7 @@ export default function Home() {
       </div>
     </div>
     <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} />
+    <SignInDialog open={otherSignInOpen} onOpenChange={setOtherSignInOpen} initialView="email" />
     </>
   );
 }
