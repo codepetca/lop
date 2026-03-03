@@ -56,7 +56,6 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   const unclaimTopic = useMutation(api.topics.unclaimTopic);
   const deletePoll = useMutation(api.polls.deletePoll);
 
-
   const [draggedTopicId, setDraggedTopicId] = useState<Id<"topics"> | null>(null);
   const [previewTopics, setPreviewTopics] = useState<typeof topics | null>(null);
   const [optimisticOrder, setOptimisticOrder] = useState<Id<"topics">[] | null>(null);
@@ -575,7 +574,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                 </DropdownMenu>
               </div>
               <Button
-                variant={poll.isOpen || (poll.topicsVisible ?? false) ? "success" : "warning"}
+                variant={poll.isOpen ? "outline" : (poll.topicsVisible ?? false) ? "success" : "warning"}
                 size="sm"
                 onClick={poll.isOpen ? undefined : handleToggleTopicsVisible}
                 disabled={poll.isOpen}

@@ -91,6 +91,7 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
     if (!poll) return;
     if (groupId) return; // Already have a group
     if (poll.requireParticipantNames !== false) return; // Not anonymous
+    if (!poll.isOpen) return; // Don't auto-join closed polls (view-only or fully closed)
 
     // In preview mode, just set a fake group ID
     if (isPreviewMode) {

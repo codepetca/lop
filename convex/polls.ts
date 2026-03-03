@@ -232,12 +232,13 @@ export const toggleTopicsVisible = mutation({
   handler: async (ctx, args) => {
     const poll = await validateAdminAccess(ctx, args.pollId, args.adminToken);
 
-    const newValue = !(poll.topicsVisible ?? false);
-    await ctx.db.patch(args.pollId, {
-      topicsVisible: newValue,
-    });
+    if (poll.isOpen) {
+      throw new Error("Cannot toggle topic visibility while poll is open");
+    }
 
-    return { topicsVisible: newValue };
+    await ctx.db.patch(args.pollId, {
+      topicsVisible: !(poll.topicsVisible ?? false),
+    });
   },
 });
 
