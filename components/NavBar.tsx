@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Home, LogOut } from "lucide-react";
+import { Home, LogOut, UserRound } from "lucide-react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { SignInDialog } from "@/components/SignInDialog";
@@ -42,9 +42,10 @@ export function NavBar({ showHomeButton = false }: NavBarProps) {
               isAnonymous ? (
                 <button
                   onClick={() => setSignInOpen(true)}
-                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Sign in"
                 >
-                  Sign in
+                  <UserRound className="h-5 w-5" />
                 </button>
               ) : (
                 <Popover>
