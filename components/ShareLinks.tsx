@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CopyableInput } from "@/components/shared/CopyableInput";
-import { ExternalLink, Download, Lock, Unlock, Eye, EyeOff } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Share2, ExternalLink, Lock, Unlock, Eye, EyeOff, Download, Check, HelpCircle, ChevronDown } from "lucide-react";
 
 interface ShareLinksProps {
   participantUrl: string;
@@ -12,6 +14,7 @@ interface ShareLinksProps {
   onCopy: (text: string, field: string) => void;
   successMessage?: string;
   showControls?: boolean;
+  hidePollRow?: boolean;
   poll?: {
     isOpen: boolean;
     resultsVisible?: boolean;
@@ -31,6 +34,7 @@ export function ShareLinks({
   onCopy,
   successMessage,
   showControls = false,
+  hidePollRow = false,
   poll,
   onToggleOpen,
   onToggleTopicsVisible,
@@ -38,229 +42,107 @@ export function ShareLinks({
   onExportCSV,
   exportDisabled = false,
 }: ShareLinksProps) {
+  const resultsVisible = poll?.resultsVisible ?? true;
+  const [helpOpen, setHelpOpen] = useState(false);
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Share</CardTitle>
-        {successMessage && (
+    <Card className="relative">
+      <Tooltip open={helpOpen} onOpenChange={setHelpOpen}>
+        <TooltipTrigger asChild>
+          <button
+            className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"
+            onClick={() => setHelpOpen(v => !v)}
+          >
+            <HelpCircle className="h-4 w-4" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="left">Share the results link. Hide the results.</TooltipContent>
+      </Tooltip>
+      {successMessage && (
+        <CardHeader>
           <CardDescription className="text-success font-medium">
             {successMessage}
           </CardDescription>
-        )}
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <p className="text-sm text-muted-foreground">
-            Share this link with participants
-          </p>
-          {/* Mobile Layout */}
-          <div className="md:hidden space-y-2">
-            <CopyableInput
-              value={participantUrl}
-              onCopy={() => onCopy(participantUrl, "student")}
-              isCopied={copiedField === "student"}
-            />
-            <div className="flex gap-2">
-              <Button
-                onClick={() => window.open(`${participantUrl}?preview=true`, "_blank")}
-                className="flex-1"
-                title="Preview poll as a participant"
-              >
-                <ExternalLink className="mr-2 h-4 w-4" />
-                Preview
-              </Button>
-              {showControls && poll && onToggleOpen && (
-                <Button
-                  variant={poll.isOpen ? "success" : "warning"}
-                  onClick={onToggleOpen}
-                  className="flex-1"
-                  title={poll.isOpen ? "Click to close poll" : "Click to open poll"}
-                >
-                  {poll.isOpen ? (
-                    <>
-                      <Unlock className="mr-2 h-4 w-4" />
-                      Poll is Open
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="mr-2 h-4 w-4" />
-                      Poll is Closed
-                    </>
-                  )}
-                </Button>
-              )}
-              {showControls && poll && onToggleTopicsVisible && !poll.isOpen && (
-                <Button
-                  variant={(poll.topicsVisible ?? false) ? "success" : "warning"}
-                  onClick={onToggleTopicsVisible}
-                  className="flex-1"
-                  title={(poll.topicsVisible ?? false) ? "Click to hide topics" : "Click to show topics"}
-                >
-                  {(poll.topicsVisible ?? false) ? (
-                    <>
-                      <Eye className="mr-2 h-4 w-4" />
-                      Topics Visible
-                    </>
-                  ) : (
-                    <>
-                      <EyeOff className="mr-2 h-4 w-4" />
-                      Topics Hidden
-                    </>
-                  )}
-                </Button>
-              )}
-            </div>
-          </div>
-          {/* Desktop Layout */}
-          <div className="hidden md:flex gap-2">
-            <CopyableInput
-              value={participantUrl}
-              onCopy={() => onCopy(participantUrl, "student")}
-              isCopied={copiedField === "student"}
-            />
-            <Button
-              onClick={() => window.open(`${participantUrl}?preview=true`, "_blank")}
-              className="w-36 shrink-0"
-              title="Preview poll as a participant"
-            >
-              <ExternalLink className="mr-2 h-4 w-4" />
-              Preview
+        </CardHeader>
+      )}
+      <CardContent className={`${successMessage ? "pt-0" : "pt-4"} space-y-3`}>
+
+        {/* Poll row */}
+        {!hidePollRow && <div className="flex flex-wrap items-center gap-2">
+          <p className="text-2xl font-semibold leading-none tracking-tight w-24 shrink-0">Poll</p>
+          <Button
+            size="sm"
+            variant={copiedField === "student" ? "success" : "default"}
+            className="px-8 transition-all"
+            onClick={() => onCopy(participantUrl, "student")}
+          >
+            {copiedField === "student"
+              ? <Check className="mr-1.5 h-3.5 w-3.5" />
+              : <Share2 className="mr-1.5 h-3.5 w-3.5" />}
+            {copiedField === "student" ? "URL Copied!" : "Share"}
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => window.open(`${participantUrl}?preview=true`, "_blank")} title="Preview">
+            <ExternalLink className="h-3.5 w-3.5" />
+          </Button>
+          {showControls && poll && onToggleOpen && (
+            <Button variant={poll.isOpen ? "success" : "warning"} size="sm" onClick={onToggleOpen} title={poll.isOpen ? "Open" : "Closed"}>
+              {poll.isOpen ? <Unlock className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
             </Button>
-            {showControls && poll && onToggleOpen && (
-              <Button
-                variant={poll.isOpen ? "success" : "warning"}
-                onClick={onToggleOpen}
-                className="w-44 shrink-0"
-                title={poll.isOpen ? "Click to close poll" : "Click to open poll"}
-              >
-                {poll.isOpen ? (
-                  <>
-                    <Unlock className="mr-2 h-4 w-4" />
-                    Poll is Open
-                  </>
-                ) : (
-                  <>
-                    <Lock className="mr-2 h-4 w-4" />
-                    Poll is Closed
-                  </>
+          )}
+          {showControls && poll && onToggleTopicsVisible && !poll.isOpen && (
+            <Button
+              variant={(poll.topicsVisible ?? false) ? "success" : "warning"}
+              size="sm"
+              onClick={onToggleTopicsVisible}
+              title={(poll.topicsVisible ?? false) ? "Topics visible to students" : "Topics hidden from students"}
+            >
+              {(poll.topicsVisible ?? false) ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+            </Button>
+          )}
+        </div>}
+
+        {/* Results row */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Split button: Results Link + dropdown for CSV download */}
+          <div className="flex">
+            <Button
+              size="sm"
+              variant={copiedField === "results" ? "success" : "default"}
+              className="min-w-44 transition-all rounded-r-none"
+              onClick={() => onCopy(resultsUrl, "results")}
+            >
+              {copiedField === "results"
+                ? <Check className="mr-1.5 h-3.5 w-3.5" />
+                : <Share2 className="mr-1.5 h-3.5 w-3.5" />}
+              {copiedField === "results" ? "URL Copied!" : "Results Link"}
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="sm"
+                  variant={copiedField === "results" ? "success" : "default"}
+                  className="rounded-l-none border-l border-l-white/20 px-2 transition-all"
+                >
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                {showControls && onExportCSV && (
+                  <DropdownMenuItem onClick={onExportCSV} disabled={exportDisabled}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download CSV
+                  </DropdownMenuItem>
                 )}
-              </Button>
-            )}
-            {showControls && poll && onToggleTopicsVisible && !poll.isOpen && (
-              <Button
-                variant={(poll.topicsVisible ?? false) ? "success" : "warning"}
-                onClick={onToggleTopicsVisible}
-                className="w-44 shrink-0"
-                title={(poll.topicsVisible ?? false) ? "Click to hide topics" : "Click to show topics"}
-              >
-                {(poll.topicsVisible ?? false) ? (
-                  <>
-                    <Eye className="mr-2 h-4 w-4" />
-                    Topics Visible
-                  </>
-                ) : (
-                  <>
-                    <EyeOff className="mr-2 h-4 w-4" />
-                    Topics Hidden
-                  </>
-                )}
-              </Button>
-            )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-          {copiedField === "student" && (
-            <p className="text-xs text-success font-medium">✓ Copied to clipboard</p>
+          {showControls && poll && onToggleResultsVisible && (
+            <Button variant={resultsVisible ? "success" : "warning"} size="sm" onClick={onToggleResultsVisible} title={resultsVisible ? "Visible" : "Hidden"}>
+              {resultsVisible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+            </Button>
           )}
         </div>
-        <div className="space-y-2">
-          <p className="text-sm text-muted-foreground">
-            Share the realtime results
-          </p>
-          {/* Mobile Layout */}
-          <div className="md:hidden space-y-2">
-            <CopyableInput
-              value={resultsUrl}
-              onCopy={() => onCopy(resultsUrl, "results")}
-              isCopied={copiedField === "results"}
-            />
-            <div className="flex gap-2">
-              <Button
-                onClick={() => window.open(resultsUrl, "_blank")}
-                className="flex-1"
-                title="View results board"
-              >
-                <ExternalLink className="mr-2 h-4 w-4" />
-                Results
-              </Button>
-              {showControls && poll && onToggleResultsVisible && (
-                <Button
-                  variant={(poll.resultsVisible ?? true) ? "success" : "warning"}
-                  onClick={onToggleResultsVisible}
-                  className="flex-1"
-                  title={(poll.resultsVisible ?? true) ? "Click to hide results" : "Click to show results"}
-                >
-                  {(poll.resultsVisible ?? true) ? (
-                    <>
-                      <Unlock className="mr-2 h-4 w-4" />
-                      Results Visible
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="mr-2 h-4 w-4" />
-                      Results Hidden
-                    </>
-                  )}
-                </Button>
-              )}
-            </div>
-          </div>
-          {/* Desktop Layout */}
-          <div className="hidden md:flex gap-2">
-            <CopyableInput
-              value={resultsUrl}
-              onCopy={() => onCopy(resultsUrl, "results")}
-              isCopied={copiedField === "results"}
-            />
-            <Button
-              onClick={() => window.open(resultsUrl, "_blank")}
-              className="w-36 shrink-0"
-              title="View results board"
-            >
-              <ExternalLink className="mr-2 h-4 w-4" />
-              Results
-            </Button>
-            {showControls && poll && onToggleResultsVisible && (
-              <Button
-                variant={(poll.resultsVisible ?? true) ? "success" : "warning"}
-                onClick={onToggleResultsVisible}
-                className="w-44 shrink-0"
-                title={(poll.resultsVisible ?? true) ? "Click to hide results" : "Click to show results"}
-              >
-                {(poll.resultsVisible ?? true) ? (
-                  <>
-                    <Unlock className="mr-2 h-4 w-4" />
-                    Results Visible
-                  </>
-                ) : (
-                  <>
-                    <Lock className="mr-2 h-4 w-4" />
-                    Results Hidden
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
-          {copiedField === "results" && (
-            <p className="text-xs text-success font-medium">✓ Copied to clipboard</p>
-          )}
-        </div>
-        {showControls && onExportCSV && (
-          <div className="pt-2">
-            <Button variant="outline" onClick={onExportCSV} disabled={exportDisabled} title="Export results as CSV">
-              <Download className="mr-2 h-4 w-4" />
-              Download CSV
-            </Button>
-          </div>
-        )}
+
       </CardContent>
     </Card>
   );
