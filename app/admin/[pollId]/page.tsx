@@ -565,7 +565,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                   <DropdownMenuContent align="start">
                     <DropdownMenuItem onClick={() => window.open(participantUrl, "_blank")}>
                       <ExternalLink className="mr-2 h-4 w-4" />
-                      Launch Poll
+                      Open Poll
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => window.open(`${participantUrl}?preview=true`, "_blank")}>
                       <Presentation className="mr-2 h-4 w-4" />
