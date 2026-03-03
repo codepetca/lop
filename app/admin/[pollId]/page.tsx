@@ -545,7 +545,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                   size="sm"
                   variant={copiedField === "student" ? "success" : "default"}
                   className="min-w-44 transition-all rounded-r-none"
-                  onClick={() => { copyToClipboard(participantUrl, "student"); window.open(participantUrl, "_blank"); }}
+                  onClick={() => copyToClipboard(participantUrl, "student")}
                 >
                   {copiedField === "student"
                     ? <Check className="mr-1.5 h-3.5 w-3.5" />
@@ -594,7 +594,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                   size="sm"
                   variant={copiedField === "results" ? "success" : "default"}
                   className="min-w-44 transition-all rounded-r-none"
-                  onClick={() => { copyToClipboard(resultsUrl, "results"); window.open(resultsUrl, "_blank"); }}
+                  onClick={() => copyToClipboard(resultsUrl, "results")}
                 >
                   {copiedField === "results"
                     ? <Check className="mr-1.5 h-3.5 w-3.5" />
@@ -612,6 +612,10 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start">
+                    <DropdownMenuItem onClick={() => window.open(resultsUrl, "_blank")}>
+                      <ExternalLink className="mr-2 h-4 w-4" />
+                      Open Results
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleExportCSV} disabled={!exportResults}>
                       <Download className="mr-2 h-4 w-4" />
                       Download CSV
