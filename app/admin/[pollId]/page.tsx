@@ -10,9 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Plus, Download, GripVertical, Trash2, ChevronUp, ChevronDown } from "lucide-react";
+import { Loader2, Plus, Download, GripVertical, Trash2, HelpCircle, RotateCcw, Share2, Check, ExternalLink, Lock, Unlock, ChevronDown, Eye, EyeOff } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useConfirm } from "@/components/ui/use-confirm";
-import { ShareLinks } from "@/components/ShareLinks";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { usePollId, useAdminToken } from "@/hooks/usePollParams";
@@ -54,9 +55,14 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   const unclaimTopic = useMutation(api.topics.unclaimTopic);
   const deletePoll = useMutation(api.polls.deletePoll);
 
+  const [titleHelpOpen, setTitleHelpOpen] = useState(false);
   const [draggedTopicId, setDraggedTopicId] = useState<Id<"topics"> | null>(null);
   const [previewTopics, setPreviewTopics] = useState<typeof topics | null>(null);
   const [optimisticOrder, setOptimisticOrder] = useState<Id<"topics">[] | null>(null);
+  // Refs for touch drag (avoid stale closure issues in event handlers)
+  const draggedTopicIdRef = useRef<Id<"topics"> | null>(null);
+  const previewTopicsRef = useRef<typeof topics | null>(null);
+  const topicsContainerRef = useRef<HTMLDivElement>(null);
   const [editingTopicId, setEditingTopicId] = useState<Id<"topics"> | null>(null);
   const [editingTopicLabel, setEditingTopicLabel] = useState("");
   const editingCancelledRef = useRef(false);
@@ -244,46 +250,65 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
     }
   };
 
-  const handleMoveUp = async (topicId: Id<"topics">) => {
-    if (!topics) return;
-    const currentIndex = topics.findIndex((t) => t._id === topicId);
-    if (currentIndex <= 0) return; // Already at top
+  // Prevent page scroll while touch-dragging (must be passive:false, so use native listener)
+  useEffect(() => {
+    const el = topicsContainerRef.current;
+    if (!el) return;
+    const preventScroll = (e: TouchEvent) => {
+      if (draggedTopicIdRef.current) e.preventDefault();
+    };
+    el.addEventListener("touchmove", preventScroll, { passive: false });
+    return () => el.removeEventListener("touchmove", preventScroll);
+  }, []);
 
-    const reordered = [...topics];
-    [reordered[currentIndex - 1], reordered[currentIndex]] = [reordered[currentIndex], reordered[currentIndex - 1]];
-    const finalOrderIds = reordered.map((t) => t._id);
-
-    setOptimisticOrder(finalOrderIds);
-
-    try {
-      await reorderTopics({
-        pollId,
-        adminToken,
-        topicIds: finalOrderIds,
-      });
-    } catch (error) {
-      setError(getErrorMessage(error));
-      setOptimisticOrder(null);
-    }
+  const handleTouchStart = (topicId: Id<"topics">) => {
+    draggedTopicIdRef.current = topicId;
+    previewTopicsRef.current = null;
+    setDraggedTopicId(topicId);
+    setPreviewTopics(null);
   };
 
-  const handleMoveDown = async (topicId: Id<"topics">) => {
-    if (!topics) return;
-    const currentIndex = topics.findIndex((t) => t._id === topicId);
-    if (currentIndex < 0 || currentIndex >= topics.length - 1) return; // Already at bottom
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const currentDraggedId = draggedTopicIdRef.current;
+    if (!currentDraggedId || !topics) return;
 
-    const reordered = [...topics];
-    [reordered[currentIndex], reordered[currentIndex + 1]] = [reordered[currentIndex + 1], reordered[currentIndex]];
-    const finalOrderIds = reordered.map((t) => t._id);
+    const touch = e.touches[0];
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    const topicEl = el?.closest("[data-topic-id]") as HTMLElement | null;
+    if (!topicEl) return;
 
+    const targetId = topicEl.dataset.topicId as Id<"topics"> | undefined;
+    if (!targetId || targetId === currentDraggedId) return;
+
+    const source = previewTopicsRef.current ?? topics;
+    const draggedIndex = source.findIndex((t) => t._id === currentDraggedId);
+    const targetIndex = source.findIndex((t) => t._id === targetId);
+    if (draggedIndex === -1 || targetIndex === -1) return;
+
+    const reordered = [...source];
+    const [removed] = reordered.splice(draggedIndex, 1);
+    reordered.splice(targetIndex, 0, removed);
+
+    previewTopicsRef.current = reordered;
+    setPreviewTopics(reordered);
+  };
+
+  const handleTouchEnd = async () => {
+    const currentDraggedId = draggedTopicIdRef.current;
+    const currentPreview = previewTopicsRef.current;
+
+    draggedTopicIdRef.current = null;
+    previewTopicsRef.current = null;
+    setDraggedTopicId(null);
+    setPreviewTopics(null);
+
+    if (!currentDraggedId || !currentPreview) return;
+
+    const finalOrderIds = currentPreview.map((t) => t._id);
     setOptimisticOrder(finalOrderIds);
 
     try {
-      await reorderTopics({
-        pollId,
-        adminToken,
-        topicIds: finalOrderIds,
-      });
+      await reorderTopics({ pollId, adminToken, topicIds: finalOrderIds });
     } catch (error) {
       setError(getErrorMessage(error));
       setOptimisticOrder(null);
@@ -319,7 +344,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   const handleDeletePoll = async () => {
     const confirmed = await confirm({
       title: "Delete Poll",
-      description: "Are you sure you want to permanently delete this poll? This will delete all topics, groups, and submissions. This action cannot be undone.",
+      description: "Permanently delete this poll and all associated data? This action cannot be undone.",
       actionLabel: "Delete Poll",
       destructive: true,
     });
@@ -450,13 +475,24 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   const totalCount = topics.length;
 
   return (
-    <div className="min-h-screen bg-background p-4 py-8">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-background p-4 py-4">
+      <div className="max-w-6xl mx-auto space-y-3">
         {/* Error Message */}
         <ErrorMessage message={error} onDismiss={() => setError(null)} />
 
         {/* Header */}
-        <Card>
+        <Card className="relative">
+          <Tooltip open={titleHelpOpen} onOpenChange={setTitleHelpOpen}>
+            <TooltipTrigger asChild>
+              <button
+                className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"
+                onClick={() => setTitleHelpOpen(v => !v)}
+              >
+                <HelpCircle className="h-4 w-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="left">Tap on title or description to edit it. Share the poll link. Lock the poll. Preview the poll.</TooltipContent>
+          </Tooltip>
           <CardHeader>
             {titleEdit.isEditing ? (
               <Input
@@ -472,7 +508,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
               />
             ) : (
               <CardTitle
-                className="text-2xl cursor-pointer hover:text-info transition-colors bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent hover:from-info hover:to-info/70"
+                className="text-2xl cursor-pointer text-info hover:text-info/80 transition-colors"
                 onClick={titleEdit.startEditing}
                 title="Click to edit"
               >
@@ -494,58 +530,104 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
               />
             ) : (
               <CardDescription
-                className="text-base mt-2 cursor-pointer hover:text-info transition-colors"
+                className="text-base mt-2 cursor-pointer text-info hover:text-info/80 transition-colors"
                 onClick={descriptionEdit.startEditing}
                 title="Click to edit"
               >
-                {poll.description || "Click to add description"}
+                {poll.description || "Description"}
               </CardDescription>
             )}
           </CardHeader>
+          <CardContent className="pt-0 pb-4 space-y-2">
+            {/* Row 1: Poll Link + Lock/Unlock */}
+            <div className="flex items-center gap-2">
+              <div className="flex">
+                <Button
+                  size="sm"
+                  variant={copiedField === "student" ? "success" : "default"}
+                  className="min-w-44 transition-all rounded-r-none"
+                  onClick={() => { copyToClipboard(participantUrl, "student"); window.open(participantUrl, "_blank"); }}
+                >
+                  {copiedField === "student"
+                    ? <Check className="mr-1.5 h-3.5 w-3.5" />
+                    : <Share2 className="mr-1.5 h-3.5 w-3.5" />}
+                  {copiedField === "student" ? "URL Copied!" : "Poll Link"}
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant={copiedField === "student" ? "success" : "default"}
+                      className="rounded-l-none border-l border-l-white/20 px-2 transition-all"
+                    >
+                      <ChevronDown className="h-3.5 w-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuItem onClick={() => window.open(`${participantUrl}?preview=true`, "_blank")}>
+                      <ExternalLink className="mr-2 h-4 w-4" />
+                      Open Preview
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              <Button variant={poll.isOpen ? "success" : "warning"} size="sm" onClick={handleToggleOpen} title={poll.isOpen ? "Open" : "Closed"}>
+                {poll.isOpen ? <Unlock className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
+              </Button>
+            </div>
+            {/* Row 2: Results Link + Visibility toggle */}
+            <div className="flex items-center gap-2">
+              <div className="flex">
+                <Button
+                  size="sm"
+                  variant={copiedField === "results" ? "success" : "default"}
+                  className="min-w-44 transition-all rounded-r-none"
+                  onClick={() => { copyToClipboard(resultsUrl, "results"); window.open(resultsUrl, "_blank"); }}
+                >
+                  {copiedField === "results"
+                    ? <Check className="mr-1.5 h-3.5 w-3.5" />
+                    : <Share2 className="mr-1.5 h-3.5 w-3.5" />}
+                  {copiedField === "results" ? "URL Copied!" : "Results Link"}
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant={copiedField === "results" ? "success" : "default"}
+                      className="rounded-l-none border-l border-l-white/20 px-2 transition-all"
+                    >
+                      <ChevronDown className="h-3.5 w-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuItem onClick={handleExportCSV} disabled={!exportResults}>
+                      <Download className="mr-2 h-4 w-4" />
+                      Download CSV
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              <Button variant={poll.resultsVisible ? "success" : "warning"} size="sm" onClick={handleToggleResultsVisible} title={poll.resultsVisible ? "Visible" : "Hidden"}>
+                {poll.resultsVisible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+              </Button>
+            </div>
+          </CardContent>
         </Card>
 
-        {/* Share */}
-        <ShareLinks
-          participantUrl={participantUrl}
-          resultsUrl={resultsUrl}
-          copiedField={copiedField}
-          onCopy={(text, id) => copyToClipboard(text, id)}
-          showControls={true}
-          poll={{
-            isOpen: poll.isOpen,
-            resultsVisible: poll.resultsVisible,
-          }}
-          onToggleOpen={handleToggleOpen}
-          onToggleResultsVisible={handleToggleResultsVisible}
-          onExportCSV={handleExportCSV}
-          exportDisabled={!exportResults}
-        />
-
-        {/* Edit Topics */}
+        {/* Topics */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Edit Topics</CardTitle>
-              <div className="flex items-center gap-4">
-                <div className="text-sm text-muted-foreground">
-                  {claimedCount} / {totalCount} topics claimed
-                </div>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleClearAllClaims}
-                  title="Unclaim all topics"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Clear All Claims
-                </Button>
+              <CardTitle>Topics</CardTitle>
+              <div className="text-sm text-muted-foreground">
+                {claimedCount} / {totalCount} topics claimed
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Existing Topics */}
             <div>
-              <div className="space-y-2">
+              <div className="space-y-2" ref={topicsContainerRef}>
                 {(previewTopics ||
                   (optimisticOrder && topics
                     ? optimisticOrder.map(id => topics.find(t => t._id === id)!).filter(Boolean)
@@ -553,12 +635,16 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                 ).map((topic) => (
                   <div
                     key={topic._id}
+                    data-topic-id={topic._id}
                     draggable
                     onDragStart={() => handleDragStart(topic._id)}
                     onDragOver={(e) => handleDragOver(e, topic._id)}
                     onDragEnd={handleDragEnd}
                     onDrop={() => handleDrop(topic._id)}
-                    className={`flex items-center gap-2 p-3 rounded-lg border md:cursor-move transition-[opacity,transform,background-color] duration-300 ease-in-out ${
+                    onTouchStart={() => handleTouchStart(topic._id)}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
+                    className={`flex items-center gap-2 p-3 rounded-lg border cursor-move transition-[opacity,transform,background-color] duration-300 ease-in-out ${
                       draggedTopicId === topic._id
                         ? "opacity-40 bg-muted"
                         : "bg-accent border-border"
@@ -566,36 +652,8 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                     style={{ transition: "all 0.3s ease-in-out" }}
                     title="Drag to reorder topics"
                   >
-                    {/* Mobile reorder buttons */}
-                    <div className="flex flex-col gap-1 md:hidden">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleMoveUp(topic._id);
-                        }}
-                        className="p-0 h-4 w-4"
-                        disabled={topics.findIndex((t) => t._id === topic._id) === 0}
-                      >
-                        <ChevronUp className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleMoveDown(topic._id);
-                        }}
-                        className="p-0 h-4 w-4"
-                        disabled={topics.findIndex((t) => t._id === topic._id) === topics.length - 1}
-                      >
-                        <ChevronDown className="h-4 w-4" />
-                      </Button>
-                    </div>
-
-                    {/* Desktop drag handle */}
-                    <GripVertical className="h-5 w-5 text-gray-400 flex-shrink-0 hidden md:block" />
+                    {/* Drag handle */}
+                    <GripVertical className="h-5 w-5 text-gray-400 flex-shrink-0" />
 
                     <div className="flex-1">
                       {editingTopicId === topic._id ? (
@@ -657,7 +715,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
                       title="Delete this topic"
                     >
-                      Delete
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 ))}
@@ -666,7 +724,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
 
             {/* Add New Topics */}
             <div>
-              <form onSubmit={handleAddTopics} className="space-y-4">
+              <form onSubmit={handleAddTopics} className="space-y-2">
                 <Textarea
                   value={newTopics}
                   onChange={(e) => setNewTopics(e.target.value)}
@@ -675,19 +733,21 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                   className="font-mono"
                   title="Enter topics, one per line"
                 />
-                <Button type="submit" disabled={isAddingTopics} title="Add new topics (one per line)">
-                  {isAddingTopics ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Adding...
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Topics
-                    </>
-                  )}
-                </Button>
+                <div className="flex justify-end">
+                  <Button type="submit" disabled={isAddingTopics || !newTopics.trim()} title="Add new topics (one per line)">
+                    {isAddingTopics ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Save
+                      </>
+                    )}
+                  </Button>
+                </div>
               </form>
             </div>
           </CardContent>
@@ -697,13 +757,20 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
         <Card className="border-red-200">
           <CardHeader>
             <CardTitle className="text-red-600">Danger Zone</CardTitle>
-            <CardDescription>
-              Permanently delete this poll and all associated data
-            </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleClearAllClaims}
+              title="Unclaim all topics"
+            >
+              <RotateCcw className="mr-2 h-4 w-4" />
+              Clear All Claims
+            </Button>
             <Button
               variant="destructive"
+              size="sm"
               onClick={handleDeletePoll}
               title="Permanently delete this poll and all data"
             >
