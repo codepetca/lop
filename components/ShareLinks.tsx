@@ -89,14 +89,15 @@ export function ShareLinks({
               {poll.isOpen ? <Unlock className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
             </Button>
           )}
-          {showControls && poll && onToggleTopicsVisible && !poll.isOpen && (
+          {showControls && poll && onToggleTopicsVisible && (
             <Button
-              variant={(poll.topicsVisible ?? false) ? "success" : "warning"}
+              variant={poll.isOpen || (poll.topicsVisible ?? false) ? "success" : "warning"}
               size="sm"
-              onClick={onToggleTopicsVisible}
-              title={(poll.topicsVisible ?? false) ? "Topics visible to students" : "Topics hidden from students"}
+              onClick={poll.isOpen ? undefined : onToggleTopicsVisible}
+              disabled={poll.isOpen}
+              title={poll.isOpen ? "Topics always visible when poll is open" : (poll.topicsVisible ?? false) ? "Topics visible to students" : "Topics hidden from students"}
             >
-              {(poll.topicsVisible ?? false) ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+              {poll.isOpen || (poll.topicsVisible ?? false) ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
             </Button>
           )}
         </div>}
