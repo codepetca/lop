@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Plus, Download, GripVertical, Trash2, RotateCcw, Share2, Check, ExternalLink, Lock, Unlock, ChevronDown, Eye, EyeOff } from "lucide-react";
+import { Loader2, Plus, Download, GripVertical, Trash2, RotateCcw, Copy, Check, ExternalLink, Lock, Unlock, ChevronDown, Eye, EyeOff } from "lucide-react";
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useConfirm } from "@/components/ui/use-confirm";
@@ -549,7 +549,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                 >
                   {copiedField === "student"
                     ? <Check className="mr-1.5 h-3.5 w-3.5" />
-                    : <Share2 className="mr-1.5 h-3.5 w-3.5" />}
+                    : <Copy className="mr-1.5 h-3.5 w-3.5" />}
                   {copiedField === "student" ? "URL Copied!" : "Poll Link"}
                 </Button>
                 <DropdownMenu>
@@ -594,7 +594,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                 >
                   {copiedField === "results"
                     ? <Check className="mr-1.5 h-3.5 w-3.5" />
-                    : <Share2 className="mr-1.5 h-3.5 w-3.5" />}
+                    : <Copy className="mr-1.5 h-3.5 w-3.5" />}
                   {copiedField === "results" ? "URL Copied!" : "Results Link"}
                 </Button>
                 <DropdownMenu>

@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Share2, ExternalLink, Lock, Unlock, Eye, EyeOff, Download, Check, ChevronDown } from "lucide-react";
+import { Copy, ExternalLink, Lock, Unlock, Eye, EyeOff, Download, Check, ChevronDown } from "lucide-react";
 
 interface ShareLinksProps {
   participantUrl: string;
@@ -64,7 +64,7 @@ export function ShareLinks({
           >
             {copiedField === "student"
               ? <Check className="mr-1.5 h-3.5 w-3.5" />
-              : <Share2 className="mr-1.5 h-3.5 w-3.5" />}
+              : <Copy className="mr-1.5 h-3.5 w-3.5" />}
             {copiedField === "student" ? "URL Copied!" : "Share"}
           </Button>
           <Button variant="outline" size="sm" onClick={() => window.open(`${participantUrl}?preview=true`, "_blank")} title="Preview">
@@ -100,7 +100,7 @@ export function ShareLinks({
             >
               {copiedField === "results"
                 ? <Check className="mr-1.5 h-3.5 w-3.5" />
-                : <Share2 className="mr-1.5 h-3.5 w-3.5" />}
+                : <Copy className="mr-1.5 h-3.5 w-3.5" />}
               {copiedField === "results" ? "URL Copied!" : "Results Link"}
             </Button>
             <DropdownMenu>
