@@ -40,13 +40,12 @@ export function NavBar({ showHomeButton = false }: NavBarProps) {
             <ThemeToggle />
             {!isLoading && (
               isAnonymous ? (
-                <Button
-                  variant="outline"
-                  size="sm"
+                <button
                   onClick={() => setSignInOpen(true)}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Sign in
-                </Button>
+                </button>
               ) : (
                 <Popover>
                   <PopoverTrigger asChild>
