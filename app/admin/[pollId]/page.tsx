@@ -10,11 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Plus, Download, GripVertical, Trash2, HelpCircle, RotateCcw, Share2, Check, ExternalLink, Lock, Unlock, ChevronDown } from "lucide-react";
+import { Loader2, Plus, Download, GripVertical, Trash2, HelpCircle, RotateCcw, Share2, Check, ExternalLink, Lock, Unlock, ChevronDown, Eye, EyeOff } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useConfirm } from "@/components/ui/use-confirm";
-import { ShareLinks } from "@/components/ShareLinks";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { usePollId, useAdminToken } from "@/hooks/usePollParams";
@@ -540,13 +539,13 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
             )}
           </CardHeader>
           <CardContent className="pt-0 pb-4 flex flex-wrap items-center gap-2">
-            {/* Split button: Poll Link + dropdown for Preview Link */}
+            {/* Split button: Poll Link + dropdown for Preview Poll */}
             <div className="flex">
               <Button
                 size="sm"
                 variant={copiedField === "student" ? "success" : "default"}
                 className="min-w-44 transition-all rounded-r-none"
-                onClick={() => copyToClipboard(participantUrl, "student")}
+                onClick={() => { copyToClipboard(participantUrl, "student"); window.open(participantUrl, "_blank"); }}
               >
                 {copiedField === "student"
                   ? <Check className="mr-1.5 h-3.5 w-3.5" />
@@ -564,38 +563,54 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
-                  <DropdownMenuItem onClick={() => { copyToClipboard(`${participantUrl}?preview=true`, "preview"); window.open(`${participantUrl}?preview=true`, "_blank"); }}>
-                    {copiedField === "preview"
-                      ? <Check className="mr-2 h-4 w-4 text-success" />
-                      : <ExternalLink className="mr-2 h-4 w-4" />}
-                    {copiedField === "preview" ? "URL Copied!" : "Copy and open preview link"}
+                  <DropdownMenuItem onClick={() => window.open(`${participantUrl}?preview=true`, "_blank")}>
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    Preview Poll
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
+            {/* Lock/Unlock toggle */}
             <Button variant={poll.isOpen ? "success" : "warning"} size="sm" onClick={handleToggleOpen} title={poll.isOpen ? "Open" : "Closed"}>
               {poll.isOpen ? <Unlock className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
             </Button>
+            {/* Split button: Results Link + dropdown for CSV */}
+            <div className="flex">
+              <Button
+                size="sm"
+                variant={copiedField === "results" ? "success" : "default"}
+                className="min-w-44 transition-all rounded-r-none"
+                onClick={() => { copyToClipboard(resultsUrl, "results"); window.open(resultsUrl, "_blank"); }}
+              >
+                {copiedField === "results"
+                  ? <Check className="mr-1.5 h-3.5 w-3.5" />
+                  : <Share2 className="mr-1.5 h-3.5 w-3.5" />}
+                {copiedField === "results" ? "URL Copied!" : "Results Link"}
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant={copiedField === "results" ? "success" : "default"}
+                    className="rounded-l-none border-l border-l-white/20 px-2 transition-all"
+                  >
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuItem onClick={handleExportCSV} disabled={!exportResults}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download CSV
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            {/* Results visibility toggle */}
+            <Button variant={poll.resultsVisible ? "success" : "warning"} size="sm" onClick={handleToggleResultsVisible} title={poll.resultsVisible ? "Visible" : "Hidden"}>
+              {poll.resultsVisible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+            </Button>
           </CardContent>
         </Card>
-
-        {/* Share */}
-        <ShareLinks
-          participantUrl={participantUrl}
-          resultsUrl={resultsUrl}
-          copiedField={copiedField}
-          onCopy={(text, id) => copyToClipboard(text, id)}
-          showControls={true}
-          hidePollRow={true}
-          poll={{
-            isOpen: poll.isOpen,
-            resultsVisible: poll.resultsVisible,
-          }}
-          onToggleOpen={handleToggleOpen}
-          onToggleResultsVisible={handleToggleResultsVisible}
-          onExportCSV={handleExportCSV}
-          exportDisabled={!exportResults}
-        />
 
         {/* Topics */}
         <Card>
