@@ -22,6 +22,12 @@ export function NavBar({ showHomeButton = false }: NavBarProps) {
 
   const initial = (name ?? email ?? "?")[0].toUpperCase();
 
+  const AVATAR_COLORS = [
+    "#e11d48", "#ea580c", "#d97706", "#16a34a",
+    "#0d9488", "#0284c7", "#4f46e5", "#7c3aed", "#c026d3",
+  ];
+  const avatarBg = AVATAR_COLORS[initial.charCodeAt(0) % AVATAR_COLORS.length];
+
   return (
     <>
       <div className="border-b bg-card">
@@ -50,11 +56,11 @@ export function NavBar({ showHomeButton = false }: NavBarProps) {
               ) : (
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full h-6 w-6 p-0 overflow-hidden" aria-label={name ?? email ?? "User menu"}>
+                    <Button variant="ghost" className="rounded-full h-7 w-7 p-0 overflow-hidden" aria-label={name ?? email ?? "User menu"}>
                       {image ? (
-                        <img src={image} alt={name ?? email ?? "User"} className="h-6 w-6 rounded-full object-cover" />
+                        <img src={image} alt={name ?? email ?? "User"} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                       ) : (
-                        <span className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-medium">
+                        <span className="w-full h-full flex items-center justify-center text-xs font-semibold text-white" style={{ background: avatarBg }}>
                           {initial}
                         </span>
                       )}

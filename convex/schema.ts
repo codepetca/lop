@@ -38,7 +38,6 @@ export default defineSchema({
     .index("by_createdAt", ["createdAt"])
     .index("by_user", ["userId"])
     .index("by_creator_createdAt", ["creatorDeviceId", "createdAt"]),
-
   topics: defineTable({
     pollId: v.id("polls"),
     label: v.string(),

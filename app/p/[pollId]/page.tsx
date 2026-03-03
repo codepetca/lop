@@ -33,6 +33,7 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
 
   const [members, setMembers] = useState<Member[]>([{ firstName: "", lastName: "" }]);
   const [groupId, setGroupId] = useState<Id<"groups"> | null>(null);
+  const [sessionChecked, setSessionChecked] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [previewSelectedTopicId, setPreviewSelectedTopicId] = useState<Id<"topics"> | null>(null);
@@ -58,12 +59,18 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
 
   // Check localStorage for saved group ID on mount (skip in preview mode)
   useEffect(() => {
-    if (isPreviewMode) return;
+    if (isPreviewMode) {
+      setSessionChecked(true);
+      return;
+    }
+
+    // Wait for groups to load before checking — we need to verify the saved group still exists
+    if (groups === undefined) return;
 
     const savedGroupId = localStorage.getItem(storageKey);
 
-    if (savedGroupId && groups) {
-      // Verify the group still exists
+    if (savedGroupId) {
+      // Verify the group still exists in Convex
       const group = groups.find((g) => g._id === savedGroupId);
       if (group) {
         setGroupId(savedGroupId as Id<"groups">);
@@ -73,7 +80,11 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
         localStorage.removeItem(storageKey);
       }
     }
-  }, [pollId, groups, isPreviewMode]);
+
+    // Mark session check complete — prevents form from flashing before we know
+    // whether the user has a saved session
+    setSessionChecked(true);
+  }, [pollId, groups, isPreviewMode, storageKey]);
 
   // Auto-create group for anonymous polls
   useEffect(() => {
@@ -350,7 +361,7 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
     }
   };
 
-  if (poll === undefined || topics === undefined) {
+  if (poll === undefined || topics === undefined || !sessionChecked) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner size="lg" />
