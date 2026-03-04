@@ -539,20 +539,20 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
           <CardContent className="pt-0 pb-4 space-y-2">
             {/* Row 1: Poll Link + Lock/Unlock */}
             <div className="flex items-center gap-2">
-              <div className="flex">
-                <Button
-                  size="sm"
-                  variant={copiedField === "student" ? "success" : "default"}
-                  className="min-w-44 transition-all rounded-r-none"
-                  onClick={() => copyToClipboard(participantUrl, "student")}
-                >
-                  {copiedField === "student"
-                    ? <Check className="mr-1.5 h-3.5 w-3.5" />
-                    : <Copy className="mr-1.5 h-3.5 w-3.5" />}
-                  {copiedField === "student" ? "URL Copied!" : "Poll Link"}
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <div className="flex">
+                    <Button
+                      size="sm"
+                      variant={copiedField === "student" ? "success" : "default"}
+                      className="min-w-44 transition-all rounded-r-none"
+                      onClick={(e) => { e.stopPropagation(); copyToClipboard(participantUrl, "student"); }}
+                    >
+                      {copiedField === "student"
+                        ? <Check className="mr-1.5 h-3.5 w-3.5" />
+                        : <Copy className="mr-1.5 h-3.5 w-3.5" />}
+                      {copiedField === "student" ? "URL Copied!" : "Poll Link"}
+                    </Button>
                     <Button
                       size="sm"
                       variant={copiedField === "student" ? "success" : "default"}
@@ -560,19 +560,19 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                     >
                       <ChevronDown className="h-3.5 w-3.5" />
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
-                    <DropdownMenuItem onClick={() => window.open(participantUrl, "_blank")}>
-                      <ExternalLink className="mr-2 h-4 w-4" />
-                      Open Poll
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => window.open(`${participantUrl}?preview=true`, "_blank")}>
-                      <Presentation className="mr-2 h-4 w-4" />
-                      Open Preview
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" sideOffset={1}>
+                  <DropdownMenuItem onClick={() => window.open(participantUrl, "_blank")}>
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    Open Poll
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => window.open(`${participantUrl}?preview=true`, "_blank")}>
+                    <Presentation className="mr-2 h-4 w-4" />
+                    Open Preview
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button
                 variant={poll.isOpen ? "outline" : (poll.topicsVisible ?? false) ? "success" : "warning"}
                 size="sm"
@@ -588,20 +588,20 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
             </div>
             {/* Row 2: Results Link + Visibility toggle */}
             <div className="flex items-center gap-2">
-              <div className="flex">
-                <Button
-                  size="sm"
-                  variant={copiedField === "results" ? "success" : "default"}
-                  className="min-w-44 transition-all rounded-r-none"
-                  onClick={() => copyToClipboard(resultsUrl, "results")}
-                >
-                  {copiedField === "results"
-                    ? <Check className="mr-1.5 h-3.5 w-3.5" />
-                    : <Copy className="mr-1.5 h-3.5 w-3.5" />}
-                  {copiedField === "results" ? "URL Copied!" : "Results Link"}
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <div className="flex">
+                    <Button
+                      size="sm"
+                      variant={copiedField === "results" ? "success" : "default"}
+                      className="min-w-44 transition-all rounded-r-none"
+                      onClick={(e) => { e.stopPropagation(); copyToClipboard(resultsUrl, "results"); }}
+                    >
+                      {copiedField === "results"
+                        ? <Check className="mr-1.5 h-3.5 w-3.5" />
+                        : <Copy className="mr-1.5 h-3.5 w-3.5" />}
+                      {copiedField === "results" ? "URL Copied!" : "Results Link"}
+                    </Button>
                     <Button
                       size="sm"
                       variant={copiedField === "results" ? "success" : "default"}
@@ -609,19 +609,19 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                     >
                       <ChevronDown className="h-3.5 w-3.5" />
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
-                    <DropdownMenuItem onClick={() => window.open(resultsUrl, "_blank")}>
-                      <ExternalLink className="mr-2 h-4 w-4" />
-                      Open Results
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleExportCSV} disabled={!exportResults}>
-                      <Download className="mr-2 h-4 w-4" />
-                      Download CSV
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" sideOffset={1}>
+                  <DropdownMenuItem onClick={() => window.open(resultsUrl, "_blank")}>
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    Open Results
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportCSV} disabled={!exportResults}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download CSV
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button variant={poll.resultsVisible ? "success" : "warning"} size="sm" onClick={handleToggleResultsVisible} title={poll.resultsVisible ? "Visible" : "Hidden"}>
                 {poll.resultsVisible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
               </Button>
