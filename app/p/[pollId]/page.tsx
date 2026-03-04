@@ -479,7 +479,7 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
         ) : (
           <>
             {/* Group Info */}
-            {groupId && poll.requireParticipantNames !== false && (
+            {groupId && !viewOnly && poll.requireParticipantNames !== false && (
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle>{members.length > 1 ? "Participants" : "Participant"}</CardTitle>

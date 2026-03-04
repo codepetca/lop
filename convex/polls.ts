@@ -204,8 +204,13 @@ export const toggleOpen = mutation({
   },
   handler: async (ctx, args) => {
     const poll = await validateAdminAccess(ctx, args.pollId, args.adminToken);
-    await ctx.db.patch(args.pollId, { isOpen: !poll.isOpen });
-    return { isOpen: !poll.isOpen };
+    const newIsOpen = !poll.isOpen;
+    await ctx.db.patch(args.pollId, {
+      isOpen: newIsOpen,
+      // Reset topicsVisible when reopening so the next close starts hidden by default
+      ...(newIsOpen ? { topicsVisible: false } : {}),
+    });
+    return { isOpen: newIsOpen };
   },
 });
 

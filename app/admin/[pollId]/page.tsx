@@ -558,6 +558,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                       size="sm"
                       variant={copiedField === "student" ? "success" : "default"}
                       className="rounded-l-none border-l border-l-white/20 px-2 transition-all"
+                      aria-label="Poll link options"
                     >
                       <ChevronDown className="h-3.5 w-3.5" />
                     </Button>
@@ -608,6 +609,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                       size="sm"
                       variant={copiedField === "results" ? "success" : "default"}
                       className="rounded-l-none border-l border-l-white/20 px-2 transition-all"
+                      aria-label="Results link options"
                     >
                       <ChevronDown className="h-3.5 w-3.5" />
                     </Button>
