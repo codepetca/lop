@@ -39,7 +39,7 @@ export function NavBar({ showHomeButton = false }: NavBarProps) {
             <Home className="h-5 w-5" />
           </Button>
 
-<div className="absolute right-4 flex items-center gap-2">
+          <div className="absolute right-4 flex items-center gap-2">
             <ThemeToggle />
             {!isLoading && (
               isAnonymous ? (
