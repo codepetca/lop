@@ -13,7 +13,7 @@ import { GoogleLogo } from "@/components/SignInDialog";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { SavedPoll } from "@/types/poll";
-import { Loader2, X } from "lucide-react";
+import { ChevronUp, Loader2 } from "lucide-react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { getErrorMessage } from "@/lib/errors";
 
@@ -145,17 +145,14 @@ export default function Home() {
                     </div>
                   ) : (
                     <Card>
-                      <CardHeader className="pb-3 pt-4 px-4 flex flex-row items-center justify-between space-y-0">
-                        <CardTitle className="text-sm font-medium">
-                          {isSignUp ? "Create account" : "Email sign-in"}
-                        </CardTitle>
+                      <CardHeader className="pb-3 pt-3 px-4 flex flex-row items-center justify-end space-y-0">
                         <button
                           type="button"
                           onClick={collapseOtherOptions}
                           className="text-muted-foreground hover:text-foreground transition-colors"
-                          aria-label="Close"
+                          aria-label="Collapse"
                         >
-                          <X className="h-4 w-4" />
+                          <ChevronUp className="h-4 w-4" />
                         </button>
                       </CardHeader>
                       <CardContent className="px-4 pb-4">
