@@ -25,6 +25,7 @@ export default defineSchema({
     description: v.optional(v.string()),
     isOpen: v.boolean(),
     resultsVisible: v.optional(v.boolean()),
+    topicsVisible: v.optional(v.boolean()), // Whether topics are visible to students when poll is closed (defaults to false)
     adminToken: v.string(),
     membersPerGroup: v.optional(v.number()),
     pollType: v.optional(v.union(v.literal("claims"), v.literal("standard"))),

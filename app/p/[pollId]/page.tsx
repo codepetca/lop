@@ -91,6 +91,7 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
     if (!poll) return;
     if (groupId) return; // Already have a group
     if (poll.requireParticipantNames !== false) return; // Not anonymous
+    if (!poll.isOpen) return; // Don't auto-join closed polls (view-only or fully closed)
 
     // In preview mode, just set a fake group ID
     if (isPreviewMode) {
@@ -378,7 +379,7 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
     );
   }
 
-  if (!poll.isOpen) {
+  if (!poll.isOpen && !(poll.topicsVisible ?? false)) {
     return (
       <EmptyState
         title="Poll Closed"
@@ -386,6 +387,8 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
       />
     );
   }
+
+  const viewOnly = !poll.isOpen;
 
   return (
     <div className="min-h-screen bg-background p-4 py-8">
@@ -395,6 +398,15 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
           <div className="bg-warning/20 border-2 border-warning rounded-lg p-4 text-center">
             <p className="text-warning font-semibold">
               Preview Mode - No data will be saved
+            </p>
+          </div>
+        )}
+
+        {/* View Only Banner */}
+        {viewOnly && (
+          <div className="bg-muted border-2 border-border rounded-lg p-4 text-center">
+            <p className="text-muted-foreground font-semibold">
+              Poll is closed — topics shown for reference only
             </p>
           </div>
         )}
@@ -417,7 +429,7 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
         </Card>
 
         {/* Student Info Form */}
-        {!groupId ? (
+        {!groupId && !viewOnly ? (
           <Card>
             <CardHeader>
               <CardTitle>Participant Information</CardTitle>
@@ -467,7 +479,7 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
         ) : (
           <>
             {/* Group Info */}
-            {poll.requireParticipantNames !== false && (
+            {groupId && !viewOnly && poll.requireParticipantNames !== false && (
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle>{members.length > 1 ? "Participants" : "Participant"}</CardTitle>
@@ -500,7 +512,9 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
                   {poll.pollType === "standard" ? "Topics" : "Available Topics"}
                 </CardTitle>
                 <CardDescription>
-                  {poll.pollType === "standard"
+                  {viewOnly
+                    ? "View only"
+                    : poll.pollType === "standard"
                     ? "Vote on a topic"
                     : "Choose a topic to claim it"}
                 </CardDescription>
@@ -518,10 +532,13 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
                       return (
                         <button
                           key={topic._id}
-                          onClick={() => handleClaimTopic(topic._id)}
+                          onClick={viewOnly ? undefined : () => handleClaimTopic(topic._id)}
+                          disabled={viewOnly}
                           className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
                             isYours
                               ? "border-success bg-success-subtle cursor-pointer"
+                              : viewOnly
+                              ? "border-border opacity-75 cursor-default"
                               : "border-border hover:border-info hover:bg-info-subtle cursor-pointer"
                           }`}
                         >
@@ -562,8 +579,8 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
                         label={topic.label}
                         state={state}
                         selectedBy={!isPreviewMode && topic.selectedBy ? topic.selectedBy : null}
-                        onClick={() => handleClaimTopic(topic._id)}
-                        disabled={!isPreviewMode && isTaken}
+                        onClick={viewOnly ? undefined : () => handleClaimTopic(topic._id)}
+                        disabled={viewOnly || (!isPreviewMode && !!isTaken)}
                       />
                     );
                   })}

@@ -30,8 +30,7 @@ export function NavBar({ showHomeButton = false }: NavBarProps) {
 
   return (
     <>
-      <div className="border-b bg-card">
-        <div className="max-w-7xl mx-auto px-4 py-1 relative flex items-center justify-center">
+      <div className="sticky top-0 z-50 max-w-2xl mx-auto border-b rounded-b-lg bg-card px-4 py-4 relative flex items-center justify-center">
           <Button
             variant="ghost"
             onClick={() => router.push("/")}
@@ -39,8 +38,6 @@ export function NavBar({ showHomeButton = false }: NavBarProps) {
           >
             <Home className="h-5 w-5" />
           </Button>
-
-          <span className="text-sm font-semibold">Claims Poll</span>
 
           <div className="absolute right-4 flex items-center gap-2">
             <ThemeToggle />
@@ -80,7 +77,6 @@ export function NavBar({ showHomeButton = false }: NavBarProps) {
             )}
           </div>
         </div>
-      </div>
 
       <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} />
     </>

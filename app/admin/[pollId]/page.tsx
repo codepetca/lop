@@ -10,8 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Plus, Download, GripVertical, Trash2, HelpCircle, RotateCcw, Share2, Check, ExternalLink, Lock, Unlock, ChevronDown, Eye, EyeOff } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Loader2, Plus, Download, GripVertical, Trash2, RotateCcw, Copy, Check, ExternalLink, Presentation, Lock, Unlock, ChevronDown, Eye, EyeOff } from "lucide-react";
+
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useConfirm } from "@/components/ui/use-confirm";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
@@ -45,6 +45,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   );
 
   const toggleOpen = useMutation(api.polls.toggleOpen);
+  const toggleTopicsVisible = useMutation(api.polls.toggleTopicsVisible);
   const toggleResultsVisible = useMutation(api.polls.toggleResultsVisible);
   const updatePollDetails = useMutation(api.polls.updatePollDetails);
   const addTopics = useMutation(api.polls.addTopics);
@@ -55,7 +56,6 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   const unclaimTopic = useMutation(api.topics.unclaimTopic);
   const deletePoll = useMutation(api.polls.deletePoll);
 
-  const [titleHelpOpen, setTitleHelpOpen] = useState(false);
   const [draggedTopicId, setDraggedTopicId] = useState<Id<"topics"> | null>(null);
   const [previewTopics, setPreviewTopics] = useState<typeof topics | null>(null);
   const [optimisticOrder, setOptimisticOrder] = useState<Id<"topics">[] | null>(null);
@@ -91,6 +91,15 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
     setError(null);
     try {
       await toggleOpen({ pollId, adminToken });
+    } catch (error) {
+      setError(getErrorMessage(error));
+    }
+  };
+
+  const handleToggleTopicsVisible = async () => {
+    setError(null);
+    try {
+      await toggleTopicsVisible({ pollId, adminToken });
     } catch (error) {
       setError(getErrorMessage(error));
     }
@@ -476,23 +485,12 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
 
   return (
     <div className="min-h-screen bg-background p-4 py-4">
-      <div className="max-w-6xl mx-auto space-y-3">
+      <div className="max-w-2xl mx-auto space-y-3">
         {/* Error Message */}
         <ErrorMessage message={error} onDismiss={() => setError(null)} />
 
         {/* Header */}
-        <Card className="relative">
-          <Tooltip open={titleHelpOpen} onOpenChange={setTitleHelpOpen}>
-            <TooltipTrigger asChild>
-              <button
-                className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"
-                onClick={() => setTitleHelpOpen(v => !v)}
-              >
-                <HelpCircle className="h-4 w-4" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="left">Tap on title or description to edit it. Share the poll link. Lock the poll. Preview the poll.</TooltipContent>
-          </Tooltip>
+        <Card>
           <CardHeader>
             {titleEdit.isEditing ? (
               <Input
@@ -530,7 +528,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
               />
             ) : (
               <CardDescription
-                className="text-base mt-2 cursor-pointer text-info hover:text-info/80 transition-colors"
+                className={`text-base mt-2 cursor-pointer transition-colors ${poll.description ? "text-info hover:text-info/80" : "text-muted-foreground/50 italic hover:text-muted-foreground/70"}`}
                 onClick={descriptionEdit.startEditing}
                 title="Click to edit"
               >
@@ -541,72 +539,93 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
           <CardContent className="pt-0 pb-4 space-y-2">
             {/* Row 1: Poll Link + Lock/Unlock */}
             <div className="flex items-center gap-2">
-              <div className="flex">
-                <Button
-                  size="sm"
-                  variant={copiedField === "student" ? "success" : "default"}
-                  className="min-w-44 transition-all rounded-r-none"
-                  onClick={() => { copyToClipboard(participantUrl, "student"); window.open(participantUrl, "_blank"); }}
-                >
-                  {copiedField === "student"
-                    ? <Check className="mr-1.5 h-3.5 w-3.5" />
-                    : <Share2 className="mr-1.5 h-3.5 w-3.5" />}
-                  {copiedField === "student" ? "URL Copied!" : "Poll Link"}
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <div className="flex">
+                    <Button
+                      size="sm"
+                      variant={copiedField === "student" ? "success" : "default"}
+                      className="min-w-44 transition-all rounded-r-none"
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onClick={() => copyToClipboard(participantUrl, "student")}
+                    >
+                      {copiedField === "student"
+                        ? <Check className="mr-1.5 h-3.5 w-3.5" />
+                        : <Copy className="mr-1.5 h-3.5 w-3.5" />}
+                      {copiedField === "student" ? "URL Copied!" : "Poll Link"}
+                    </Button>
                     <Button
                       size="sm"
                       variant={copiedField === "student" ? "success" : "default"}
                       className="rounded-l-none border-l border-l-white/20 px-2 transition-all"
+                      aria-label="Poll link options"
                     >
                       <ChevronDown className="h-3.5 w-3.5" />
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
-                    <DropdownMenuItem onClick={() => window.open(`${participantUrl}?preview=true`, "_blank")}>
-                      <ExternalLink className="mr-2 h-4 w-4" />
-                      Open Preview
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              <Button variant={poll.isOpen ? "success" : "warning"} size="sm" onClick={handleToggleOpen} title={poll.isOpen ? "Open" : "Closed"}>
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" sideOffset={1}>
+                  <DropdownMenuItem onClick={() => window.open(participantUrl, "_blank")}>
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    Open Poll
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => window.open(`${participantUrl}?preview=true`, "_blank")}>
+                    <Presentation className="mr-2 h-4 w-4" />
+                    Open Preview
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button
+                variant={poll.isOpen ? "outline" : (poll.topicsVisible ?? false) ? "success" : "warning"}
+                size="sm"
+                onClick={poll.isOpen ? undefined : handleToggleTopicsVisible}
+                disabled={poll.isOpen}
+                title={poll.isOpen ? "Topics always visible when poll is open" : (poll.topicsVisible ?? false) ? "Topics visible to students" : "Topics hidden from students"}
+              >
+                {poll.isOpen || (poll.topicsVisible ?? false) ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+              </Button>
+              <Button variant={poll.isOpen ? "success" : "warning"} size="sm" onClick={handleToggleOpen} title={poll.isOpen ? "Poll opened" : "Poll closed"}>
                 {poll.isOpen ? <Unlock className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
               </Button>
             </div>
             {/* Row 2: Results Link + Visibility toggle */}
             <div className="flex items-center gap-2">
-              <div className="flex">
-                <Button
-                  size="sm"
-                  variant={copiedField === "results" ? "success" : "default"}
-                  className="min-w-44 transition-all rounded-r-none"
-                  onClick={() => { copyToClipboard(resultsUrl, "results"); window.open(resultsUrl, "_blank"); }}
-                >
-                  {copiedField === "results"
-                    ? <Check className="mr-1.5 h-3.5 w-3.5" />
-                    : <Share2 className="mr-1.5 h-3.5 w-3.5" />}
-                  {copiedField === "results" ? "URL Copied!" : "Results Link"}
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <div className="flex">
+                    <Button
+                      size="sm"
+                      variant={copiedField === "results" ? "success" : "default"}
+                      className="min-w-44 transition-all rounded-r-none"
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onClick={() => copyToClipboard(resultsUrl, "results")}
+                    >
+                      {copiedField === "results"
+                        ? <Check className="mr-1.5 h-3.5 w-3.5" />
+                        : <Copy className="mr-1.5 h-3.5 w-3.5" />}
+                      {copiedField === "results" ? "URL Copied!" : "Results Link"}
+                    </Button>
                     <Button
                       size="sm"
                       variant={copiedField === "results" ? "success" : "default"}
                       className="rounded-l-none border-l border-l-white/20 px-2 transition-all"
+                      aria-label="Results link options"
                     >
                       <ChevronDown className="h-3.5 w-3.5" />
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
-                    <DropdownMenuItem onClick={handleExportCSV} disabled={!exportResults}>
-                      <Download className="mr-2 h-4 w-4" />
-                      Download CSV
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" sideOffset={1}>
+                  <DropdownMenuItem onClick={() => window.open(resultsUrl, "_blank")}>
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    Open Results
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportCSV} disabled={!exportResults}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Download CSV
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button variant={poll.resultsVisible ? "success" : "warning"} size="sm" onClick={handleToggleResultsVisible} title={poll.resultsVisible ? "Visible" : "Hidden"}>
                 {poll.resultsVisible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
               </Button>

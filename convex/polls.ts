@@ -204,8 +204,13 @@ export const toggleOpen = mutation({
   },
   handler: async (ctx, args) => {
     const poll = await validateAdminAccess(ctx, args.pollId, args.adminToken);
-    await ctx.db.patch(args.pollId, { isOpen: !poll.isOpen });
-    return { isOpen: !poll.isOpen };
+    const newIsOpen = !poll.isOpen;
+    await ctx.db.patch(args.pollId, {
+      isOpen: newIsOpen,
+      // Reset topicsVisible when reopening so the next close starts hidden by default
+      ...(newIsOpen ? { topicsVisible: false } : {}),
+    });
+    return { isOpen: newIsOpen };
   },
 });
 
@@ -220,6 +225,25 @@ export const toggleResultsVisible = mutation({
     const newValue = !(poll.resultsVisible ?? true);
     await ctx.db.patch(args.pollId, { resultsVisible: newValue });
     return { resultsVisible: newValue };
+  },
+});
+
+// Toggle topics visibility when poll is closed (admin only)
+export const toggleTopicsVisible = mutation({
+  args: {
+    pollId: v.id("polls"),
+    adminToken: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const poll = await validateAdminAccess(ctx, args.pollId, args.adminToken);
+
+    if (poll.isOpen) {
+      throw new Error("Cannot toggle topic visibility while poll is open");
+    }
+
+    await ctx.db.patch(args.pollId, {
+      topicsVisible: !(poll.topicsVisible ?? false),
+    });
   },
 });
 
