@@ -126,13 +126,13 @@ export default function Home() {
                     Sign in with Google
                   </Button>
                   {!showOtherOptions ? (
-                    <div className="text-center">
+                    <div className="text-right">
                       <button
                         type="button"
                         onClick={() => setShowOtherOptions(true)}
-                        className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+                        className="text-[10px] text-muted-foreground/60 underline-offset-4 hover:underline"
                       >
-                        Other options
+                        options
                       </button>
                     </div>
                   ) : (
