@@ -541,28 +541,23 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
             <div className="flex items-center gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <div className="flex">
-                    <Button
-                      size="sm"
-                      variant={copiedField === "student" ? "success" : "default"}
-                      className="min-w-44 transition-all rounded-r-none"
-                      onClick={(e) => { e.stopPropagation(); copyToClipboard(participantUrl, "student"); }}
-                    >
-                      {copiedField === "student"
-                        ? <Check className="mr-1.5 h-3.5 w-3.5" />
-                        : <Copy className="mr-1.5 h-3.5 w-3.5" />}
-                      {copiedField === "student" ? "URL Copied!" : "Poll Link"}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={copiedField === "student" ? "success" : "default"}
-                      className="rounded-l-none border-l border-l-white/20 px-2 transition-all"
-                    >
-                      <ChevronDown className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
+                  <Button
+                    size="sm"
+                    variant={copiedField === "student" ? "success" : "default"}
+                    className="min-w-44 transition-all"
+                  >
+                    {copiedField === "student"
+                      ? <Check className="mr-1.5 h-3.5 w-3.5" />
+                      : <Copy className="mr-1.5 h-3.5 w-3.5" />}
+                    {copiedField === "student" ? "URL Copied!" : "Poll Link"}
+                    <ChevronDown className="ml-auto h-3.5 w-3.5 opacity-60" />
+                  </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" sideOffset={1}>
+                  <DropdownMenuItem onClick={() => copyToClipboard(participantUrl, "student")}>
+                    <Copy className="mr-2 h-4 w-4" />
+                    Copy Link
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => window.open(participantUrl, "_blank")}>
                     <ExternalLink className="mr-2 h-4 w-4" />
                     Open Poll
@@ -590,28 +585,23 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
             <div className="flex items-center gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <div className="flex">
-                    <Button
-                      size="sm"
-                      variant={copiedField === "results" ? "success" : "default"}
-                      className="min-w-44 transition-all rounded-r-none"
-                      onClick={(e) => { e.stopPropagation(); copyToClipboard(resultsUrl, "results"); }}
-                    >
-                      {copiedField === "results"
-                        ? <Check className="mr-1.5 h-3.5 w-3.5" />
-                        : <Copy className="mr-1.5 h-3.5 w-3.5" />}
-                      {copiedField === "results" ? "URL Copied!" : "Results Link"}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={copiedField === "results" ? "success" : "default"}
-                      className="rounded-l-none border-l border-l-white/20 px-2 transition-all"
-                    >
-                      <ChevronDown className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
+                  <Button
+                    size="sm"
+                    variant={copiedField === "results" ? "success" : "default"}
+                    className="min-w-44 transition-all"
+                  >
+                    {copiedField === "results"
+                      ? <Check className="mr-1.5 h-3.5 w-3.5" />
+                      : <Copy className="mr-1.5 h-3.5 w-3.5" />}
+                    {copiedField === "results" ? "URL Copied!" : "Results Link"}
+                    <ChevronDown className="ml-auto h-3.5 w-3.5 opacity-60" />
+                  </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" sideOffset={1}>
+                  <DropdownMenuItem onClick={() => copyToClipboard(resultsUrl, "results")}>
+                    <Copy className="mr-2 h-4 w-4" />
+                    Copy Link
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => window.open(resultsUrl, "_blank")}>
                     <ExternalLink className="mr-2 h-4 w-4" />
                     Open Results
