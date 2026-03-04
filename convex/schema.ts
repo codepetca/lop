@@ -1,22 +1,48 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { authTables } from "@convex-dev/auth/server";
 
 export default defineSchema({
+  ...authTables,
+
+  // Extend the users table with a tier field
+  users: defineTable({
+    name: v.optional(v.string()),
+    image: v.optional(v.string()),
+    email: v.optional(v.string()),
+    emailVerificationTime: v.optional(v.number()),
+    phone: v.optional(v.string()),
+    phoneVerificationTime: v.optional(v.number()),
+    isAnonymous: v.optional(v.boolean()),
+    // Subscription tier: anonymous (default) | free (signed in) | pro (manually set)
+    tier: v.optional(v.union(v.literal("anonymous"), v.literal("free"), v.literal("pro"))),
+  })
+    .index("email", ["email"])
+    .index("phone", ["phone"]),
+
   polls: defineTable({
     title: v.string(),
     description: v.optional(v.string()),
     isOpen: v.boolean(),
-    resultsVisible: v.optional(v.boolean()), // Whether results page is publicly visible (defaults to true)
+    resultsVisible: v.optional(v.boolean()),
+    topicsVisible: v.optional(v.boolean()), // Whether topics are visible to students when poll is closed (defaults to false)
     adminToken: v.string(),
-    membersPerGroup: v.optional(v.number()), // 1-10, how many members required per group (defaults to 1)
-    pollType: v.optional(v.union(v.literal("claims"), v.literal("standard"))), // Type of poll: "claims" (exclusive) or "standard" (voting)
-    requireParticipantNames: v.optional(v.boolean()), // Whether to require participant names (defaults to true)
-    createdAt: v.number(), // Date.now()
-  }),
+    membersPerGroup: v.optional(v.number()),
+    pollType: v.optional(v.union(v.literal("claims"), v.literal("standard"))),
+    requireParticipantNames: v.optional(v.boolean()),
+    createdAt: v.number(),
+    // Auth fields (new)
+    userId: v.optional(v.id("users")),
+    // Legacy rate-limiting field (deprecated, kept for backwards compat)
+    creatorDeviceId: v.optional(v.string()),
+  })
+    .index("by_createdAt", ["createdAt"])
+    .index("by_user", ["userId"])
+    .index("by_creator_createdAt", ["creatorDeviceId", "createdAt"]),
   topics: defineTable({
     pollId: v.id("polls"),
     label: v.string(),
-    order: v.number(), // Display order (0-based)
+    order: v.number(),
     selectedByGroupId: v.optional(v.id("groups")),
     selectedAt: v.optional(v.number()),
   })
@@ -24,6 +50,7 @@ export default defineSchema({
     .index("by_poll_order", ["pollId", "order"])
     .index("by_poll_label", ["pollId", "label"])
     .index("by_poll_group", ["pollId", "selectedByGroupId"]),
+
   groups: defineTable({
     pollId: v.id("polls"),
     members: v.array(
@@ -34,6 +61,7 @@ export default defineSchema({
     ),
     createdAt: v.number(),
   }).index("by_poll", ["pollId"]),
+
   votes: defineTable({
     pollId: v.id("polls"),
     topicId: v.id("topics"),

@@ -1,7 +1,27 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalMutation } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { validateAdminAccess } from "./lib/validators";
+import { getAuthUserId } from "@convex-dev/auth/server";
+
+// Tier poll limits
+const TIER_POLL_LIMITS = {
+  anonymous: 2,
+  free: 5,
+  pro: 10,
+} as const;
+
+type Tier = keyof typeof TIER_POLL_LIMITS;
+
+// Max topics per poll (module-level so it's parsed once)
+const MAX_TOPICS_PER_POLL = parseInt(process.env.MAX_TOPICS_PER_POLL ?? "") || 100;
+
+// Resolve a user document to their effective Tier
+function resolveTier(user: { tier?: string | null; isAnonymous?: boolean | null } | null): Tier {
+  if (!user) return "anonymous";
+  const isAnonymous = user.isAnonymous === true;
+  return (user.tier as Tier) ?? (isAnonymous ? "anonymous" : "free");
+}
 
 // Generate a cryptographically secure admin token
 function generateAdminToken(): string {
@@ -24,9 +44,53 @@ export const create = mutation({
     const pollType = args.pollType ?? "claims";
     const requireParticipantNames = args.requireParticipantNames ?? true;
 
-    // Validate membersPerGroup is between 1 and 10
     if (membersPerGroup < 1 || membersPerGroup > 10) {
       throw new Error("Members per group must be between 1 and 10");
+    }
+
+    // Validate topic count
+    const validTopics = args.topicLabels.filter((l) => l.trim());
+    if (validTopics.length > MAX_TOPICS_PER_POLL) {
+      throw new Error(`Too many topics (max ${MAX_TOPICS_PER_POLL} per poll).`);
+    }
+
+    // Get authenticated user and their tier
+    const userId = await getAuthUserId(ctx);
+    let tier: Tier = "anonymous";
+    if (userId) {
+      const user = await ctx.db.get(userId);
+      tier = resolveTier(user);
+    }
+
+    // Enforce tier-based poll limit
+    const pollLimit = TIER_POLL_LIMITS[tier];
+    if (userId) {
+      const userPolls = await ctx.db
+        .query("polls")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .take(pollLimit + 1);
+      if (userPolls.length >= pollLimit) {
+        if (tier === "anonymous") {
+          throw new Error(
+            `Anonymous users can create up to ${pollLimit} polls. Sign up for a free account to create more.`
+          );
+        } else if (tier === "free") {
+          throw new Error(
+            `Free accounts can create up to ${pollLimit} polls. Upgrade to Pro for more.`
+          );
+        } else {
+          throw new Error(`Poll limit reached (max ${pollLimit}).`);
+        }
+      }
+    }
+
+    // Global total cap (DB size backstop)
+    const maxTotalPolls = parseInt(process.env.MAX_TOTAL_POLLS ?? "") || 500;
+    const existingPolls = await ctx.db.query("polls").take(maxTotalPolls + 1);
+    if (existingPolls.length > maxTotalPolls) {
+      throw new Error(
+        `Service poll limit reached. Please try again later.`
+      );
     }
 
     // Create the poll
@@ -40,6 +104,7 @@ export const create = mutation({
       pollType,
       requireParticipantNames,
       createdAt: Date.now(),
+      userId: userId ?? undefined,
     });
 
     // Create topics with order
@@ -56,6 +121,49 @@ export const create = mutation({
     }
 
     return { pollId, adminToken };
+  },
+});
+
+// Get the current user's polls (server-side My Polls)
+export const myPolls = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return null;
+
+    const polls = await ctx.db
+      .query("polls")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .order("desc")
+      .collect();
+
+    return polls.map((p) => ({
+      pollId: p._id,
+      title: p.title,
+      isOpen: p.isOpen,
+      createdAt: p.createdAt,
+      adminToken: p.adminToken,
+    }));
+  },
+});
+
+// Get the current user's poll count and limit
+export const myPollUsage = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return { used: 0, limit: TIER_POLL_LIMITS.anonymous, tier: "anonymous" as Tier };
+
+    const user = await ctx.db.get(userId);
+    const tier = resolveTier(user);
+    const limit = TIER_POLL_LIMITS[tier];
+
+    const polls = await ctx.db
+      .query("polls")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .take(limit + 1);
+
+    return { used: polls.length, limit, tier };
   },
 });
 
@@ -80,7 +188,6 @@ export const validatePolls = query({
           existingIds.push(pollId);
         }
       } catch (e) {
-        // Invalid ID format or poll doesn't exist, skip it
         continue;
       }
     }
@@ -97,12 +204,13 @@ export const toggleOpen = mutation({
   },
   handler: async (ctx, args) => {
     const poll = await validateAdminAccess(ctx, args.pollId, args.adminToken);
-
+    const newIsOpen = !poll.isOpen;
     await ctx.db.patch(args.pollId, {
-      isOpen: !poll.isOpen,
+      isOpen: newIsOpen,
+      // Reset topicsVisible when reopening so the next close starts hidden by default
+      ...(newIsOpen ? { topicsVisible: false } : {}),
     });
-
-    return { isOpen: !poll.isOpen };
+    return { isOpen: newIsOpen };
   },
 });
 
@@ -114,13 +222,28 @@ export const toggleResultsVisible = mutation({
   },
   handler: async (ctx, args) => {
     const poll = await validateAdminAccess(ctx, args.pollId, args.adminToken);
-
     const newValue = !(poll.resultsVisible ?? true);
-    await ctx.db.patch(args.pollId, {
-      resultsVisible: newValue,
-    });
-
+    await ctx.db.patch(args.pollId, { resultsVisible: newValue });
     return { resultsVisible: newValue };
+  },
+});
+
+// Toggle topics visibility when poll is closed (admin only)
+export const toggleTopicsVisible = mutation({
+  args: {
+    pollId: v.id("polls"),
+    adminToken: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const poll = await validateAdminAccess(ctx, args.pollId, args.adminToken);
+
+    if (poll.isOpen) {
+      throw new Error("Cannot toggle topic visibility while poll is open");
+    }
+
+    await ctx.db.patch(args.pollId, {
+      topicsVisible: !(poll.topicsVisible ?? false),
+    });
   },
 });
 
@@ -138,9 +261,7 @@ export const updatePollDetails = mutation({
     const updates: { title?: string; description?: string } = {};
 
     if (args.title !== undefined) {
-      if (args.title.trim() === "") {
-        throw new Error("Title cannot be empty");
-      }
+      if (args.title.trim() === "") throw new Error("Title cannot be empty");
       updates.title = args.title.trim();
     }
 
@@ -149,7 +270,6 @@ export const updatePollDetails = mutation({
     }
 
     await ctx.db.patch(args.pollId, updates);
-
     return { success: true };
   },
 });
@@ -164,11 +284,15 @@ export const addTopics = mutation({
   handler: async (ctx, args) => {
     await validateAdminAccess(ctx, args.pollId, args.adminToken);
 
-    // Get current max order
     const existingTopics = await ctx.db
       .query("topics")
       .withIndex("by_poll", (q) => q.eq("pollId", args.pollId))
       .collect();
+
+    const incomingCount = args.topicLabels.filter((l) => l.trim()).length;
+    if (existingTopics.length + incomingCount > MAX_TOPICS_PER_POLL) {
+      throw new Error(`Topic limit reached (max ${MAX_TOPICS_PER_POLL} per poll).`);
+    }
 
     let maxOrder = existingTopics.length > 0
       ? Math.max(...existingTopics.map(t => t.order))
@@ -207,7 +331,6 @@ export const exportResults = query({
 
     topics.sort((a, b) => a.order - b.order);
 
-    // Standard poll: aggregate vote counts in a single pass
     if (poll.pollType === "standard") {
       const allVotes = await ctx.db
         .query("votes")
@@ -230,7 +353,6 @@ export const exportResults = query({
       }));
     }
 
-    // Claims poll: include the claiming group's member names
     const results = [];
     for (const topic of topics) {
       if (topic.selectedByGroupId) {
@@ -239,7 +361,6 @@ export const exportResults = query({
           const memberNames = group.members
             .map((m) => `${m.firstName} ${m.lastName}`)
             .join("; ");
-
           results.push({
             topic: topic.label,
             members: memberNames,
@@ -248,12 +369,7 @@ export const exportResults = query({
           });
         }
       } else {
-        results.push({
-          topic: topic.label,
-          members: "",
-          selectedAt: "",
-          votes: null,
-        });
+        results.push({ topic: topic.label, members: "", selectedAt: "", votes: null });
       }
     }
 
@@ -270,39 +386,82 @@ export const deletePoll = mutation({
   handler: async (ctx, args) => {
     await validateAdminAccess(ctx, args.pollId, args.adminToken);
 
-    // Delete all topics for this poll
     const topics = await ctx.db
       .query("topics")
       .withIndex("by_poll", (q) => q.eq("pollId", args.pollId))
       .collect();
+    for (const topic of topics) await ctx.db.delete(topic._id);
 
-    for (const topic of topics) {
-      await ctx.db.delete(topic._id);
-    }
-
-    // Delete all groups for this poll
     const groups = await ctx.db
       .query("groups")
       .withIndex("by_poll", (q) => q.eq("pollId", args.pollId))
       .collect();
+    for (const group of groups) await ctx.db.delete(group._id);
 
-    for (const group of groups) {
-      await ctx.db.delete(group._id);
-    }
-
-    // Delete all votes for this poll (standard polls)
     const votes = await ctx.db
       .query("votes")
       .withIndex("by_poll", (q) => q.eq("pollId", args.pollId))
       .collect();
+    for (const vote of votes) await ctx.db.delete(vote._id);
 
-    for (const vote of votes) {
-      await ctx.db.delete(vote._id);
+    await ctx.db.delete(args.pollId);
+    return { success: true };
+  },
+});
+
+// Auto-cleanup: delete polls based on owner's tier expiry rules
+export const cleanupOldPolls = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const maxAnonDays = parseInt(process.env.POLL_MAX_AGE_DAYS_ANONYMOUS ?? "") || 30;
+    const maxFreeDays = parseInt(process.env.POLL_MAX_AGE_DAYS_FREE ?? "") || 180;
+
+    const now = Date.now();
+    const anonCutoff = now - maxAnonDays * 24 * 60 * 60 * 1000;
+    const freeCutoff = now - maxFreeDays * 24 * 60 * 60 * 1000;
+
+    // Fetch all polls older than the anonymous cutoff (the shorter window).
+    // Pro polls are skipped inside the loop; free polls are only deleted if older than freeCutoff.
+    const candidates = await ctx.db
+      .query("polls")
+      .withIndex("by_createdAt", (q) => q.lt("createdAt", anonCutoff))
+      .collect();
+
+    const toDelete = new Set<Id<"polls">>();
+
+    for (const poll of candidates) {
+      const owner = poll.userId ? await ctx.db.get(poll.userId) : null;
+      const tier = resolveTier(owner);
+
+      if (tier === "pro") continue; // pro polls never expire
+      if (tier === "free" && poll.createdAt >= freeCutoff) continue; // free poll not old enough
+      toDelete.add(poll._id);
     }
 
-    // Delete the poll itself
-    await ctx.db.delete(args.pollId);
+    let deleted = 0;
+    for (const pollId of toDelete) {
+      const topics = await ctx.db
+        .query("topics")
+        .withIndex("by_poll", (q) => q.eq("pollId", pollId))
+        .collect();
+      for (const topic of topics) await ctx.db.delete(topic._id);
 
-    return { success: true };
+      const groups = await ctx.db
+        .query("groups")
+        .withIndex("by_poll", (q) => q.eq("pollId", pollId))
+        .collect();
+      for (const group of groups) await ctx.db.delete(group._id);
+
+      const votes = await ctx.db
+        .query("votes")
+        .withIndex("by_poll", (q) => q.eq("pollId", pollId))
+        .collect();
+      for (const vote of votes) await ctx.db.delete(vote._id);
+
+      await ctx.db.delete(pollId);
+      deleted++;
+    }
+
+    return { deleted };
   },
 });
