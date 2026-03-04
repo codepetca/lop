@@ -126,26 +126,15 @@ export default function Home() {
                     Sign in with Google
                   </Button>
                   {!showOtherOptions ? (
-                    <>
-                      <div className="text-center">
-                        <button
-                          type="button"
-                          onClick={() => setShowOtherOptions(true)}
-                          className="text-xs text-muted-foreground underline-offset-4 hover:underline"
-                        >
-                          Other options
-                        </button>
-                      </div>
-                      <div className="text-center">
-                        <button
-                          type="button"
-                          onClick={() => router.push("/admin")}
-                          className="text-xs text-muted-foreground underline-offset-4 hover:underline"
-                        >
-                          Skip
-                        </button>
-                      </div>
-                    </>
+                    <div className="text-center">
+                      <button
+                        type="button"
+                        onClick={() => setShowOtherOptions(true)}
+                        className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+                      >
+                        Other options
+                      </button>
+                    </div>
                   ) : (
                     <form onSubmit={handleEmailSubmit} className="space-y-3 pt-1">
                       <div className="relative">
