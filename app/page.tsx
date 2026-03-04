@@ -13,7 +13,7 @@ import { GoogleLogo } from "@/components/SignInDialog";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { SavedPoll } from "@/types/poll";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { getErrorMessage } from "@/lib/errors";
 
@@ -32,6 +32,14 @@ export default function Home() {
   const handleGoogleSignIn = () => {
     setIsGoogleLoading(true);
     void signIn("google");
+  };
+
+  const collapseOtherOptions = () => {
+    setShowOtherOptions(false);
+    setEmail("");
+    setPassword("");
+    setEmailError(null);
+    setIsSignUp(false);
   };
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
@@ -136,77 +144,83 @@ export default function Home() {
                       </button>
                     </div>
                   ) : (
-                    <form onSubmit={handleEmailSubmit} className="space-y-3 pt-1">
-                      <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                          <span className="w-full border-t" />
-                        </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                          <span className="bg-background px-2 text-muted-foreground">
-                            {isSignUp ? "Create account" : "Email sign-in"}
-                          </span>
-                        </div>
-                      </div>
-
-                      {emailError && (
-                        <p className="text-sm text-destructive text-center">{emailError}</p>
-                      )}
-
-                      <div className="space-y-1">
-                        <Label htmlFor="home-email">Email</Label>
-                        <Input
-                          id="home-email"
-                          type="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          required
-                          autoFocus
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <Label htmlFor="home-password">Password</Label>
-                        <Input
-                          id="home-password"
-                          type="password"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          required
-                        />
-                      </div>
-
-                      <Button type="submit" className="w-full" disabled={isEmailLoading}>
-                        {isEmailLoading ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : isSignUp ? (
-                          "Create account"
-                        ) : (
-                          "Sign in"
-                        )}
-                      </Button>
-
-                      <div className="text-center">
+                    <Card>
+                      <CardHeader className="pb-3 pt-4 px-4 flex flex-row items-center justify-between space-y-0">
+                        <CardTitle className="text-sm font-medium">
+                          {isSignUp ? "Create account" : "Email sign-in"}
+                        </CardTitle>
                         <button
                           type="button"
-                          onClick={() => { setIsSignUp(!isSignUp); setEmailError(null); }}
-                          className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+                          onClick={collapseOtherOptions}
+                          className="text-muted-foreground hover:text-foreground transition-colors"
+                          aria-label="Close"
                         >
-                          {isSignUp
-                            ? "Already have an account? Sign in"
-                            : "Don't have an account? Create one"}
+                          <X className="h-4 w-4" />
                         </button>
-                      </div>
+                      </CardHeader>
+                      <CardContent className="px-4 pb-4">
+                        <form onSubmit={handleEmailSubmit} className="space-y-3">
+                          {emailError && (
+                            <p className="text-sm text-destructive text-center">{emailError}</p>
+                          )}
 
-                      <div className="text-center pt-1">
-                        <button
-                          type="button"
-                          onClick={() => router.push("/admin")}
-                          className="text-xs text-muted-foreground underline-offset-4 hover:underline"
-                        >
-                          Skip
-                        </button>
-                      </div>
-                    </form>
+                          <div className="space-y-1">
+                            <Label htmlFor="home-email">Email</Label>
+                            <Input
+                              id="home-email"
+                              type="email"
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              required
+                              autoFocus
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <Label htmlFor="home-password">Password</Label>
+                            <Input
+                              id="home-password"
+                              type="password"
+                              value={password}
+                              onChange={(e) => setPassword(e.target.value)}
+                              required
+                            />
+                          </div>
+
+                          <Button type="submit" className="w-full" disabled={isEmailLoading}>
+                            {isEmailLoading ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : isSignUp ? (
+                              "Create account"
+                            ) : (
+                              "Sign in"
+                            )}
+                          </Button>
+
+                          <div className="text-center">
+                            <button
+                              type="button"
+                              onClick={() => { setIsSignUp(!isSignUp); setEmailError(null); }}
+                              className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+                            >
+                              {isSignUp
+                                ? "Already have an account? Sign in"
+                                : "Don't have an account? Create one"}
+                            </button>
+                          </div>
+
+                          <div className="text-center pt-1">
+                            <button
+                              type="button"
+                              onClick={() => router.push("/admin")}
+                              className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+                            >
+                              Skip
+                            </button>
+                          </div>
+                        </form>
+                      </CardContent>
+                    </Card>
                   )}
                 </>
               ) : (
