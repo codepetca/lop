@@ -30,8 +30,7 @@ export function NavBar({ showHomeButton = false }: NavBarProps) {
 
   return (
     <>
-      <div className="border-b bg-card">
-        <div className="max-w-2xl mx-auto px-4 py-1 relative flex items-center justify-center">
+      <div className="max-w-2xl mx-auto border-b bg-card px-4 py-1 relative flex items-center justify-center">
           <Button
             variant="ghost"
             onClick={() => router.push("/")}
@@ -80,7 +79,6 @@ export function NavBar({ showHomeButton = false }: NavBarProps) {
             )}
           </div>
         </div>
-      </div>
 
       <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} />
     </>
