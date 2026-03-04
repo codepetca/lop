@@ -31,7 +31,7 @@ export function NavBar({ showHomeButton = false }: NavBarProps) {
   return (
     <>
       <div className="border-b bg-card">
-        <div className="max-w-7xl mx-auto px-4 py-1 relative flex items-center justify-center">
+        <div className="max-w-2xl mx-auto px-4 py-1 relative flex items-center justify-center">
           <Button
             variant="ghost"
             onClick={() => router.push("/")}

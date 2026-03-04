@@ -485,7 +485,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
 
   return (
     <div className="min-h-screen bg-background p-4 py-4">
-      <div className="max-w-6xl mx-auto space-y-3">
+      <div className="max-w-2xl mx-auto space-y-3">
         {/* Error Message */}
         <ErrorMessage message={error} onDismiss={() => setError(null)} />
 
