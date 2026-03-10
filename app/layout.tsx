@@ -18,14 +18,14 @@ const spaceGrotesk = Space_Grotesk({
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | Claims Poll",
-    default: "Claims Poll",
+    template: "%s | Lop",
+    default: "Lop",
   },
   description: "Real-time topic selection on a first-come, first-served basis",
   openGraph: {
     type: "website",
     locale: "en_US",
-    siteName: "Claims Poll",
+    siteName: "Lop",
   },
 };
 

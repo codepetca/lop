@@ -101,7 +101,7 @@ export default function Home() {
   const tierLabel = tier === "pro" ? "Pro" : tier === "free" ? "Free" : null;
 
   return (
-    <div className="min-h-screen bg-background p-4">
+    <div className={`min-h-screen bg-background p-4 ${!userLoading && isAnonymous && !showOtherOptions ? "pb-16" : ""}`}>
       <NavBar />
       <div className="w-full max-w-2xl mx-auto space-y-2">
         <Card>

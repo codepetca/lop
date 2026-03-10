@@ -37,7 +37,7 @@ export function AnimatedTitle({ onDone }: AnimatedTitleProps) {
       const t = setTimeout(() => setText(target.slice(0, text.length + 1)), 150);
       return () => clearTimeout(t);
     }
-  }, [phase, text]);
+  }, [phase, text, onDone]);
 
   useEffect(() => {
     if (phase === "done") {
@@ -51,9 +51,10 @@ export function AnimatedTitle({ onDone }: AnimatedTitleProps) {
 
   return (
     <>
+      <span className="sr-only">Lop</span>
+      <span aria-hidden="true">
       {text}
       <span
-        aria-hidden
         style={{ display: "inline-block", position: "relative", marginLeft: "0.08em" }}
       >
         <span
@@ -80,6 +81,7 @@ export function AnimatedTitle({ onDone }: AnimatedTitleProps) {
             <path d="M7,27 C9,30 12,34 13,37" stroke="#16a34a" strokeWidth="1.8" fill="none" strokeLinecap="round" />
           </svg>
         </span>
+      </span>
       </span>
     </>
   );

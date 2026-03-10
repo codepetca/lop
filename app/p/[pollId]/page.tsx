@@ -503,7 +503,7 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
                   {poll.pollType === "standard" ? "Topics" : "Available Topics"}
                 </CardTitle>
                 {viewOnly ? (
-                  <CardDescription className="text-amber-500 text-base">
+                  <CardDescription className="text-amber-500 dark:text-amber-400 text-base">
                     Poll is closed.
                   </CardDescription>
                 ) : (
