@@ -122,7 +122,7 @@ export default function Home() {
             {userLoading ? (
               <div className="h-11 w-full rounded-md bg-muted animate-pulse" />
             ) : isAnonymous ? (
-              <>
+              <div className="space-y-2 animate-in fade-in duration-300">
                 <Button
                   size="lg"
                   variant="outline"
@@ -213,12 +213,12 @@ export default function Home() {
                     </CardContent>
                   </Card>
                 )}
-              </>
+              </div>
             ) : (
               <Button
                 size="lg"
                 onClick={() => router.push("/admin")}
-                className="w-full"
+                className="w-full animate-in fade-in duration-300"
               >
                 Create a Poll
               </Button>
