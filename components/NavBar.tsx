@@ -10,11 +10,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { SignInDialog } from "@/components/SignInDialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
-interface NavBarProps {
-  showHomeButton?: boolean;
-}
-
-export function NavBar({ showHomeButton = false }: NavBarProps) {
+export function NavBar() {
   const router = useRouter();
   const { signOut } = useAuthActions();
   const { isLoading, isAnonymous, email, name, image } = useCurrentUser();

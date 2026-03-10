@@ -4,17 +4,22 @@ import { useState, useEffect } from "react";
 
 type Phase = "wait" | "delete" | "type" | "done";
 
-interface AnimatedTitleProps {
-  onDone?: () => void;
-}
-
-export function AnimatedTitle({ onDone }: AnimatedTitleProps) {
+export function AnimatedTitle() {
   const [text, setText] = useState("Pol");
   const [phase, setPhase] = useState<Phase>("wait");
   const [cursorOn, setCursorOn] = useState(true);
   const [carrotVisible, setCarrotVisible] = useState(false);
 
   useEffect(() => {
+    // Skip animation for users who prefer reduced motion
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setText("Lop");
+      setPhase("done");
+      setCursorOn(false);
+      setCarrotVisible(true);
+      return;
+    }
+
     if (phase === "wait") {
       const t = setTimeout(() => setPhase("delete"), 2800);
       return () => clearTimeout(t);
@@ -31,13 +36,12 @@ export function AnimatedTitle({ onDone }: AnimatedTitleProps) {
       const target = "Lop";
       if (text === target) {
         setPhase("done");
-        onDone?.();
         return;
       }
       const t = setTimeout(() => setText(target.slice(0, text.length + 1)), 150);
       return () => clearTimeout(t);
     }
-  }, [phase, text, onDone]);
+  }, [phase, text]);
 
   useEffect(() => {
     if (phase === "done") {
