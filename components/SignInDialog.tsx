@@ -95,7 +95,7 @@ export function SignInDialog({ open, onOpenChange, initialView = "default" }: Si
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle className="text-center text-xl font-display">
-            Sign in to Claims Poll
+            Sign in to Lop
           </DialogTitle>
         </DialogHeader>
 

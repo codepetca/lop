@@ -234,7 +234,7 @@ export default function Home() {
           <button
             type="button"
             onClick={() => setShowOtherOptions(true)}
-            className="text-[10px] text-muted-foreground/60 underline-offset-4 hover:underline"
+            className="text-xs text-muted-foreground/60 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
           >
             options
           </button>
