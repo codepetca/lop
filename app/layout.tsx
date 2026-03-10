@@ -3,7 +3,6 @@ import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ConvexClientProvider } from "./ConvexClientProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { NavBar } from "@/components/NavBar";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -45,7 +44,6 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <ConvexClientProvider>
-              <NavBar />
               {children}
             </ConvexClientProvider>
         </ThemeProvider>

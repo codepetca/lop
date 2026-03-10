@@ -13,9 +13,11 @@ import { GoogleLogo } from "@/components/SignInDialog";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { SavedPoll } from "@/types/poll";
-import { ChevronUp, Loader2 } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { getErrorMessage } from "@/lib/errors";
+import { AnimatedTitle } from "@/components/AnimatedTitle";
+import { NavBar } from "@/components/NavBar";
 
 export default function Home() {
   const router = useRouter();
@@ -100,19 +102,20 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background p-4">
+      <NavBar />
       <div className="w-full max-w-2xl mx-auto space-y-2">
         <Card>
           <CardHeader className="text-center">
             <CardTitle className="text-4xl font-display font-bold mb-2">
-              Claims Poll
+              <AnimatedTitle />
               {tierLabel && (
                 <span className="ml-2 text-sm font-sans font-normal text-muted-foreground align-middle">
                   {tierLabel}
                 </span>
-          )}
+              )}
             </CardTitle>
             <CardDescription className="text-base">
-              Hop in and vote.
+              Hop in. Vote.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -133,17 +136,7 @@ export default function Home() {
                     )}
                     Sign in with Google
                   </Button>
-                  {!showOtherOptions ? (
-                    <div className="text-right">
-                      <button
-                        type="button"
-                        onClick={() => setShowOtherOptions(true)}
-                        className="text-[10px] text-muted-foreground/60 underline-offset-4 hover:underline"
-                      >
-                        options
-                      </button>
-                    </div>
-                  ) : (
+                  {showOtherOptions && (
                     <Card>
                       <CardHeader className="pb-3 pt-3 px-4 flex flex-row items-center justify-end space-y-0">
                         <button
@@ -152,7 +145,7 @@ export default function Home() {
                           className="text-muted-foreground hover:text-foreground transition-colors"
                           aria-label="Collapse"
                         >
-                          <ChevronUp className="h-4 w-4" />
+                          <X className="h-4 w-4" />
                         </button>
                       </CardHeader>
                       <CardContent className="px-4 pb-4">
@@ -235,6 +228,18 @@ export default function Home() {
 
         <RecentPolls polls={displayPolls} />
       </div>
+
+      {!userLoading && isAnonymous && !showOtherOptions && (
+        <div className="fixed bottom-6 left-0 right-0 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setShowOtherOptions(true)}
+            className="text-[10px] text-muted-foreground/60 underline-offset-4 hover:underline"
+          >
+            options
+          </button>
+        </div>
+      )}
     </div>
   );
 }
