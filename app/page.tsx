@@ -119,109 +119,109 @@ export default function Home() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            {!userLoading && (
-              isAnonymous ? (
-                <>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    onClick={handleGoogleSignIn}
-                    disabled={isGoogleLoading}
-                    className="w-full gap-3"
-                  >
-                    {isGoogleLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <GoogleLogo />
-                    )}
-                    Sign in with Google
-                  </Button>
-                  {showOtherOptions && (
-                    <Card>
-                      <CardHeader className="pb-3 pt-3 px-4 flex flex-row items-center justify-end space-y-0">
-                        <button
-                          type="button"
-                          onClick={collapseOtherOptions}
-                          className="text-muted-foreground hover:text-foreground transition-colors"
-                          aria-label="Collapse"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </CardHeader>
-                      <CardContent className="px-4 pb-4">
-                        <form onSubmit={handleEmailSubmit} className="space-y-3">
-                          {emailError && (
-                            <p className="text-sm text-destructive text-center">{emailError}</p>
-                          )}
-
-                          <div className="space-y-1">
-                            <Label htmlFor="home-email">Email</Label>
-                            <Input
-                              id="home-email"
-                              type="email"
-                              value={email}
-                              onChange={(e) => setEmail(e.target.value)}
-                              required
-                              autoFocus
-                            />
-                          </div>
-
-                          <div className="space-y-1">
-                            <Label htmlFor="home-password">Password</Label>
-                            <Input
-                              id="home-password"
-                              type="password"
-                              value={password}
-                              onChange={(e) => setPassword(e.target.value)}
-                              required
-                            />
-                          </div>
-
-                          <Button type="submit" className="w-full" disabled={isEmailLoading}>
-                            {isEmailLoading ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : isSignUp ? (
-                              "Create account"
-                            ) : (
-                              "Sign in"
-                            )}
-                          </Button>
-
-                          <div className="text-center">
-                            <button
-                              type="button"
-                              onClick={() => { setIsSignUp(!isSignUp); setEmailError(null); }}
-                              className="text-xs text-muted-foreground underline-offset-4 hover:underline"
-                            >
-                              {isSignUp
-                                ? "Already have an account? Sign in"
-                                : "Don't have an account? Create one"}
-                            </button>
-                          </div>
-
-                          <div className="text-center pt-1">
-                            <button
-                              type="button"
-                              onClick={() => router.push("/admin")}
-                              className="text-xs text-muted-foreground underline-offset-4 hover:underline"
-                            >
-                              Skip
-                            </button>
-                          </div>
-                        </form>
-                      </CardContent>
-                    </Card>
-                  )}
-                </>
-              ) : (
+            {userLoading ? (
+              <div className="h-11 w-full rounded-md bg-muted animate-pulse" />
+            ) : isAnonymous ? (
+              <>
                 <Button
                   size="lg"
-                  onClick={() => router.push("/admin")}
-                  className="w-full"
+                  variant="outline"
+                  onClick={handleGoogleSignIn}
+                  disabled={isGoogleLoading}
+                  className="w-full gap-3"
                 >
-                  Create a Poll
+                  {isGoogleLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <GoogleLogo />
+                  )}
+                  Sign in with Google
                 </Button>
-              )
+                {showOtherOptions && (
+                  <Card>
+                    <CardHeader className="pb-3 pt-3 px-4 flex flex-row items-center justify-end space-y-0">
+                      <button
+                        type="button"
+                        onClick={collapseOtherOptions}
+                        className="text-muted-foreground hover:text-foreground transition-colors"
+                        aria-label="Collapse"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </CardHeader>
+                    <CardContent className="px-4 pb-4">
+                      <form onSubmit={handleEmailSubmit} className="space-y-3">
+                        {emailError && (
+                          <p className="text-sm text-destructive text-center">{emailError}</p>
+                        )}
+
+                        <div className="space-y-1">
+                          <Label htmlFor="home-email">Email</Label>
+                          <Input
+                            id="home-email"
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            autoFocus
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <Label htmlFor="home-password">Password</Label>
+                          <Input
+                            id="home-password"
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                          />
+                        </div>
+
+                        <Button type="submit" className="w-full" disabled={isEmailLoading}>
+                          {isEmailLoading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : isSignUp ? (
+                            "Create account"
+                          ) : (
+                            "Sign in"
+                          )}
+                        </Button>
+
+                        <div className="text-center">
+                          <button
+                            type="button"
+                            onClick={() => { setIsSignUp(!isSignUp); setEmailError(null); }}
+                            className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+                          >
+                            {isSignUp
+                              ? "Already have an account? Sign in"
+                              : "Don't have an account? Create one"}
+                          </button>
+                        </div>
+
+                        <div className="text-center pt-1">
+                          <button
+                            type="button"
+                            onClick={() => router.push("/admin")}
+                            className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+                          >
+                            Skip
+                          </button>
+                        </div>
+                      </form>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            ) : (
+              <Button
+                size="lg"
+                onClick={() => router.push("/admin")}
+                className="w-full"
+              >
+                Create a Poll
+              </Button>
             )}
           </CardContent>
         </Card>
