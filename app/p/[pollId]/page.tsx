@@ -402,15 +402,6 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
           </div>
         )}
 
-        {/* View Only Banner */}
-        {viewOnly && (
-          <div className="bg-muted border-2 border-border rounded-lg p-4 text-center">
-            <p className="text-muted-foreground font-semibold">
-              Poll is closed — topics shown for reference only
-            </p>
-          </div>
-        )}
-
         {/* Error Message */}
         <ErrorMessage message={error} onDismiss={() => setError(null)} />
 
@@ -511,13 +502,15 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
                 <CardTitle>
                   {poll.pollType === "standard" ? "Topics" : "Available Topics"}
                 </CardTitle>
-                <CardDescription>
-                  {viewOnly
-                    ? "View only"
-                    : poll.pollType === "standard"
-                    ? "Vote on a topic"
-                    : "Choose a topic to claim it"}
-                </CardDescription>
+                {viewOnly ? (
+                  <CardDescription className="text-amber-500 dark:text-amber-400 text-base">
+                    Poll is closed.
+                  </CardDescription>
+                ) : (
+                  <CardDescription>
+                    {poll.pollType === "standard" ? "Vote on a topic" : "Choose a topic to claim it"}
+                  </CardDescription>
+                )}
               </CardHeader>
               <CardContent>
                 <div className="grid gap-3">
