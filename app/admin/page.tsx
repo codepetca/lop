@@ -151,7 +151,7 @@ export default function AdminPage() {
                         <PopoverContent side="right" className="w-80">
                           <div className="space-y-3">
                             <div>
-                              <p className="font-semibold mb-1">Claims Poll</p>
+                              <p className="font-semibold mb-1">Claims</p>
                               <p className="text-sm text-muted-foreground">
                                 Topics are claimed on a first-come basis. Each topic can only be selected by one participant.
                               </p>

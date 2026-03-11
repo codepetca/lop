@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Home, LogOut, UserRound } from "lucide-react";
@@ -10,12 +10,9 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { SignInDialog } from "@/components/SignInDialog";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
-interface NavBarProps {
-  showHomeButton?: boolean;
-}
-
-export function NavBar({ showHomeButton = false }: NavBarProps) {
+export function NavBar() {
   const router = useRouter();
+  const pathname = usePathname();
   const { signOut } = useAuthActions();
   const { isLoading, isAnonymous, email, name, image } = useCurrentUser();
   const [signInOpen, setSignInOpen] = useState(false);
@@ -31,13 +28,16 @@ export function NavBar({ showHomeButton = false }: NavBarProps) {
   return (
     <>
       <div className="sticky top-0 z-50 max-w-2xl mx-auto border-b rounded-b-lg bg-card px-4 py-4 relative flex items-center justify-center">
-          <Button
-            variant="ghost"
-            onClick={() => router.push("/")}
-            className="absolute left-4 p-0 h-auto w-auto hover:bg-transparent"
-          >
-            <Home className="h-5 w-5" />
-          </Button>
+          {pathname !== "/" && (
+            <Button
+              variant="ghost"
+              onClick={() => router.push("/")}
+              className="absolute left-4 p-0 h-auto w-auto hover:bg-transparent"
+              aria-label="Home"
+            >
+              <Home className="h-5 w-5" />
+            </Button>
+          )}
 
           <div className="absolute right-4 flex items-center gap-2">
             <ThemeToggle />
