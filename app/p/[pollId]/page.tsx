@@ -379,7 +379,7 @@ export default function PollPage({ params }: { params: Promise<{ pollId: string 
     );
   }
 
-  if (!poll.isOpen && !(poll.topicsVisible ?? false)) {
+  if (!poll.isOpen && !(poll.topicsVisible ?? false) && !isPreviewMode) {
     return (
       <EmptyState
         title="Poll Closed"

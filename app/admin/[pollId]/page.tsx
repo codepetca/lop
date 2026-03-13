@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Plus, Download, GripVertical, Trash2, RotateCcw, Copy, Check, ExternalLink, Presentation, Lock, Unlock, ChevronDown, Eye, EyeOff } from "lucide-react";
+import { Loader2, Plus, Download, GripVertical, Trash2, RotateCcw, Copy, Check, ExternalLink, Presentation, Lock, Unlock, ChevronDown, Eye, EyeOff, CopyPlus } from "lucide-react";
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useConfirm } from "@/components/ui/use-confirm";
@@ -55,6 +55,7 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
   const clearAllClaims = useMutation(api.topics.clearAllClaims);
   const unclaimTopic = useMutation(api.topics.unclaimTopic);
   const deletePoll = useMutation(api.polls.deletePoll);
+  const duplicatePoll = useMutation(api.polls.duplicate);
 
   const [draggedTopicId, setDraggedTopicId] = useState<Id<"topics"> | null>(null);
   const [previewTopics, setPreviewTopics] = useState<typeof topics | null>(null);
@@ -371,6 +372,16 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
     }
   };
 
+  const handleDuplicatePoll = async () => {
+    setError(null);
+    try {
+      const result = await duplicatePoll({ pollId, adminToken });
+      router.push(`/admin/${result.pollId}?token=${result.adminToken}`);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    }
+  };
+
   const handleStartEditingTopic = (topicId: Id<"topics">, currentLabel: string) => {
     editingCancelledRef.current = false;
     isSavingTopicRef.current = false;
@@ -575,15 +586,6 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button
-                variant={poll.isOpen ? "outline" : (poll.topicsVisible ?? false) ? "success" : "warning"}
-                size="sm"
-                onClick={poll.isOpen ? undefined : handleToggleTopicsVisible}
-                disabled={poll.isOpen}
-                title={poll.isOpen ? "Topics always visible when poll is open" : (poll.topicsVisible ?? false) ? "Topics visible to students" : "Topics hidden from students"}
-              >
-                {poll.isOpen || (poll.topicsVisible ?? false) ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-              </Button>
               <Button variant={poll.isOpen ? "success" : "warning"} size="sm" onClick={handleToggleOpen} title={poll.isOpen ? "Poll opened" : "Poll closed"}>
                 {poll.isOpen ? <Unlock className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
               </Button>
@@ -777,7 +779,16 @@ export default function AdminManagePage({ params }: { params: Promise<{ pollId: 
           <CardHeader>
             <CardTitle className="text-red-600">Danger Zone</CardTitle>
           </CardHeader>
-          <CardContent className="flex gap-2">
+          <CardContent className="flex gap-2 flex-wrap">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDuplicatePoll}
+              title="Duplicate this poll (topics only, no claims)"
+            >
+              <CopyPlus className="mr-2 h-4 w-4" />
+              Duplicate Poll
+            </Button>
             <Button
               variant="outline"
               size="sm"
