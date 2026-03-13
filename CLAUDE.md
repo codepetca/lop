@@ -41,6 +41,10 @@ Topic claims MUST be atomic to prevent duplicate selections:
 
 All state-changing admin mutations must validate `adminToken` parameter.
 
+## Worktree Setup
+
+After creating a worktree, always run `npm install` inside it before starting any dev server or making changes — `node_modules` are not shared between the main repo and worktrees.
+
 ## Business Rules
 
 - Each group selects exactly ONE topic at a time

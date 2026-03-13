@@ -17,6 +17,10 @@ export function NavBar() {
   const { isLoading, isAnonymous, email, name, image } = useCurrentUser();
   const [signInOpen, setSignInOpen] = useState(false);
 
+  if (pathname?.startsWith("/p/") || pathname?.startsWith("/r/")) {
+    return null;
+  }
+
   const initial = (name ?? email ?? "?")[0].toUpperCase();
 
   const AVATAR_COLORS = [

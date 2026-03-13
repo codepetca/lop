@@ -377,6 +377,67 @@ export const exportResults = query({
   },
 });
 
+// Duplicate a poll (topics only, no claims/groups)
+export const duplicate = mutation({
+  args: {
+    pollId: v.id("polls"),
+    adminToken: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const source = await validateAdminAccess(ctx, args.pollId, args.adminToken);
+
+    const newAdminToken = generateAdminToken();
+
+    // Enforce tier limits for the duplicating user
+    const userId = await getAuthUserId(ctx);
+    let tier: Tier = "anonymous";
+    if (userId) {
+      const user = await ctx.db.get(userId);
+      tier = resolveTier(user);
+    }
+    const pollLimit = TIER_POLL_LIMITS[tier];
+    if (userId) {
+      const userPolls = await ctx.db
+        .query("polls")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .take(pollLimit + 1);
+      if (userPolls.length >= pollLimit) {
+        throw new Error(`Poll limit reached (max ${pollLimit}).`);
+      }
+    }
+
+    const newPollId = await ctx.db.insert("polls", {
+      title: `${source.title} (copy)`,
+      description: source.description,
+      isOpen: false,
+      resultsVisible: source.resultsVisible ?? true,
+      adminToken: newAdminToken,
+      membersPerGroup: source.membersPerGroup ?? 1,
+      pollType: source.pollType ?? "claims",
+      requireParticipantNames: source.requireParticipantNames ?? true,
+      createdAt: Date.now(),
+      userId: userId ?? undefined,
+    });
+
+    const sourceTopics = await ctx.db
+      .query("topics")
+      .withIndex("by_poll", (q) => q.eq("pollId", args.pollId))
+      .collect();
+
+    sourceTopics.sort((a, b) => a.order - b.order);
+
+    for (const topic of sourceTopics) {
+      await ctx.db.insert("topics", {
+        pollId: newPollId,
+        label: topic.label,
+        order: topic.order,
+      });
+    }
+
+    return { pollId: newPollId, adminToken: newAdminToken };
+  },
+});
+
 // Delete a poll and all associated data (admin only)
 export const deletePoll = mutation({
   args: {
